@@ -185,7 +185,7 @@ static void LoadInternal(ExtensionLoader &loader) {
 	loader.RegisterFunction(PragmaFunction::PragmaStatement("gtfs_init", InitializeDataset));
 	loader.RegisterFunction(PragmaFunction::PragmaStatement("gtfs_refresh", InitializeDataset));
 	loader.RegisterFunction(PragmaFunction::PragmaCall("gtfs_import", ImportDataset, {LogicalType::VARCHAR}));
-	for (auto sql : {GTFS_LOAD_SQL, GTFS_INIT_SQL, GTFS_REROUTE_SQL}) {
+	for (auto sql : {GTFS_LOAD_SQL, GTFS_INIT_SQL, GTFS_REROUTE_SQL, GTFS_SONIFY_SQL}) {
 		Parser parser;
 		parser.ParseQuery(sql);
 		for (auto &statement : parser.statements) {

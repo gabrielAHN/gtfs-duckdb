@@ -51,7 +51,7 @@ The integration suite:
 
 - Serves the actual staged tree over loopback HTTP, downloads all three files, verifies sizes and SHA-256 checksums, and verifies decompressed native bytes against their original checksum.
 - Queries the standalone native client's engine version/platform, sets both home and extension directories to fresh temporary locations, performs HTTP `INSTALL` and `LOAD`, checks the `Bus` query result, observes the exact requested path, and checks the installed cache's SHA-256.
-- Copies `test/test_wasm.mjs` to a temporary directory, changes only its repository file source and root resolution, then runs its existing unsigned-positive EH/MVP cases in real Chromium. The app and repository use different loopback origins with CORS. All 65 macros, lifecycle, shortest path, pending edits, route types, and non-destructive load assertions remain intact.
+- Copies `test/test_wasm.mjs` to a temporary directory, changes only its repository file source and root resolution, then runs its existing unsigned-positive EH/MVP cases in real Chromium. The app and repository use different loopback origins with CORS. All 72 macros, lifecycle, shortest path, pending edits, route types, and non-destructive load assertions remain intact.
 
 To compare two complete real staging runs, repeat the staging command with `--output build/staged-repository-repeat` and run:
 

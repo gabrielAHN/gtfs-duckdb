@@ -13,7 +13,7 @@ const { build } = require('esbuild');
 const browserModule = (await build({ entryPoints: [resolve(wasmDist, 'duckdb-browser.mjs')], bundle: true, format: 'esm', platform: 'browser', write: false })).outputFiles[0].contents;
 const requests = [];
 const fixture = await readFile(resolve(root, 'test/fixtures/normalized.sql'), 'utf8');
-const macroNames = (await Promise.all(['load', 'init', 'reroute'].map(name => readFile(resolve(root, `sql/${name}.sql`), 'utf8')))).flatMap(sql => [...sql.matchAll(/CREATE OR REPLACE MACRO\s+(\w+)/g)].map(match => match[1])).sort();
+const macroNames = (await Promise.all(['load', 'init', 'reroute', 'sonify'].map(name => readFile(resolve(root, `sql/${name}.sql`), 'utf8')))).flatMap(sql => [...sql.matchAll(/CREATE OR REPLACE MACRO\s+(\w+)/g)].map(match => match[1])).sort();
 const baselineErrors = process.argv.includes('--baseline-errors');
 const unsignedOnly = process.argv.includes('--unsigned-only');
 const types = { wasm: 'application/wasm', js: 'text/javascript', mjs: 'text/javascript' };

@@ -411,6 +411,59 @@ WHERE r.stop_id IS NULL
 ORDER BY t.location_type_name, t.stop_name, t.stop_id;
 ```
 
+## Sonification Macros
+
+Turn a feed's schedule into notes an audio engine can play. The macros only compute the notes; the sound stays in the app that plays them.
+
+### gtfs_sonify_stops(p_date, p_route_ids, low_midi, octaves, scale, p_pitch_axis)
+
+A note for every stop served on `p_date`, from its place in the network.
+
+- **Pitch** follows latitude by default. `p_pitch_axis := 'lon'` uses longitude, and `'auto'` uses the longer axis. It is quantized to `scale` (semitone offsets) over `octaves`, starting from `low_midi`.
+- **Pan** follows longitude, from -1 to 1.
+- **Service day:** `p_date` (`YYYY-MM-DD` or `YYYYMMDD`) keeps the services that run that day, from the `calendar` weekdays and date range plus `calendar_dates` additions and removals. Pending calendar edits apply. With `p_date` NULL, every service counts.
+- Pitch and pan are measured over every stop of the day, so a stop keeps its note whatever `p_route_ids` selects.
+
+```sql
+SELECT stop_name, route_ids, midi, freq_hz, pan
+FROM gtfs_sonify_stops(p_date := '2026-04-22', p_route_ids := ['Red']);
+```
+
+Returns: `stop_id`, `stop_name`, `lat`, `lon`, `route_ids`, `pitch_pos`, `pan`, `midi`, `freq_hz`
+
+### gtfs_sonify_events(p_date, p_from, p_to, p_route_ids, low_midi, octaves, scale, p_pitch_axis)
+
+A note for every departure from `p_from` up to `p_to`, in time order. The trip leaving a stop plays that stop's note from `gtfs_sonify_stops`, and `p_date` picks the service day the same way.
+
+- `density`: departures per minute over 15 minutes, relative to the busiest minute.
+- `velocity`: rises with `density` and with `accent`, which marks a trip's first and last stop.
+- `hue`: the route colour's hue, for a sound per line. `voice` numbers the routes in `route_sort_order`.
+- **Route filter:** everything is computed over every route first, so `p_route_ids` returns exactly those routes' rows of the unfiltered result. A line on its own plays its part of the whole.
+
+Every argument is named and optional.
+
+```sql
+SELECT t, route_name, stop_name, midi, freq_hz, pan, velocity
+FROM gtfs_sonify_events(p_date := '2026-04-22', p_from := '08:00:00', p_to := '09:00:00',
+                        p_route_ids := ['Red'], p_pitch_axis := 'lon');
+```
+
+Returns: `trip_id`, `route_id`, `route_name`, `route_color_hex`, `hue`, `voice`, `stop_id`, `stop_name`, `stop_sequence`, `lat`, `lon`, `t_sec`, `t`, `midi`, `freq_hz`, `pan`, `density`, `accent`, `velocity`
+
+To draw routes under the notes, use `get_route_shapes_for_routes`, which gives every route's shape points.
+
+### gtfs_note_midi(value, low_midi, octaves, scale) / gtfs_midi_to_hz(midi) / gtfs_hex_to_hue(hex)
+
+Scalar helpers the macros above use:
+
+- `gtfs_note_midi` quantizes a value from 0 to 1 to a MIDI note.
+- `gtfs_midi_to_hz` converts a MIDI note to Hz.
+- `gtfs_hex_to_hue` reads the hue (0 to 1) of a `#RRGGBB` or `RRGGBB` colour.
+
+```sql
+SELECT gtfs_note_midi(0.5), gtfs_midi_to_hz(69), gtfs_hex_to_hue('#DA291C');  -- 61, 440.0, 0.0114
+```
+
 ## Named Queries
 
 Use with `gtfs-viz query --name <name>`. Add `--data` to print rows.

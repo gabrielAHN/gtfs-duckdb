@@ -81,7 +81,7 @@ To serve locally built artifacts as an extension repository for GTFS Viz develop
 
 ## Releasing
 
-The first release is **1.0.0**. There is no earlier published build.
+The current release is **1.0.1**. Each version is listed in [CHANGELOG.md](CHANGELOG.md).
 
 GitHub Actions (`.github/workflows/MainDistributionPipeline.yml`) runs on pull requests, pushes to `main` and manual dispatch. It builds native binaries against DuckDB v1.5.4 and `wasm_eh`/`wasm_mvp` against DuckDB-WASM v1.4.3, runs the format checks and test suites, and uploads an unsigned development repository artifact. These artifacts are for testing only.
 
@@ -89,8 +89,8 @@ Each push to `main` also republishes the unsigned development repository as `gtf
 
 Signed distribution goes through the [DuckDB community extensions](https://duckdb.org/community_extensions/documentation) repository, whose CI builds and signs every platform:
 
-1. Merge to `main` and tag the merge commit `v1.0.0`, so built binaries report `v1.0.0` instead of a commit hash.
-2. Copy the merged commit SHA into `community/description.yml` (`repo.ref`); `extension.version` is `1.0.0`.
+1. Merge to `main` and tag the merge commit `v1.0.1`, so built binaries report `v1.0.1` instead of a commit hash.
+2. Copy the merged commit SHA into `community/description.yml` (`repo.ref`); `extension.version` is `1.0.1`.
 3. Open a pull request to `duckdb/community-extensions` adding `extensions/gtfs/description.yml`.
 
 After it is merged, `INSTALL gtfs FROM community; LOAD gtfs;` works with default signature checks.

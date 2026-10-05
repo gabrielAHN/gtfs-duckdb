@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.1
+
+Adds sonification macros that turn a feed's schedule into notes. `LOAD` now registers 96 functions.
+
+- `gtfs_sonify_stops`: a note and a pan for every stop served that day, from its place in the network.
+- `gtfs_sonify_events`: a note for every departure, taken from its stop, with density, velocity, accent and the route colour's hue. A `p_route_ids` filter returns those routes' rows of the unfiltered result.
+- Both take a `p_date` and keep the services that run that day, from `calendar` and `calendar_dates`.
+- Helpers: `gtfs_note_midi`, `gtfs_midi_to_hz` and `gtfs_hex_to_hue`.
+
 ## 1.0.0
 
 First release of GTFS DuckDB, the `gtfs` DuckDB extension.

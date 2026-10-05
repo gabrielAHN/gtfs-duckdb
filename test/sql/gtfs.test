@@ -22,3 +22,13 @@ query T
 SELECT database_name FROM duckdb_functions() WHERE function_name = 'route_type_to_name';
 ----
 system
+
+query IRT
+SELECT gtfs_note_midi(0.5), gtfs_midi_to_hz(69), gtfs_hex_to_hue('zz') IS NULL;
+----
+61	440.0	true
+
+query T
+SELECT DISTINCT database_name FROM duckdb_functions() WHERE function_name IN ('gtfs_sonify_stops', 'gtfs_sonify_events', 'gtfs_note_midi', 'gtfs_midi_to_hz', 'gtfs_hex_to_hue');
+----
+system
