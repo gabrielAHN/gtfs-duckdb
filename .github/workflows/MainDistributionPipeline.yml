@@ -11,10 +11,10 @@ concurrency:
 
 jobs:
   duckdb-stable-build:
-    name: Build native binaries (DuckDB v1.5.4)
+    name: Build native binaries (DuckDB v1.5.5)
     uses: duckdb/extension-ci-tools/.github/workflows/_extension_distribution.yml@v1.5-variegata
     with:
-      duckdb_version: v1.5.4
+      duckdb_version: v1.5.5
       ci_tools_version: v1.5-variegata
       extension_name: gtfs
       exclude_archs: 'wasm_mvp;wasm_eh;wasm_threads'
@@ -32,7 +32,7 @@ jobs:
     name: Code Quality Check
     uses: duckdb/extension-ci-tools/.github/workflows/_extension_code_quality.yml@v1.5-variegata
     with:
-      duckdb_version: v1.5.4
+      duckdb_version: v1.5.5
       ci_tools_version: v1.5-variegata
       extension_name: gtfs
       format_checks: 'format;tidy'
@@ -58,7 +58,7 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          pattern: gtfs-v1.5.4-extension-*
+          pattern: gtfs-v1.5.5-extension-*
           path: build/native
 
       - uses: actions/download-artifact@v4
@@ -69,16 +69,16 @@ jobs:
       - name: Arrange artifacts
         run: |
           mkdir -p build/release/extension/gtfs build/wasm_eh/extension/gtfs build/wasm_mvp/extension/gtfs
-          cp build/native/gtfs-v1.5.4-extension-linux_amd64/gtfs.duckdb_extension "$GTFS_EXTENSION"
+          cp build/native/gtfs-v1.5.5-extension-linux_amd64/gtfs.duckdb_extension "$GTFS_EXTENSION"
           for variant in eh mvp; do
             cp "build/wasm/gtfs-v1.4.3-extension-wasm_$variant/gtfs.duckdb_extension.wasm" "build/wasm_$variant/extension/gtfs/"
           done
           find build/native build/wasm -type f | sort
 
-      - name: Install DuckDB CLI v1.5.4 and spatial
+      - name: Install DuckDB CLI v1.5.5 and spatial
         run: |
           mkdir -p build/duckdb-cli
-          curl -fsSL -o build/duckdb-cli/cli.zip https://github.com/duckdb/duckdb/releases/download/v1.5.4/duckdb_cli-linux-amd64.zip
+          curl -fsSL -o build/duckdb-cli/cli.zip https://github.com/duckdb/duckdb/releases/download/v1.5.5/duckdb_cli-linux-amd64.zip
           unzip -q build/duckdb-cli/cli.zip -d build/duckdb-cli
           echo "$GITHUB_WORKSPACE/build/duckdb-cli" >> "$GITHUB_PATH"
           echo "GTFS_DEPENDENCY_CACHE=$HOME/.duckdb/extensions" >> "$GITHUB_ENV"
@@ -101,9 +101,9 @@ jobs:
       - name: Stage unsigned development repository
         run: |
           args=()
-          for dir in build/native/gtfs-v1.5.4-extension-*; do
+          for dir in build/native/gtfs-v1.5.5-extension-*; do
             platform="${dir##*-extension-}"
-            args+=(--artifact native v1.5.4 "$platform" "$dir/gtfs.duckdb_extension")
+            args+=(--artifact native v1.5.5 "$platform" "$dir/gtfs.duckdb_extension")
           done
           for variant in eh mvp; do
             args+=(--artifact wasm v1.4.3 "wasm_$variant" "build/wasm_$variant/extension/gtfs/gtfs.duckdb_extension.wasm")

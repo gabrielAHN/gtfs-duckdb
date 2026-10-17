@@ -63,7 +63,7 @@ This produces `build/wasm_eh` and `build/wasm_mvp` artifacts.
 ```sh
 npm ci && npx playwright install chromium    # browser test dependencies
 
-DUCKDB_BIN=/path/to/duckdb-1.5.4 \
+DUCKDB_BIN=/path/to/duckdb-1.5.5 \
 GTFS_EXTENSION="$PWD/build/release/extension/gtfs/gtfs.duckdb_extension" \
 GTFS_DEPENDENCY_CACHE=/path/to/extension-cache \
 python3 -m unittest discover -s test -p 'test_*.py' -v
