@@ -9,7 +9,7 @@ Run from the extension repository root with Python 3. The output directory must 
 ```sh
 python3 scripts/stage-repository.py \
   --output build/staged-repository \
-  --artifact native v1.5.4 osx_arm64 \
+  --artifact native v2.0.0 osx_arm64 \
     build/release/extension/gtfs/gtfs.duckdb_extension \
   --artifact wasm v1.4.3 wasm_eh \
     build/wasm_eh/extension/gtfs/gtfs.duckdb_extension.wasm \
@@ -17,12 +17,12 @@ python3 scripts/stage-repository.py \
     build/wasm_mvp/extension/gtfs/gtfs.duckdb_extension.wasm
 ```
 
-Each `--artifact` takes `TARGET VERSION PLATFORM FILE`. Versions and platforms must be observed from the clients, not inferred from build directory names. Native `SELECT version()` and `PRAGMA platform` returned `v1.5.4` and **`osx_arm64`**. The real browser engines returned `v1.4.3`, requesting the `wasm_eh` and `wasm_mvp` paths below. There is no extra `duckdb-wasm` directory in these custom-repository requests.
+Each `--artifact` takes `TARGET VERSION PLATFORM FILE`. Versions and platforms must be observed from the clients, not inferred from build directory names. Native `SELECT version()` and `PRAGMA platform` report them, for example `v2.0.0` and **`osx_arm64`**. The real browser engines returned `v1.4.3`, requesting the `wasm_eh` and `wasm_mvp` paths below. There is no extra `duckdb-wasm` directory in these custom-repository requests.
 
 ```text
 build/staged-repository/
   manifest.json
-  v1.5.4/osx_arm64/gtfs.duckdb_extension.gz
+  v2.0.0/osx_arm64/gtfs.duckdb_extension.gz
   v1.4.3/wasm_eh/gtfs.duckdb_extension.wasm
   v1.4.3/wasm_mvp/gtfs.duckdb_extension.wasm
 ```
@@ -41,7 +41,7 @@ Unit tests use temporary mock binary fixtures only; real staging above uses the 
 python3 -m unittest discover -s test -p 'test_stage_repository.py' -v
 
 GTFS_STAGED_REPOSITORY="$PWD/build/staged-repository" \
-DUCKDB_BIN=/path/to/standalone-duckdb-1.5.4 \
+DUCKDB_BIN=/path/to/standalone-duckdb-2.0.0 \
 python3 -m unittest discover -s test -p 'test_staged_repository_integration.py' -v
 ```
 
@@ -68,6 +68,8 @@ python3 -m http.server 8000 --bind 127.0.0.1 --directory build/staged-repository
 The plain Python server is for native/download checks; the browser integration suite provides its own CORS-enabled repository server. Unsigned permission is enabled only inside the isolated test processes. Do not weaken a production consumer's signature policy.
 
 ## Verified local result
+
+This run predates the move to DuckDB v2.0.0: its native artifact and CLI were DuckDB v1.5.4. It has not been repeated locally with v2.0.0; CI stages and tests the v2.0.0 native build.
 
 The unit suite passed, including 13 invalid-input subcases, deterministic output, and refusal to overwrite an existing tree. All three integration tests passed using the staged real artifacts. Chromium `147.0.7727.15` passed both browser variants; the standalone native CLI downloaded from `/v1.5.4/osx_arm64/gtfs.duckdb_extension.gz` into a clean cache and returned `Bus`. Every artifact HTTP download returned 200 and matched the manifest. A second real staging run was byte-identical across all four files, including the manifest.
 
