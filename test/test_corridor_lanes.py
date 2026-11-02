@@ -24,7 +24,7 @@ def query(points, select, spacing=16):
         for i, (x, y) in enumerate(coordinates):
             rows.append(f"('{route}','{route}',{i},{y / 111320.0},{x / 111320.0})")
     cache = os.environ.get("GTFS_DEPENDENCY_CACHE")
-    config = "SET extension_directory='" + cache.replace("'", "''") + "';" if cache else ""
+    config = "SET extension_directories=['" + cache.replace("'", "''") + "'];" if cache else ""
     setup = (
         config
         + f"SET home_directory='{pathlib.Path.home()}'; "

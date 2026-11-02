@@ -5,6 +5,7 @@
 - Native builds now target DuckDB v2.0.0, the version the DuckDB community extensions build against. Browser builds stay on DuckDB-WASM v1.4.3, which GTFS Viz uses.
 - The extension compiles against both: it uses `Parser::GetBuiltinParser()` and `CreateInfo::SetSchema()` when DuckDB provides them, and quotes `gtfs_import` paths without the deprecated `KeywordHelper::WriteQuoted`.
 - CI builds `osx_amd64` explicitly, since extension-ci-tools v2.0 makes it opt-in.
+- Tests set `extension_directories` instead of `extension_directory`. DuckDB 2.0 deprecates the old setting and its CLI prints the warning on stdout, which broke `-json` output parsing.
 
 ## 1.0.1
 

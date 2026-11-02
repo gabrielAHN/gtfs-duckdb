@@ -40,7 +40,7 @@ class LegacyParityTests(unittest.TestCase):
         cache = os.environ.get("GTFS_DEPENDENCY_CACHE")
         config = ""
         if cache:
-            config = "SET extension_directory='" + cache.replace("'", "''") + "';"
+            config = "SET extension_directories=['" + cache.replace("'", "''") + "'];"
         prelude = config + "LOAD spatial;" + ("" if legacy else f"LOAD '{extension}';")
         setup = self.blocks[0] + FIXTURE + self.blocks[1] + self.blocks[2] if legacy else FIXTURE + "PRAGMA gtfs_init;"
         result = subprocess.run(

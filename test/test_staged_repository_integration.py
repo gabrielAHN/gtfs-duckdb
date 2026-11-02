@@ -71,7 +71,7 @@ class StagedRepositoryIntegrationTests(unittest.TestCase):
                 version = version_rows[0]['version']
                 platform = platform_rows[0]['platform']
                 quoted = lambda value: str(value).replace("'", "''")
-                sql = f"SET home_directory='{quoted(base)}'; SET extension_directory='{quoted(cache)}'; INSTALL gtfs FROM 'http://127.0.0.1:{server.server_port}'; LOAD gtfs; SELECT route_type_to_name(3) AS name;"
+                sql = f"SET home_directory='{quoted(base)}'; SET extension_directories=['{quoted(cache)}']; INSTALL gtfs FROM 'http://127.0.0.1:{server.server_port}'; LOAD gtfs; SELECT route_type_to_name(3) AS name;"
                 result = subprocess.run(
                     [binary, '-unsigned', '-json', ':memory:', '-c', sql], text=True, capture_output=True, timeout=60
                 )
