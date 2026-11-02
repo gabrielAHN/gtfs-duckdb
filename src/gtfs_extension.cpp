@@ -7,7 +7,7 @@
 #include "duckdb/parser/statement/create_statement.hpp"
 #include "duckdb/parser/parsed_data/create_macro_info.hpp"
 #include "duckdb/common/file_system.hpp"
-#include "duckdb/parser/keyword_helper.hpp"
+#include "duckdb/common/string_util.hpp"
 
 namespace duckdb {
 
@@ -19,8 +19,34 @@ static bool IsMacro(SQLStatement &statement) {
 	return type == CatalogType::MACRO_ENTRY || type == CatalogType::TABLE_MACRO_ENTRY;
 }
 
+// DuckDB 2.0 replaced the default Parser constructor and CreateInfo::schema. The browser build still targets
+// DuckDB-WASM 1.4, so each helper picks the API that the DuckDB being compiled against provides.
+template <class PARSER>
+static auto CreateParser(int) -> decltype(PARSER::GetBuiltinParser()) {
+	return PARSER::GetBuiltinParser();
+}
+
+template <class PARSER>
+static PARSER CreateParser(...) {
+	return PARSER();
+}
+
+template <class INFO>
+static auto UseDefaultSchema(INFO &info, int) -> decltype(info.SetSchema(DEFAULT_SCHEMA)) {
+	return info.SetSchema(DEFAULT_SCHEMA);
+}
+
+template <class INFO>
+static void UseDefaultSchema(INFO &info, ...) {
+	info.schema = DEFAULT_SCHEMA;
+}
+
+static string QuoteLiteral(const string &text) {
+	return "'" + StringUtil::Replace(text, "'", "''") + "'";
+}
+
 static string DatasetStatements(const char *sql) {
-	Parser parser;
+	auto parser = CreateParser<Parser>(0);
 	parser.ParseQuery(sql);
 	string result;
 	for (auto &statement : parser.statements) {
@@ -151,8 +177,7 @@ static string ImportDataset(ClientContext &context, const FunctionParameters &pa
 			continue;
 		}
 		result += "CREATE OR REPLACE TEMP TABLE " + string(file.table) + "_raw AS SELECT * FROM read_csv_auto(" +
-		          KeywordHelper::WriteQuoted(path, '\'') +
-		          ", all_varchar=true, null_padding=true, quote='\"', ignore_errors=true);\n";
+		          QuoteLiteral(path) + ", all_varchar=true, null_padding=true, quote='\"', ignore_errors=true);\n";
 		result += string(file.normalize) + "\n";
 	}
 	return result + InitializeDataset(context, parameters);
@@ -186,14 +211,14 @@ static void LoadInternal(ExtensionLoader &loader) {
 	loader.RegisterFunction(PragmaFunction::PragmaStatement("gtfs_refresh", InitializeDataset));
 	loader.RegisterFunction(PragmaFunction::PragmaCall("gtfs_import", ImportDataset, {LogicalType::VARCHAR}));
 	for (auto sql : {GTFS_LOAD_SQL, GTFS_INIT_SQL, GTFS_REROUTE_SQL, GTFS_SONIFY_SQL}) {
-		Parser parser;
+		auto parser = CreateParser<Parser>(0);
 		parser.ParseQuery(sql);
 		for (auto &statement : parser.statements) {
 			if (!IsMacro(*statement)) {
 				continue;
 			}
 			auto &info = statement->Cast<CreateStatement>().info->Cast<CreateMacroInfo>();
-			info.schema = DEFAULT_SCHEMA;
+			UseDefaultSchema(info, 0);
 			info.internal = true;
 			loader.RegisterFunction(info);
 		}
