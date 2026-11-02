@@ -63,7 +63,7 @@ This produces `build/wasm_eh` and `build/wasm_mvp` artifacts.
 ```sh
 npm ci && npx playwright install chromium    # browser test dependencies
 
-DUCKDB_BIN=/path/to/duckdb-1.5.4 \
+DUCKDB_BIN=/path/to/duckdb-2.0.0 \
 GTFS_EXTENSION="$PWD/build/release/extension/gtfs/gtfs.duckdb_extension" \
 GTFS_DEPENDENCY_CACHE=/path/to/extension-cache \
 python3 -m unittest discover -s test -p 'test_*.py' -v
@@ -83,7 +83,7 @@ To serve locally built artifacts as an extension repository for GTFS Viz develop
 
 The current release is **1.0.1**. Each version is listed in [CHANGELOG.md](CHANGELOG.md).
 
-GitHub Actions (`.github/workflows/MainDistributionPipeline.yml`) runs on pull requests, pushes to `main` and manual dispatch. It builds native binaries against DuckDB v1.5.4 and `wasm_eh`/`wasm_mvp` against DuckDB-WASM v1.4.3, runs the format checks and test suites, and uploads an unsigned development repository artifact. These artifacts are for testing only.
+GitHub Actions (`.github/workflows/MainDistributionPipeline.yml`) runs on pull requests, pushes to `main` and manual dispatch. It builds native binaries against DuckDB v2.0.0 and `wasm_eh`/`wasm_mvp` against DuckDB-WASM v1.4.3, runs the format checks and test suites, and uploads an unsigned development repository artifact. These artifacts are for testing only.
 
 Each push to `main` also republishes the unsigned development repository as `gtfs-extension-repository.tar.gz` on the moving [`main-latest`](https://github.com/gabrielAHN/gtfs-duckdb/releases/tag/main-latest) pre-release. GTFS Viz's deploy downloads it, checks the WASM files against the SHA-256 sums in its `manifest.json` and serves them from its own `/extensions/` path; because the build is unsigned, GTFS Viz enables unsigned loading only in that deploy build.
 

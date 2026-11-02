@@ -100,7 +100,7 @@ class NativeExtensionTests(unittest.TestCase):
                 cache = str(base / "cache").replace("'", "''")
                 sql = (
                     f"SET home_directory='{str(base).replace(chr(39), chr(39) * 2)}'; "
-                    f"SET extension_directory='{cache}'; "
+                    f"SET extension_directories=['{cache}']; "
                     f"INSTALL gtfs FROM 'http://127.0.0.1:{server.server_port}'; "
                     "LOAD gtfs; SELECT route_type_to_name(3) AS name;"
                 )
