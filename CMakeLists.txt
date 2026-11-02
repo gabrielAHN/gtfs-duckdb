@@ -3,12 +3,43 @@ set(TARGET_NAME gtfs)
 set(EXTENSION_NAME ${TARGET_NAME}_extension)
 set(LOADABLE_EXTENSION_NAME ${TARGET_NAME}_loadable_extension)
 project(${TARGET_NAME})
-set(CMAKE_CXX_STANDARD "17" CACHE STRING "C++ standard to enforce")
+set(CMAKE_CXX_STANDARD
+    "17"
+    CACHE STRING "C++ standard to enforce")
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-foreach(SECTION load init reroute sonify normalize_stops normalize_pathways empty_pathways normalize_routes empty_routes normalize_trips empty_trips normalize_stop_times empty_stop_times normalize_shapes empty_shapes normalize_calendar empty_calendar normalize_calendar_dates empty_calendar_dates drop add_geometry prepare_route_cache reset_route_cache)
-  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/sql/${SECTION}.sql")
+foreach(
+  SECTION
+  load
+  init
+  reroute
+  sonify
+  normalize_stops
+  normalize_pathways
+  empty_pathways
+  normalize_routes
+  empty_routes
+  normalize_trips
+  empty_trips
+  normalize_stop_times
+  empty_stop_times
+  normalize_shapes
+  empty_shapes
+  normalize_calendar
+  empty_calendar
+  normalize_calendar_dates
+  empty_calendar_dates
+  drop
+  add_geometry
+  prepare_route_cache
+  reset_route_cache)
+  set_property(
+    DIRECTORY
+    APPEND
+    PROPERTY CMAKE_CONFIGURE_DEPENDS
+             "${CMAKE_CURRENT_SOURCE_DIR}/sql/${SECTION}.sql")
   string(TOUPPER "${SECTION}" SECTION_UPPER)
-  file(READ "${CMAKE_CURRENT_SOURCE_DIR}/sql/${SECTION}.sql" GTFS_${SECTION_UPPER}_SQL)
+  file(READ "${CMAKE_CURRENT_SOURCE_DIR}/sql/${SECTION}.sql"
+       GTFS_${SECTION_UPPER}_SQL)
 endforeach()
 string(SHA256 GTFS_ROUTE_CACHE_VERSION "${GTFS_INIT_SQL}")
 configure_file(src/include/gtfs_sql.hpp.in generated/gtfs_sql.hpp @ONLY)
@@ -16,6 +47,8 @@ include_directories(src/include "${CMAKE_CURRENT_BINARY_DIR}/generated")
 set(EXTENSION_SOURCES src/gtfs_extension.cpp)
 build_static_extension(${TARGET_NAME} ${EXTENSION_SOURCES})
 build_loadable_extension(${TARGET_NAME} " " ${EXTENSION_SOURCES})
-install(TARGETS ${EXTENSION_NAME} EXPORT "${DUCKDB_EXPORT_SET}"
+install(
+  TARGETS ${EXTENSION_NAME}
+  EXPORT "${DUCKDB_EXPORT_SET}"
   LIBRARY DESTINATION "${INSTALL_LIB_DIR}"
   ARCHIVE DESTINATION "${INSTALL_LIB_DIR}")
