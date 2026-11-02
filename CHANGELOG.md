@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.0.2
+
+Moves native builds to DuckDB v2.0.0, the version DuckDB community extensions build against. No function changes: `LOAD` still registers 96 functions.
 
 - Native builds now target DuckDB v2.0.0, the version the DuckDB community extensions build against. Browser builds stay on DuckDB-WASM v1.4.3, which GTFS Viz uses.
 - The extension compiles against both: it uses `Parser::GetBuiltinParser()` and `CreateInfo::SetSchema()` when DuckDB provides them, and quotes `gtfs_import` paths without the deprecated `KeywordHelper::WriteQuoted`.
