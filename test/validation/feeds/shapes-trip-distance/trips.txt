@@ -1,0 +1,6 @@
+route_id,service_id,trip_id,trip_headsign,shape_id
+R1,SV,TE,North,SHE
+R1,SV,TW,North,SHW
+R1,SV,TX,North,SHX
+R1,SV,TN,North,SHN
+R1,SV,TZ,North,SHZ

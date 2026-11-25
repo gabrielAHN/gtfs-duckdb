@@ -1,0 +1,11 @@
+stop_id,stop_name,stop_lat,stop_lon
+A1,Alpha One,40.7500,-73.9800
+A2,Alpha Two,40.7600,-73.9800
+C1,Charlie One,40.7500,-73.9700
+C2,Charlie Two,40.7600,-73.9700
+D1,Delta One,40.7500,-73.9600
+D2,Delta Two,40.7600,-73.9600
+N1,November One,40.7500,-73.9500
+N2,November Two,40.7600,-73.9500
+Z1,Zulu One,40.7500,-73.9400
+Z2,Zulu Two,40.7600,-73.9400
