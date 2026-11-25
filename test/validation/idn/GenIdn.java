@@ -99,75 +99,77 @@ public class GenIdn {
 
     // ------------------------------------------------------------------------------------------------ SQL tables
 
+    /** Refused input code point: unassigned in Unicode 3.2 (A.1), or its map and NFKC hold a prohibited one. */
+    static boolean refused(int cp) {
+        if (type[cp] == UNASSIGNED || prepared[cp] == null) return true;
+        return prepared[cp].codePoints().anyMatch(c -> type[c] == PROHIBITED);
+    }
+
+    static final int LONG_RUN = 32; // refused runs at least this long go to the regex, shorter ones to the map
+    static final String REFUSED = "\uE000"; // marker: a prohibited code point, so never in a valid prepared label
+
     static void writeSql(Path sql) throws IOException {
-        List<int[]> entries = new ArrayList<>(); // {cp, mapped...}
-        List<int[]> runs = new ArrayList<>(); // {first, count, offset}
-        List<int[]> singles = new ArrayList<>();
+        List<int[]> refusedRuns = ranges(cp -> refused(cp) ? 1 : 0);
+        List<int[]> longRuns = new ArrayList<>();
+        java.util.BitSet inMap = new java.util.BitSet(MAX + 1);
+        for (int[] r : refusedRuns) {
+            if (r[1] - r[0] + 1 >= LONG_RUN) longRuns.add(r);
+            else for (int cp = r[0]; cp <= r[1]; cp++) if (!surrogate(cp)) inMap.set(cp);
+        }
+        // The map, in code point order: keys holds the code points whose B.1/B.2 map plus NFKC differs from the code
+        // point and from its NFC, and the refused code points of the short runs; values (fields separated by U+0001)
+        // what each maps to, REFUSED for the refused ones.
+        StringBuilder keys = new StringBuilder(), values = new StringBuilder();
         for (int cp = 0; cp <= MAX; cp++) {
-            String t = prepared[cp];
-            if (t == null) continue;
-            String self = new String(Character.toChars(cp));
-            if (t.equals(self) || t.equals(Normalizer.normalize(self, Normalizer.Form.NFC))) continue;
-            int[] cps = t.codePoints().toArray();
-            for (int c : cps) {
-                if (surrogate(c) || type[c] == UNASSIGNED) throw new IllegalStateException("unassigned output " + cp);
-            }
-            if (cps.length == 1) {
-                singles.add(new int[] {cp, cps[0] - cp});
+            if (surrogate(cp)) continue;
+            String t;
+            if (inMap.get(cp)) {
+                t = REFUSED;
+            } else if (refused(cp)) {
+                continue; // in the regex
             } else {
-                int[] e = new int[cps.length + 1];
-                e[0] = cp;
-                System.arraycopy(cps, 0, e, 1, cps.length);
-                entries.add(e);
+                t = prepared[cp];
+                String self = new String(Character.toChars(cp));
+                if (t.equals(self) || t.equals(Normalizer.normalize(self, Normalizer.Form.NFC))) continue;
+                for (int c : t.codePoints().toArray()) {
+                    if (surrogate(c) || type[c] == UNASSIGNED || c == 1) throw new IllegalStateException("output " + cp);
+                }
             }
+            if (keys.length() > 0) values.append('\u0001');
+            keys.appendCodePoint(cp);
+            values.append(t);
         }
-        // One-to-one mappings: runs of consecutive code points with the same offset; single ones become entries.
-        for (int i = 0; i < singles.size(); ) {
-            int j = i;
-            while (j + 1 < singles.size() && singles.get(j + 1)[0] == singles.get(j)[0] + 1
-                    && singles.get(j + 1)[1] == singles.get(i)[1]) j++;
-            if (j > i) runs.add(new int[] {singles.get(i)[0], j - i + 1, singles.get(i)[1]});
-            else entries.add(new int[] {singles.get(i)[0], singles.get(i)[0] + singles.get(i)[1]});
-            i = j + 1;
-        }
-        entries.sort((a, b) -> Integer.compare(a[0], b[0]));
 
         StringBuilder b = new StringBuilder();
         b.append(BEGIN).append('\n');
         b.append("-- RFC 3491 nameprep data of java.net.IDN on Java ").append(System.getProperty("java.version"))
                 .append(" (StringPrep, Unicode 3.2 tables).\n");
-        b.append("-- gtfs_vc_idn_entries(): [code point, mapped code points...] for the code points whose B.1/B.2 map\n");
-        b.append("-- plus NFKC differs from the code point and from its NFC; gtfs_vc_idn_runs(): [first, count, offset]\n");
-        b.append("-- runs of such one-to-one mappings. The other code points are left to nfc_normalize().\n");
-        b.append("CREATE OR REPLACE MACRO gtfs_vc_idn_entries() AS ([\n");
-        appendLists(b, entries);
-        b.append("]);\n");
-        b.append("CREATE OR REPLACE MACRO gtfs_vc_idn_runs() AS ([\n");
-        appendLists(b, runs);
-        b.append("]);\n");
-        b.append("-- Input code points StringPrep refuses as unassigned in Unicode 3.2 (A.1).\n");
-        b.append("CREATE OR REPLACE MACRO gtfs_vc_idn_unassigned_re() AS (\n");
-        appendClass(b, "", ranges(cp -> type[cp] == UNASSIGNED ? 1 : 0), "");
+        b.append("-- Refused input code points: unassigned in Unicode 3.2 (A.1) or mapped to a prohibited one (C.1.2 to\n");
+        b.append("-- C.9). Runs of ").append(LONG_RUN).append(" or more are in gtfs_vc_idn_refused_re(), the others in the map.\n");
+        b.append("-- gtfs_vc_idn_keys(): those and the code points whose B.1/B.2 map plus NFKC differs from the code point\n");
+        b.append("-- and from its NFC; field i (separated by U+0001) of gtfs_vc_idn_values() is what the i-th one maps to\n");
+        b.append("-- (empty for B.1, U+E000 for a refused one). The other code points are left to nfc_normalize(). UTF-8 in\n");
+        b.append("-- base64, so the SQL stays ASCII; adjacent literals, which the parser joins.\n");
+        b.append("CREATE OR REPLACE MACRO gtfs_vc_idn_keys() AS (decode(from_base64(\n");
+        appendBase64(b, keys.toString());
+        b.append(")));\n");
+        b.append("CREATE OR REPLACE MACRO gtfs_vc_idn_values() AS (decode(from_base64(\n");
+        appendBase64(b, values.toString());
+        b.append(")));\n");
+        b.append("CREATE OR REPLACE MACRO gtfs_vc_idn_refused_re() AS (\n");
+        appendClass(b, "", longRuns, "");
         b.append(");\n");
-        // Output code points: the unassigned ones never reach the output; for the bidi classes the prohibited ones
-        // fail first. Those code points are merged into neighbouring ranges ("don't care").
-        b.append("-- Prepared code points StringPrep refuses as prohibited (C.1.2 to C.9).\n");
-        b.append("CREATE OR REPLACE MACRO gtfs_vc_idn_prohibited_re() AS (\n");
-        appendClass(b, "", ranges(cp -> type[cp] == UNASSIGNED ? -1 : type[cp] == PROHIBITED ? 1 : 0), "");
-        b.append(");\n");
+        // Prepared code points are neither unassigned nor prohibited: those are merged into neighbouring ranges.
         b.append("-- Prepared code points of bidi class R or AL, and of class L (jdk.internal.icu UCharacter.getDirection).\n");
         b.append("CREATE OR REPLACE MACRO gtfs_vc_idn_r_re() AS (\n");
         appendClass(b, "", ranges(GenIdn::isR), "");
-        b.append(");\n");
-        b.append("CREATE OR REPLACE MACRO gtfs_vc_idn_r_ends_re() AS (\n");
-        appendClass(b, "(?s)", ranges(GenIdn::isR), "");
-        b.append("  || '(?:.*'\n");
-        appendClass(b, "", ranges(GenIdn::isR), ")?");
         b.append(");\n");
         b.append("CREATE OR REPLACE MACRO gtfs_vc_idn_l_re() AS (\n");
         appendClass(b, "", ranges(cp -> outputDontCare(cp) ? -1 : dir[cp] == 0 ? 1 : 0), "");
         b.append(");\n");
         b.append(END).append('\n');
+        System.err.println("map keys " + keys.codePointCount(0, keys.length()) + ", refused runs " + refusedRuns.size()
+                + ", long " + longRuns.size());
 
         String text = new String(Files.readAllBytes(sql), StandardCharsets.UTF_8);
         int s = text.indexOf(BEGIN), e = text.indexOf(END);
@@ -212,7 +214,7 @@ public class GenIdn {
             String item = r[0] == r[1] ? hex(r[0]) : hex(r[0]) + "-" + hex(r[1]);
             if (line.length() + item.length() > 116) {
                 b.append(line).append("'\n");
-                line = new StringBuilder("  || '");
+                line = new StringBuilder("  '");
             }
             line.append(item);
         }
@@ -223,19 +225,12 @@ public class GenIdn {
         return "\\x{" + Integer.toHexString(cp).toUpperCase() + "}";
     }
 
-    static void appendLists(StringBuilder b, List<int[]> lists) {
-        StringBuilder line = new StringBuilder("  ");
-        for (int i = 0; i < lists.size(); i++) {
-            StringBuilder item = new StringBuilder("[");
-            for (int j = 0; j < lists.get(i).length; j++) item.append(j > 0 ? "," : "").append(lists.get(i)[j]);
-            item.append("]").append(i + 1 < lists.size() ? "," : "");
-            if (line.length() + item.length() > 118) {
-                b.append(line.toString().stripTrailing()).append('\n');
-                line = new StringBuilder("  ");
-            }
-            line.append(item);
+    /** Base64 of the UTF-8 of s as adjacent string literals of 112 characters (the parser joins them). */
+    static void appendBase64(StringBuilder b, String s) {
+        String enc = java.util.Base64.getEncoder().encodeToString(s.getBytes(StandardCharsets.UTF_8));
+        for (int i = 0; i < enc.length(); i += 112) {
+            b.append("  '").append(enc, i, Math.min(enc.length(), i + 112)).append("'\n");
         }
-        b.append(line.toString().stripTrailing()).append('\n');
     }
 
     // ------------------------------------------------------------------------------------------------ corpus
