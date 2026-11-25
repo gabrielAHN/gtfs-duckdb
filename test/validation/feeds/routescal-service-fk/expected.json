@@ -1,0 +1,59 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "foreign_key_violation",
+   "notice": {
+    "childFieldName": "service_id",
+    "childFilename": "trips.txt",
+    "csvRowNumber": 3,
+    "fieldValue": "NOPE",
+    "parentFieldName": "service_id",
+    "parentFilename": "calendar.txt or calendar_dates.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_file",
+   "notice": {
+    "filename": "shapes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unusable_trip",
+   "notice": {
+    "csvRowNumber": 3,
+    "tripId": "T2"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_trip",
+   "notice": {
+    "csvRowNumber": 3,
+    "tripId": "T2"
+   },
+   "severity": "WARNING"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

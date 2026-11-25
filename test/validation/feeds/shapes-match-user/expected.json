@@ -1,0 +1,122 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "decreasing_or_equal_stop_time_distance",
+   "notice": {
+    "csvRowNumber": 15,
+    "prevCsvRowNumber": 14,
+    "prevShapeDistTraveled": 100.0,
+    "prevStopSequence": 1,
+    "shapeDistTraveled": 50.0,
+    "stopId": "U10",
+    "stopSequence": 2,
+    "tripId": "TU5"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_too_far_from_shape",
+   "notice": {
+    "geoDistanceToShape": 150.00187286876374,
+    "match": [
+     40.73500001367644,
+     -73.85
+    ],
+    "shapeId": "SU",
+    "stopId": "U5",
+    "stopName": "Stop U5",
+    "stopTimeCsvRowNumber": 8,
+    "tripCsvRowNumber": 3,
+    "tripId": "TU2"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_too_far_from_shape_using_user_distance",
+   "notice": {
+    "geoDistanceToShape": 105.6353461192551,
+    "match": [
+     40.72195000000001,
+     -73.85
+    ],
+    "shapeId": "SU",
+    "stopId": "U3",
+    "stopName": "Stop U3",
+    "stopTimeCsvRowNumber": 4,
+    "tripCsvRowNumber": 2,
+    "tripId": "TU1"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_too_far_from_shape_using_user_distance",
+   "notice": {
+    "geoDistanceToShape": 111.19510117761928,
+    "match": [
+     40.739999999999995,
+     -73.85
+    ],
+    "shapeId": "SU",
+    "stopId": "U11",
+    "stopName": "Stop U11",
+    "stopTimeCsvRowNumber": 18,
+    "tripCsvRowNumber": 7,
+    "tripId": "TU6"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_too_far_from_shape_using_user_distance",
+   "notice": {
+    "geoDistanceToShape": 299.99683940489444,
+    "match": [
+     40.70100000000001,
+     -73.85
+    ],
+    "shapeId": "SU",
+    "stopId": "U6",
+    "stopName": "Stop U6",
+    "stopTimeCsvRowNumber": 9,
+    "tripCsvRowNumber": 4,
+    "tripId": "TU3"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stops_match_shape_out_of_order",
+   "notice": {
+    "match1": [
+     40.70050000000001,
+     -73.85
+    ],
+    "match2": [
+     40.70100000000001,
+     -73.85
+    ],
+    "shapeId": "SU",
+    "stopId1": "U10",
+    "stopId2": "U1",
+    "stopName1": "Stop U10",
+    "stopName2": "Stop U1",
+    "stopTimeCsvRowNumber1": 15,
+    "stopTimeCsvRowNumber2": 14,
+    "tripCsvRowNumber": 6,
+    "tripId": "TU5"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "trip_distance_exceeds_shape_distance",
+   "notice": {
+    "geoDistanceToShape": 111.1951011779014,
+    "maxShapeDistanceTraveled": 4000.0,
+    "maxTripDistanceTraveled": 4200.0,
+    "shapeId": "SU",
+    "tripId": "TU6"
+   },
+   "severity": "ERROR"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

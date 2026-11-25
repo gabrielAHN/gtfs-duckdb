@@ -1,0 +1,5 @@
+trip_id,arrival_time,departure_time,stop_id,stop_sequence,shape_dist_traveled
+TZ1,08:00:00,08:00:00,Z1,1,
+TZ1,08:01:00,08:01:00,Z2,2,225.27
+TZ2,08:00:00,08:00:00,Z1,1,
+TZ2,08:01:00,08:01:00,Z3,2,
