@@ -110,7 +110,7 @@ FROM found
 WHERE gtfs_validation_parsed(['trips.txt', 'stop_times.txt', 'stops.txt', 'shapes.txt']);
 
 -- TripWithShapeDistTraveledButNoShapeDistancesValidator: per trip_id of stop_times.txt, the first stop time (by
--- stop_sequence) with shape_dist_traveled; the trip has a shape_id whose points do not all have shape_dist_traveled.
+-- stop_sequence) with shape_dist_traveled, the trip has a shape_id whose points do not all have shape_dist_traveled.
 CREATE OR REPLACE MACRO gtfs_vr_shapes_trip_dist_no_shape_dist() AS TABLE
 WITH first_dist AS (
   SELECT trip_id, arg_min(csv_row_number, st_index) AS st_row
@@ -303,7 +303,7 @@ WITH s AS (
 SELECT *, n_x * n_x + n_y * n_y + n_z * n_z AS n2 FROM n;
 
 -- One assignment step of StopToShapeMatcher.findBestMatches for list_reduce. Each element is
--- {k, cands, assigns, fail, fm, pm}: the stop's index and potential matches; the accumulator carries the best
+-- {k, cands, assigns, fail, fm, pm}: the stop's index and potential matches. The accumulator carries the best
 -- feasible assignment ending at each match of the previous stop (constructBestIncrementalAssignments), each as
 -- {score, maxg, path}, path being the matches chosen so far. When no match of stop k is feasible, fail = k, fm is the
 -- stop's closest match and pm the previous stop's match in the best-scoring assignment (constructOutOfOrderError),
@@ -511,7 +511,7 @@ WITH pts AS MATERIALIZED (
   JOIN user_jobs uj ON uj.trip_row = sg.trip_row
   LEFT JOIN user_match um ON um.trip_row = sg.trip_row AND um.k = sg.k
 ), stops_scope AS (
-  -- GEO evaluates every stop; USER returns at the first stop without user distance and without a potential match.
+  -- GEO evaluates every stop, USER returns at the first stop without user distance and without a potential match.
   SELECT *, min(CASE WHEN NOT is_user AND cnt = 0 THEN k END) OVER (PARTITION BY trip_row, mode) AS k_stop
   FROM stops_both
 ), cand_problems AS (
@@ -562,8 +562,8 @@ WHERE js.stop_id <> '';
 -- The notices. The matcher above runs on DuckDB's native trig, but a notice's match location (an S2LatLng, which the
 -- notice writes as exact doubles) is recomputed here, only for the reported matches, with the bit-exact ports of
 -- Java's Math.sin/cos/atan2: the stop and shape S2Points, then S2EdgeUtil.getClosestPoint (t = 0), the shape's only
--- point (t = 1) or S2EdgeUtil.interpolate (t = 2), then new S2LatLng(point). Each exact function is expanded once
--- per round (trig macros are large, so the inputs of a round are unnested into one column).
+-- point (t = 1) or S2EdgeUtil.interpolate (t = 2), then new S2LatLng(point). The exact trig runs once per distinct
+-- input of each round (sincos of the degrees, atan2 of a.angle(b), sincos of the interpolation, atan2 of the result).
 CREATE OR REPLACE MACRO gtfs_vr_shapes_stop_matching_notices() AS TABLE
 WITH p AS MATERIALIZED (
   SELECT row_number() OVER () AS nid, * FROM (
