@@ -231,6 +231,8 @@ WHERE gtfs_validation_parsed(['calendar.txt']) AND c.service_id IS NOT NULL
   AND coalesce(c.sunday, 0) = 0;
 
 -- GtfsTripServiceIdForeignKeyValidator: trips.service_id must exist in calendar.txt or calendar_dates.txt.
+-- The jar reports parentFilename 'calendar.txt or calendar_dates.txt' (checked against the oracle); harness.in_scope
+-- drops oracle notices whose file fields name anything but the 8 files, so no fixture can cover this notice yet.
 CREATE OR REPLACE MACRO gtfs_vr_routescal_trip_service_fk() AS TABLE
 SELECT 'foreign_key_violation' AS code,
   gtfs_validation_notice(json_object('childFilename', 'trips.txt', 'childFieldName', 'service_id',
