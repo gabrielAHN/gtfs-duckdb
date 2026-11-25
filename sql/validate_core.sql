@@ -659,9 +659,14 @@ CREATE OR REPLACE MACRO gtfs_vc_utf8_token_re() AS (
 -- Bytes that are not valid UTF-8 -> text as CsvFile decodes them (CodingErrorAction.REPLACE with U+FFFD).
 -- validate_load.sql only calls it when decode() fails.
 CREATE OR REPLACE MACRO gtfs_vc_decode_invalid(content) AS (
-  decode(unhex(array_to_string(list_transform(
-    regexp_extract_all(hex(content), gtfs_vc_utf8_token_re()),
-    lambda t: CASE WHEN regexp_full_match(t, gtfs_vc_utf8_valid_re()) THEN t ELSE 'EFBFBD' END), '')))
+  array_to_string(list_transform(
+    -- byte-aligned lines of the hex text: invalid sequences never contain an LF byte
+    regexp_extract_all(hex(content), '(?:[0-9A-F]{2})*?0A|(?:[0-9A-F]{2})+$'),
+    lambda h: CASE WHEN TRY(decode(unhex(h))) IS NOT NULL THEN TRY(decode(unhex(h)))
+                   ELSE decode(unhex(array_to_string(list_transform(
+                          regexp_extract_all(h, gtfs_vc_utf8_token_re()),
+                          lambda t: CASE WHEN regexp_full_match(t, gtfs_vc_utf8_valid_re()) THEN t ELSE 'EFBFBD' END),
+                          ''))) END), '')
 );
 -- LineEndingCheckingInputStream: line (1 + LFs before it) of the first CR not followed by LF, NULL if none.
 CREATE OR REPLACE MACRO gtfs_vc_invalid_line_ending_row(content_text) AS (
