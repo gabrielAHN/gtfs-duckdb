@@ -6,10 +6,14 @@ it runs the real PRAGMA instead.
 
 Environment:
   GTFS_VALIDATION_DUCKDB_BINS  os.pathsep-separated DuckDB CLIs to test with (default: DUCKDB_BIN, else the two
-                               reference CLIs in ~/Projects/personal_project/.gtfs-validator-ref/tools, else `duckdb`)
+                               reference CLIs under GTFS_VALIDATION_REF, else `duckdb`)
+  GTFS_VALIDATION_REF          optional directory of reference tools: tools/duckdb-2.0.0/duckdb, tools/duckdb-1.4.3/duckdb,
+                               tools/oracle/jar/gtfs-validator-8.0.2-SNAPSHOT-cli.jar and an oracle-cache/ directory
   GTFS_EXTENSION               run the real extension PRAGMA instead of the emulation
   GTFS_VALIDATION_FIXTURES     glob over fixture names to run (default *)
-  GTFS_VALIDATOR_JAR / GTFS_VALIDATOR_JAVA   the MobilityData oracle (only `expect` and `diff` use it)
+  GTFS_VALIDATOR_JAR / GTFS_VALIDATOR_JAVA   the MobilityData oracle and a Java 17 binary (default `java`); only
+                               `expect` and `diff` use them
+  GTFS_VALIDATOR_ORACLE_CACHE  where oracle reports are cached (default GTFS_VALIDATION_REF/oracle-cache)
 
 CLI:
   python3 test/validation/harness.py run <feed dir> [--date D] [--bin B]        our notices, summarized
@@ -34,7 +38,7 @@ REPO = Path(__file__).resolve().parents[2]
 SQL = REPO / "sql"
 FEEDS = Path(__file__).resolve().parent / "feeds"
 TYPED_SCHEMA = json.loads((Path(__file__).resolve().parent / "typed_schema.json").read_text())
-REF = Path.home() / "Projects/personal_project/.gtfs-validator-ref"
+REF = Path(os.environ["GTFS_VALIDATION_REF"]).expanduser() if os.environ.get("GTFS_VALIDATION_REF") else None
 DEFAULT_DATE = "2026-11-24"
 
 # The validated files, in the order PRAGMA gtfs_validate loads them, and GtfsTableDescriptor.isRequired().
@@ -63,7 +67,7 @@ def duckdb_bins():
         return [b for b in env.split(os.pathsep) if b]
     if os.environ.get("DUCKDB_BIN"):
         return [os.environ["DUCKDB_BIN"]]
-    refs = [REF / "tools/duckdb-2.0.0/duckdb", REF / "tools/duckdb-1.4.3/duckdb"]
+    refs = [REF / "tools/duckdb-2.0.0/duckdb", REF / "tools/duckdb-1.4.3/duckdb"] if REF else []
     found = [str(p) for p in refs if p.exists()]
     return found or ["duckdb"]
 
@@ -237,15 +241,20 @@ def expected(name):
 
 def oracle_report(feed, date=DEFAULT_DATE):
     """MobilityData report.json for a feed dir or zip, cached by content."""
-    jar = os.environ.get("GTFS_VALIDATOR_JAR", str(REF / "tools/oracle/jar/gtfs-validator-8.0.2-SNAPSHOT-cli.jar"))
-    java = os.environ.get("GTFS_VALIDATOR_JAVA", "/opt/homebrew/opt/openjdk@17/bin/java")
+    jar = os.environ.get("GTFS_VALIDATOR_JAR")
+    if not jar and REF:
+        jar = str(REF / "tools/oracle/jar/gtfs-validator-8.0.2-SNAPSHOT-cli.jar")
+    if not jar:
+        raise RuntimeError("set GTFS_VALIDATOR_JAR or GTFS_VALIDATION_REF to run the official validator")
+    java = os.environ.get("GTFS_VALIDATOR_JAVA", "java")
     h = hashlib.sha256(f"{date}\0{Path(jar).name}".encode())
     feed = Path(feed)
     entries = sorted(feed.iterdir()) if feed.is_dir() else [feed]
     for f in entries:
         if f.is_file():
             h.update(f.name.encode() + b"\0" + hashlib.sha256(f.read_bytes()).digest())
-    cache = Path(os.environ.get("GTFS_VALIDATOR_ORACLE_CACHE", REF / "oracle-cache"))
+    default_cache = REF / "oracle-cache" if REF else Path(tempfile.gettempdir()) / "gtfs-validator-oracle-cache"
+    cache = Path(os.environ.get("GTFS_VALIDATOR_ORACLE_CACHE", default_cache))
     cache.mkdir(parents=True, exist_ok=True)
     cached = cache / f"{h.hexdigest()}.json"
     if cached.exists():
