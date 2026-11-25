@@ -202,6 +202,9 @@ FROM unused u JOIN gtfs_vr_stops_first() f ON f.stop_id = u.station_id;
 -- a grid on the unit sphere (cells of 1e-6, about 6.4 m, larger than the 2.1 m S2 query radius), so each location is
 -- compared only with the locations of its 27 neighbouring cells. levels.txt is out of scope and treated as absent, so
 -- shouldIgnoreByLevel never applies.
+-- Each location is listed once per neighbouring cell (`neighbours`, with that cell's key in plain columns), so the pair
+-- search is an equality (hash) join on the key. Written as l2.cx = l1.cx + o.dx, the keys span three relations and
+-- DuckDB 1.4 joined l1 and l2 on csv_row_number alone: quadratic in the number of stops.
 CREATE OR REPLACE MACRO gtfs_vr_stops_station_distance() AS TABLE
 WITH locs AS (
   SELECT csv_row_number, stop_id, stop_lat, stop_lon, coalesce(location_type, 0) AS lt, parent_station,
@@ -218,16 +221,20 @@ offsets AS (
   SELECT a.o AS dx, b.o AS dy, c.o AS dz
   FROM (SELECT unnest([-1, 0, 1]) AS o) a, (SELECT unnest([-1, 0, 1]) AS o) b, (SELECT unnest([-1, 0, 1]) AS o) c
 ),
+neighbours AS MATERIALIZED (
+  SELECT l1.csv_row_number, l1.stop_id, l1.stop_lat, l1.stop_lon, l1.lt, l1.parent_station,
+    l1.cx + o.dx AS nx, l1.cy + o.dy AS ny, l1.cz + o.dz AS nz
+  FROM locs l1 CROSS JOIN offsets o
+),
 pairs AS (
-  SELECT l1.csv_row_number AS row1, l1.stop_id AS id1, l1.stop_lat AS lat1, l1.stop_lon AS lon1, l1.lt AS lt1,
-    l1.parent_station AS parent1,
+  SELECT n.csv_row_number AS row1, n.stop_id AS id1, n.stop_lat AS lat1, n.stop_lon AS lon1, n.lt AS lt1,
+    n.parent_station AS parent1,
     l2.csv_row_number AS row2, l2.stop_id AS id2, l2.stop_lat AS lat2, l2.stop_lon AS lon2, l2.lt AS lt2,
     l2.parent_station AS parent2
-  FROM locs l1
-  CROSS JOIN offsets o
-  JOIN locs l2 ON l2.cx = l1.cx + o.dx AND l2.cy = l1.cy + o.dy AND l2.cz = l1.cz + o.dz
-    AND l2.csv_row_number > l1.csv_row_number
-  WHERE gtfs_validation_distance_m(l1.stop_lat, l1.stop_lon, l2.stop_lat, l2.stop_lon) < 2.0
+  FROM neighbours n
+  JOIN locs l2 ON l2.cx = n.nx AND l2.cy = n.ny AND l2.cz = n.nz
+  WHERE l2.csv_row_number > n.csv_row_number
+    AND gtfs_validation_distance_m(n.stop_lat, n.stop_lon, l2.stop_lat, l2.stop_lon) < 2.0
 )
 SELECT CASE WHEN lt1 = 1 THEN 'stations_too_close' ELSE 'stops_too_close' END AS code,
   gtfs_validation_notice(json_object('csvRowNumber1', row1, 'stopId1', id1, 'stopLat1', lat1, 'stopLon1', lon1,

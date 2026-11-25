@@ -156,5 +156,25 @@ class PipelineTest(unittest.TestCase):
         self.assertEqual(out["state"], [{"today": True}])
 
 
+class PlanTest(unittest.TestCase):
+    def test_stop_distance_pairs_come_from_a_hash_join_on_grid_cells(self):
+        # When the grid cells were not join keys, DuckDB joined every stop with every later one: 40,000 stops took
+        # 158 s on DuckDB v1.4.3 and 5.7 s on v2.0.0, against 0.01 s with the hash join.
+        with tempfile.TemporaryDirectory() as tmp:
+            feed = harness.materialize("stops-distance", Path(tmp) / "feed")
+            for bin_ in harness.duckdb_bins():
+                with self.subTest(bin=bin_):
+                    ops = harness.plan(feed, "SELECT * FROM gtfs_vr_stops_station_distance()", bin=bin_)
+                    joins = [op for op in ops if "JOIN" in op["name"] or "PRODUCT" in op["name"]]
+                    self.assertEqual({op["name"] for op in joins} - {"HASH_JOIN", "CROSS_PRODUCT"}, set())
+                    keys = []
+                    for op in joins:
+                        if op["name"] == "HASH_JOIN":
+                            conditions = op["extra_info"].get("Conditions", [])
+                            keys.append([conditions] if isinstance(conditions, str) else conditions)
+                    on_cells = [k for k in keys if all(f"c{a} = n{a}" in k or f"n{a} = c{a}" in k for a in "xyz")]
+                    self.assertTrue(on_cells, keys)
+
+
 if __name__ == "__main__":
     unittest.main()

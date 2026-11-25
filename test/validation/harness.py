@@ -124,27 +124,36 @@ QUERIES = {
 }
 
 
+def validate_then(feed_dir, date, bin, tmp, statements):
+    """Validates feed_dir (the real PRAGMA with GTFS_EXTENSION, else the emulation), runs `statements` in the same
+    session and returns the CLI's stdout."""
+    ext = os.environ.get("GTFS_EXTENSION")
+    if ext:
+        args = [f"PRAGMA gtfs_validate({quote(str(feed_dir))}, {quote(date) if date else 'NULL'});"]
+        script = [f"LOAD {quote(ext)};"] + args
+    else:
+        script = [section("validate_schema")] + [section(s) for s in MACRO_SECTIONS] + pragma_sql(feed_dir, date)
+    script_path = os.path.join(tmp, "script.sql")
+    Path(script_path).write_text("\n".join(script + statements))
+    env = {k: v for k, v in os.environ.items() if k != "AI_AGENT"}
+    cmd = [bin, "-bail", "-batch"] + (["-unsigned"] if ext else []) + [":memory:", "-c", f".read {script_path}"]
+    proc = subprocess.run(cmd, capture_output=True, text=True, env=env, cwd=tmp, timeout=3600)
+    if proc.returncode != 0 or "Error" in proc.stderr:
+        raise RuntimeError(f"{bin} failed ({proc.returncode}): {proc.stderr.strip()[-4000:]}")
+    return proc.stdout
+
+
 def run(feed_dir, date=DEFAULT_DATE, bin=None, queries=None):
     """Validates feed_dir and returns {query name: rows} for QUERIES plus `queries`."""
     bin = bin or duckdb_bins()[0]
     feed_dir = Path(feed_dir).resolve()
     queries = {**QUERIES, **(queries or {})}
     with tempfile.TemporaryDirectory(prefix="gtfs-validate-") as tmp:
-        ext = os.environ.get("GTFS_EXTENSION")
-        if ext:
-            args = [f"PRAGMA gtfs_validate({quote(str(feed_dir))}, {quote(date) if date else 'NULL'});"]
-            script = [f"LOAD {quote(ext)};"] + args
-        else:
-            script = [section("validate_schema")] + [section(s) for s in MACRO_SECTIONS] + pragma_sql(feed_dir, date)
-        for name, sql in queries.items():
-            script.append(f"COPY ({sql}) TO {quote(os.path.join(tmp, name + '.json'))} (FORMAT JSON, ARRAY true);")
-        script_path = os.path.join(tmp, "script.sql")
-        Path(script_path).write_text("\n".join(script))
-        env = {k: v for k, v in os.environ.items() if k != "AI_AGENT"}
-        cmd = [bin, "-bail", "-batch"] + (["-unsigned"] if ext else []) + [":memory:", "-c", f".read {script_path}"]
-        proc = subprocess.run(cmd, capture_output=True, text=True, env=env, cwd=tmp, timeout=3600)
-        if proc.returncode != 0 or "Error" in proc.stderr:
-            raise RuntimeError(f"{bin} failed ({proc.returncode}): {proc.stderr.strip()[-4000:]}")
+        copies = [
+            f"COPY ({sql}) TO {quote(os.path.join(tmp, name + '.json'))} (FORMAT JSON, ARRAY true);"
+            for name, sql in queries.items()
+        ]
+        validate_then(feed_dir, date, bin, tmp, copies)
         out = {}
         for name in queries:
             rows = json.loads(Path(tmp, name + ".json").read_text() or "[]")
@@ -156,6 +165,22 @@ def run(feed_dir, date=DEFAULT_DATE, bin=None, queries=None):
 
 def notices(feed_dir, date=DEFAULT_DATE, bin=None):
     return run(feed_dir, date, bin)["notices"]
+
+
+def plan(feed_dir, sql, date=DEFAULT_DATE, bin=None):
+    """Validates feed_dir, then returns the physical plan of `sql` as a flat list of {"name", "extra_info"} operators."""
+    bin = bin or duckdb_bins()[0]
+    with tempfile.TemporaryDirectory(prefix="gtfs-validate-") as tmp:
+        stdout = validate_then(Path(feed_dir).resolve(), date, bin, tmp, [f"EXPLAIN (FORMAT JSON) {sql};"])
+    # The JSON array starts at the only unindented "[" line (DuckDB v1.4 prints a "Physical Plan" box before it).
+    lines = stdout.splitlines()
+    nodes = json.loads("\n".join(lines[max(i for i, line in enumerate(lines) if line == "[") :]))
+    ops = []
+    while nodes:
+        node = nodes.pop()
+        ops.append({"name": node["name"].strip(), "extra_info": node.get("extra_info") or {}})
+        nodes.extend(node.get("children", []))
+    return ops
 
 
 # ---------------------------------------------------------------- fixtures
