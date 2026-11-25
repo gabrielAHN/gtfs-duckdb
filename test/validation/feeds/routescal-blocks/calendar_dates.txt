@@ -1,0 +1,5 @@
+service_id,date,exception_type
+CD,20260103,2
+CD,20260110,1
+CD,20260104,1
+WKD,20260110,2

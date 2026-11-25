@@ -1,0 +1,163 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "big_gap_in_service",
+   "notice": {
+    "gapDurationDays": 14,
+    "gapEndDate": "2026-01-27",
+    "gapStartDate": "2026-01-12",
+    "serviceId": "GAP14"
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "big_gap_in_service",
+   "notice": {
+    "gapDurationDays": 18,
+    "gapEndDate": "2026-03-20",
+    "gapStartDate": "2026-03-01",
+    "serviceId": "NOACT2"
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "big_gap_in_service",
+   "notice": {
+    "gapDurationDays": 20,
+    "gapEndDate": "2026-01-26",
+    "gapStartDate": "2026-01-05",
+    "serviceId": "GAP20"
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "expired_calendar",
+   "notice": {
+    "csvRowNumber": 10,
+    "serviceId": "GAP14"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "expired_calendar",
+   "notice": {
+    "csvRowNumber": 11,
+    "serviceId": "GAP20"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "expired_calendar",
+   "notice": {
+    "csvRowNumber": 13,
+    "serviceId": "REV"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "expired_calendar",
+   "notice": {
+    "csvRowNumber": 14,
+    "serviceId": "NOACT2"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "expired_calendar",
+   "notice": {
+    "csvRowNumber": 4,
+    "serviceId": "EXP"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "expired_calendar",
+   "notice": {
+    "csvRowNumber": 6,
+    "serviceId": "EXP3"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "expired_calendar",
+   "notice": {
+    "csvRowNumber": 9,
+    "serviceId": "GAP13"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_file",
+   "notice": {
+    "filename": "shapes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "service_extends_far_in_the_future",
+   "notice": {
+    "serviceId": "FAR",
+    "serviceWindowEndDate": "2028-11-24"
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "service_extends_far_in_the_future",
+   "notice": {
+    "serviceId": "UNR",
+    "serviceWindowEndDate": "2028-12-25"
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "service_has_no_active_day_of_the_week",
+   "notice": {
+    "csvRowNumber": 14,
+    "serviceId": "NOACT2"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "service_has_no_active_day_of_the_week",
+   "notice": {
+    "csvRowNumber": 3,
+    "serviceId": "NOACT"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "start_and_end_range_out_of_order",
+   "notice": {
+    "csvRowNumber": 13,
+    "endFieldName": "end_date",
+    "endValue": "20250101",
+    "entityId": "REV",
+    "filename": "calendar.txt",
+    "startFieldName": "start_date",
+    "startValue": "20250105"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "unexpected_enum_value",
+   "notice": {
+    "csvRowNumber": 12,
+    "fieldName": "monday",
+    "fieldValue": 2,
+    "filename": "calendar.txt"
+   },
+   "severity": "WARNING"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

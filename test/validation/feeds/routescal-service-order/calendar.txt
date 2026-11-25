@@ -1,0 +1,4 @@
+service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date
+SV,1,1,1,1,1,1,1,20260101,20271231
+ORD,1,0,0,0,0,0,0,20260105,20260112
+ORD2,1,0,0,0,0,0,0,20260105,20260112

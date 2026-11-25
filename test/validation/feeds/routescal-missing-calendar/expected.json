@@ -1,0 +1,50 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "empty_required_file",
+   "notice": {
+    "filename": "stop_times.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "empty_required_file",
+   "notice": {
+    "filename": "trips.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_calendar_and_calendar_date_files",
+   "notice": {},
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_recommended_file",
+   "notice": {
+    "filename": "shapes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 2,
+    "stopId": "S1",
+    "stopName": "First Stop"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 3,
+    "stopId": "S2",
+    "stopName": "Second Stop"
+   },
+   "severity": "WARNING"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

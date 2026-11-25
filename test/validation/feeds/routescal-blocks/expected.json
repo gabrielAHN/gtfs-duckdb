@@ -1,0 +1,333 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "block_trips_with_overlapping_stop_times",
+   "notice": {
+    "blockId": "B1",
+    "csvRowNumberA": 2,
+    "csvRowNumberB": 3,
+    "intersection": "20260101",
+    "serviceIdA": "SV",
+    "serviceIdB": "SV",
+    "tripIdA": "T1",
+    "tripIdB": "T2"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "block_trips_with_overlapping_stop_times",
+   "notice": {
+    "blockId": "B2",
+    "csvRowNumberA": 6,
+    "csvRowNumberB": 7,
+    "intersection": "20260104",
+    "serviceIdA": "WKE",
+    "serviceIdB": "CD",
+    "tripIdA": "T6",
+    "tripIdB": "T7"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "block_trips_with_overlapping_stop_times",
+   "notice": {
+    "blockId": "B3",
+    "csvRowNumberA": 9,
+    "csvRowNumberB": 8,
+    "intersection": "20260101",
+    "serviceIdA": "SV",
+    "serviceIdB": "SV",
+    "tripIdA": "T9",
+    "tripIdB": "T8"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "block_trips_with_overlapping_stop_times",
+   "notice": {
+    "blockId": "B4",
+    "csvRowNumberA": 10,
+    "csvRowNumberB": 11,
+    "intersection": "20260101",
+    "serviceIdA": "SV",
+    "serviceIdB": "SV",
+    "tripIdA": "T10",
+    "tripIdB": "T11"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "block_trips_with_overlapping_stop_times",
+   "notice": {
+    "blockId": "B8",
+    "csvRowNumberA": 20,
+    "csvRowNumberB": 21,
+    "intersection": "20260101",
+    "serviceIdA": "SV",
+    "serviceIdB": "SV",
+    "tripIdA": "T20",
+    "tripIdB": "T21"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "duplicate_trips",
+   "notice": {
+    "csvRowNumberTripId1FirstStopTime": 18,
+    "csvRowNumberTripId2FirstStopTime": 20,
+    "tripId1": "T10",
+    "tripId2": "T11"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "duplicate_trips",
+   "notice": {
+    "csvRowNumberTripId1FirstStopTime": 18,
+    "csvRowNumberTripId2FirstStopTime": 22,
+    "tripId1": "T10",
+    "tripId2": "T12"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "duplicate_trips",
+   "notice": {
+    "csvRowNumberTripId1FirstStopTime": 18,
+    "csvRowNumberTripId2FirstStopTime": 24,
+    "tripId1": "T10",
+    "tripId2": "T13"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 10,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 11,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 12,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 13,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 14,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 15,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 16,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 17,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 18,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 19,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 20,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 21,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 4,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 5,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 6,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 7,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 8,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 9,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_file",
+   "notice": {
+    "filename": "shapes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_trip_edge",
+   "notice": {
+    "csvRowNumber": 32,
+    "specifiedField": "departure_time",
+    "stopSequence": 1,
+    "tripId": "T17"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_time_with_arrival_before_previous_departure_time",
+   "notice": {
+    "arrivalTime": "12:30:00",
+    "csvRowNumber": 28,
+    "departureTime": "13:30:00",
+    "prevCsvRowNumber": 29,
+    "tripId": "T15"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_time_with_only_arrival_or_departure_time",
+   "notice": {
+    "csvRowNumber": 32,
+    "specifiedField": "arrival_time",
+    "stopSequence": 1,
+    "tripId": "T17"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "unsorted_stop_times",
+   "notice": {
+    "endCsvRowNumber": 29,
+    "startCsvRowNumber": 28,
+    "tripId": "T15"
+   },
+   "severity": "INFO"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}
