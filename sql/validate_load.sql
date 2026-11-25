@@ -16,13 +16,18 @@ INSERT INTO gtfs_vc_text
 SELECT {{FILE}}, regexp_replace(t, '^\x{FEFF}\x{FEFF}?', ''), gtfs_vc_invalid_line_ending_row(t)
 FROM (SELECT gtfs_vc_decode(content) AS t FROM read_blob({{PATH}}));
 INSERT INTO gtfs_vc_records SELECT * FROM gtfs_vc_parse_records();
+CREATE OR REPLACE TEMP TABLE gtfs_vc_fail AS SELECT * FROM gtfs_vc_failure();
+INSERT INTO gtfs_validation_generic_notices SELECT 'csv_parsing_failed', notice FROM gtfs_vc_fail;
+-- A header the parser failed on: INVALID_HEADERS, no header notices.
 INSERT INTO gtfs_vc_header
-SELECT unnest(names), unnest(range(0, len(names)))::INTEGER FROM gtfs_vc_header_record();
+SELECT unnest(names), unnest(range(0, len(names)))::INTEGER FROM gtfs_vc_header_record()
+WHERE NOT EXISTS (SELECT 1 FROM gtfs_vc_fail WHERE at_header);
 INSERT INTO gtfs_vc_state
-SELECT EXISTS (SELECT 1 FROM gtfs_vc_header), (SELECT count(*) FROM gtfs_vc_header), NULL, NULL;
+SELECT EXISTS (SELECT 1 FROM gtfs_vc_header_record()), (SELECT count(*) FROM gtfs_vc_header), NULL,
+  (SELECT rec_no FROM gtfs_vc_fail);
 INSERT INTO gtfs_validation_generic_notices SELECT code, notice FROM gtfs_vc_header_notices({{FILE}});
-UPDATE gtfs_vc_state SET header_ok = has_header AND fail_row IS NULL AND NOT EXISTS (
-  SELECT 1 FROM gtfs_vc_header_notices({{FILE}}) n WHERE n.code <> 'unknown_column');
+UPDATE gtfs_vc_state SET header_ok = has_header AND NOT EXISTS (SELECT 1 FROM gtfs_vc_fail WHERE at_header)
+  AND NOT EXISTS (SELECT 1 FROM gtfs_vc_header_notices({{FILE}}) n WHERE n.code <> 'unknown_column');
 INSERT INTO gtfs_vc_rows SELECT * FROM gtfs_vc_data_rows();
 INSERT INTO gtfs_vc_cells SELECT * FROM gtfs_vc_build_cells({{FILE}});
 INSERT INTO gtfs_vc_notices SELECT * FROM gtfs_vc_row_length_notices({{FILE}});
@@ -32,7 +37,7 @@ UPDATE gtfs_vc_rows SET entity = length_ok AND csv_row_number NOT IN (
 INSERT INTO gtfs_v_{{TABLE}} SELECT * FROM gtfs_vc_entities_{{TABLE}}();
 INSERT INTO gtfs_validation_generic_notices SELECT code, notice FROM gtfs_vc_notices;
 INSERT INTO gtfs_validation_columns
-SELECT {{FILE}}, column_name, column_index FROM gtfs_vc_header WHERE (SELECT has_header FROM gtfs_vc_state);
+SELECT {{FILE}}, column_name, column_index FROM gtfs_vc_header;
 INSERT INTO gtfs_validation_files
 SELECT {{FILE}}, gtfs_vc_status(), {{REQUIRED}}, gtfs_vc_status() = 'PARSABLE_HEADERS_AND_ROWS',
   (SELECT count(*) FROM gtfs_vc_rows WHERE entity);

@@ -648,11 +648,10 @@ CREATE OR REPLACE MACRO gtfs_vc_utf8_token_re() AS (
 -- Bytes -> text as CsvFile decodes them (CodingErrorAction.REPLACE with U+FFFD). The slow branch only runs on
 -- invalid UTF-8.
 CREATE OR REPLACE MACRO gtfs_vc_decode(content) AS (
-  CASE WHEN TRY(decode(content)) IS NOT NULL THEN decode(content)
-       ELSE decode(unhex(array_to_string(list_transform(
-              regexp_extract_all(hex(content), gtfs_vc_utf8_token_re()),
-              lambda t: CASE WHEN regexp_full_match(t, gtfs_vc_utf8_valid_re()) THEN t ELSE 'EFBFBD' END), '')))
-  END
+  coalesce(TRY(decode(content)),
+           decode(unhex(array_to_string(list_transform(
+             regexp_extract_all(hex(content), gtfs_vc_utf8_token_re()),
+             lambda t: CASE WHEN regexp_full_match(t, gtfs_vc_utf8_valid_re()) THEN t ELSE 'EFBFBD' END), ''))))
 );
 -- LineEndingCheckingInputStream: line (1 + LFs before it) of the first CR not followed by LF, NULL if none.
 CREATE OR REPLACE MACRO gtfs_vc_invalid_line_ending_row(content_text) AS (
@@ -738,6 +737,69 @@ SELECT rec_no, csv_row_number,
   CASE WHEN kind = 'ws' THEN [''] ELSE list_transform(fields, lambda f: coalesce(trim(f, gtfs_vc_ws()), '')) END AS names
 FROM gtfs_vc_records WHERE kind IN ('ws', 'row') ORDER BY rec_no LIMIT 1;
 
+-- univocity TextParsingException (csv_parsing_failed): the first record with a value longer than maxCharsPerColumn
+-- (4096) or more than maxColumns (512) values. Positions are recomputed from the text with offsets (only when such a
+-- record exists): charIndex is the offset after the first char past 4096 (or after the terminator of the 513th value),
+-- lineIndex the line feeds before it, record the data records before it.
+CREATE OR REPLACE MACRO gtfs_vc_failure() AS TABLE
+WITH f AS (
+  SELECT rec_no, fields,
+    list_position(list_transform(fields, lambda x: coalesce(length(x), 0) > 4096), true) AS long_pos
+  FROM gtfs_vc_records WHERE kind = 'row' AND (max_len > 4096 OR len(fields) > 512)
+  ORDER BY rec_no LIMIT 1
+),
+e AS (
+  SELECT rec_no, fields, long_pos, long_pos IS NOT NULL AND long_pos <= 512 AS is_long,
+    CASE WHEN long_pos IS NOT NULL AND long_pos <= 512 THEN long_pos ELSE 513 END AS tok_col
+  FROM f
+),
+tokens AS (
+  SELECT unnest(tk) AS tok, unnest(range(1, len(tk) + 1)) AS tok_no
+  FROM (SELECT regexp_extract_all(chr(10) || t.text, gtfs_vc_token_re()) AS tk FROM gtfs_vc_text t
+        WHERE EXISTS (SELECT 1 FROM f))
+),
+pos AS (
+  SELECT tok, tok_no, (sum(length(tok)) OVER w - length(tok))::BIGINT AS body_start,
+    sum((left(tok, 1) = chr(10))::INTEGER) OVER w AS rec_no
+  FROM tokens WINDOW w AS (ORDER BY tok_no ROWS UNBOUNDED PRECEDING)
+),
+rt AS (
+  SELECT p.*, row_number() OVER (ORDER BY tok_no) AS col_no FROM pos p WHERE p.rec_no = (SELECT rec_no FROM f)
+),
+hr AS (SELECT rec_no, names FROM gtfs_vc_header_record()),
+c AS (
+  SELECT e.rec_no, e.is_long, e.fields, e.long_pos,
+    CASE WHEN e.is_long
+         THEN rt.body_start + (length(rt.tok) - 1 - length(ltrim(rt.tok[2:], gtfs_vc_ws())))
+              + starts_with(ltrim(rt.tok[2:], gtfs_vc_ws()), '"')::INTEGER + 4096 + 1
+         ELSE rt.body_start + length(rt.tok) END AS char_index,
+    (SELECT count(*) FROM gtfs_vc_records r, hr
+     WHERE r.kind = 'row' AND r.rec_no > hr.rec_no AND r.rec_no < e.rec_no) AS record,
+    e.rec_no = (SELECT rec_no FROM hr) AS at_header
+  FROM e JOIN rt ON rt.col_no = e.tok_col
+),
+d AS (
+  SELECT c.*,
+    CASE WHEN is_long THEN long_pos - 1 ELSE 513 END AS column_index,
+    (SELECT length(x) - length(replace(x, chr(10), ''))
+     FROM (SELECT substr(t.text, 1, (CASE WHEN c.is_long THEN c.char_index - 1 ELSE c.char_index END)::BIGINT) AS x
+           FROM gtfs_vc_text t)) AS line_index,
+    CASE WHEN is_long THEN left(fields[long_pos], 4096) ELSE '' END AS parsed
+  FROM c
+)
+SELECT rec_no, at_header,
+  gtfs_validation_notice(json_object('filename', (SELECT filename FROM gtfs_vc_text), 'charIndex', char_index,
+    'columnIndex', column_index, 'lineIndex', line_index, 'parsedContent', parsed,
+    'message', CASE WHEN is_long
+        THEN 'Length of parsed input (4097) exceeds the maximum number of characters defined in your parser settings (4096). '
+        ELSE 'java.lang.ArrayIndexOutOfBoundsException - Index 512 out of bounds for length 512' END
+      || chr(10) || gtfs_vc_parser_settings()
+      || 'Internal state when error was thrown: line=' || line_index || ', column=' || column_index
+      || ', record=' || record || ', charIndex=' || char_index
+      || CASE WHEN at_header THEN '' ELSE ', headers=[' || array_to_string((SELECT names FROM hr), ', ') || ']' END
+      || CASE WHEN parsed = '' THEN '' ELSE ', content parsed=' || parsed END)) AS notice
+FROM d;
+
 -- DefaultTableHeaderValidator notices of the current header.
 CREATE OR REPLACE MACRO gtfs_vc_header_notices(p_file) AS TABLE
 WITH h AS (SELECT column_name, column_index FROM gtfs_vc_header),
@@ -770,7 +832,7 @@ SELECT r.csv_row_number, CASE WHEN r.kind = 'ws' THEN [NULL]::VARCHAR[] ELSE r.f
 FROM gtfs_vc_records r, gtfs_vc_state s
 WHERE s.header_ok AND r.rec_no > (SELECT min(rec_no) FROM gtfs_vc_records WHERE kind IN ('ws', 'row'))
   AND (r.kind = 'row' OR (r.kind = 'ws' AND r.rec_no = (SELECT max(rec_no) FROM gtfs_vc_records)))
-  AND (s.fail_row IS NULL OR r.csv_row_number < s.fail_row);
+  AND (s.fail_rec IS NULL OR r.rec_no < s.fail_rec);
 
 -- ---------------------------------------------------------------- field parsers (RowParser, Gtfs* types)
 
@@ -924,9 +986,9 @@ FROM gtfs_vc_rows r, gtfs_vc_state s WHERE NOT r.length_ok;
 
 -- CsvFileLoader's TableStatus of the current file.
 CREATE OR REPLACE MACRO gtfs_vc_status() AS (
-  SELECT CASE WHEN NOT s.has_header AND s.fail_row IS NULL THEN 'EMPTY_FILE'
+  SELECT CASE WHEN NOT s.has_header THEN 'EMPTY_FILE'
               WHEN NOT s.header_ok THEN 'INVALID_HEADERS'
-              WHEN s.fail_row IS NOT NULL OR EXISTS (SELECT 1 FROM gtfs_vc_notices n WHERE n.err) THEN 'UNPARSABLE_ROWS'
+              WHEN s.fail_rec IS NOT NULL OR EXISTS (SELECT 1 FROM gtfs_vc_notices n WHERE n.err) THEN 'UNPARSABLE_ROWS'
               ELSE 'PARSABLE_HEADERS_AND_ROWS' END
   FROM gtfs_vc_state s
 );

@@ -129,10 +129,11 @@ CREATE OR REPLACE TEMP TABLE gtfs_vc_text (filename VARCHAR, text VARCHAR, inval
 -- record ends on (CsvRow.getRowNumber) and the values (NULL for an empty value).
 CREATE OR REPLACE TEMP TABLE gtfs_vc_records (
   rec_no BIGINT, csv_row_number BIGINT, kind VARCHAR, fields VARCHAR[], max_len BIGINT);
--- Its header (CsvHeader) and parse state: header_n columns, header_ok when DefaultTableHeaderValidator found no
--- error, fail_row the row of a TextParsingException (csv_parsing_failed), 0 when it hit the header.
+-- Its header (CsvHeader) and parse state: has_header unless the file is empty, header_n columns, fail_rec the record
+-- of a TextParsingException (csv_parsing_failed), header_ok when neither the parser nor DefaultTableHeaderValidator
+-- found an error in the header.
 CREATE OR REPLACE TEMP TABLE gtfs_vc_header (column_name VARCHAR, column_index INTEGER);
-CREATE OR REPLACE TEMP TABLE gtfs_vc_state (has_header BOOLEAN, header_n INTEGER, header_ok BOOLEAN, fail_row BIGINT);
+CREATE OR REPLACE TEMP TABLE gtfs_vc_state (has_header BOOLEAN, header_n INTEGER, header_ok BOOLEAN, fail_rec BIGINT);
 -- Its data rows (RowParser.checkRowLength: length_ok; entity: no ERROR notice of its own).
 CREATE OR REPLACE TEMP TABLE gtfs_vc_rows (
   csv_row_number BIGINT, fields VARCHAR[], length_ok BOOLEAN, entity BOOLEAN);
