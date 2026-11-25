@@ -1,0 +1,510 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "invalid_color",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "route_color",
+    "fieldValue": "FF00",
+    "filename": "routes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_color",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "route_text_color",
+    "fieldValue": "#FFFFFF",
+    "filename": "routes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_color",
+   "notice": {
+    "csvRowNumber": 4,
+    "fieldName": "route_color",
+    "fieldValue": "GGGGGG",
+    "filename": "routes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_date",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "date",
+    "fieldValue": "20260229",
+    "filename": "calendar_dates.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_date",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "end_date",
+    "fieldValue": "2026-12-31",
+    "filename": "calendar.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_date",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "start_date",
+    "fieldValue": "20240230",
+    "filename": "calendar.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_date",
+   "notice": {
+    "csvRowNumber": 4,
+    "fieldName": "date",
+    "fieldValue": "2026010",
+    "filename": "calendar_dates.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_date",
+   "notice": {
+    "csvRowNumber": 4,
+    "fieldName": "end_date",
+    "fieldValue": "20271301",
+    "filename": "calendar.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_float",
+   "notice": {
+    "csvRowNumber": 6,
+    "fieldName": "stop_lat",
+    "fieldValue": "4O.78",
+    "filename": "stops.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_integer",
+   "notice": {
+    "csvRowNumber": 4,
+    "fieldName": "route_sort_order",
+    "fieldValue": "2147483648",
+    "filename": "routes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_integer",
+   "notice": {
+    "csvRowNumber": 5,
+    "fieldName": "route_sort_order",
+    "fieldValue": "1_000",
+    "filename": "routes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_integer",
+   "notice": {
+    "csvRowNumber": 5,
+    "fieldName": "stop_sequence",
+    "fieldValue": "0x10",
+    "filename": "stop_times.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_integer",
+   "notice": {
+    "csvRowNumber": 6,
+    "fieldName": "location_type",
+    "fieldValue": "x",
+    "filename": "stops.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_time",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "departure_time",
+    "fieldValue": "8:10:0",
+    "filename": "stop_times.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_time",
+   "notice": {
+    "csvRowNumber": 4,
+    "fieldName": "departure_time",
+    "fieldValue": "08:60:00",
+    "filename": "stop_times.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_time",
+   "notice": {
+    "csvRowNumber": 5,
+    "fieldName": "arrival_time",
+    "fieldValue": "8:00",
+    "filename": "stop_times.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_time",
+   "notice": {
+    "csvRowNumber": 5,
+    "fieldName": "departure_time",
+    "fieldValue": "1000:00:00",
+    "filename": "stop_times.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_timezone",
+   "notice": {
+    "csvRowNumber": 4,
+    "fieldName": "stop_timezone",
+    "fieldValue": "america/new_york",
+    "filename": "stops.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_timezone",
+   "notice": {
+    "csvRowNumber": 5,
+    "fieldName": "stop_timezone",
+    "fieldValue": "Mars/Base",
+    "filename": "stops.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_timezone",
+   "notice": {
+    "csvRowNumber": 7,
+    "fieldName": "stop_timezone",
+    "fieldValue": "EST",
+    "filename": "stops.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_url",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "stop_url",
+    "fieldValue": "http://example.c0m/x",
+    "filename": "stops.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_url",
+   "notice": {
+    "csvRowNumber": 5,
+    "fieldName": "stop_url",
+    "fieldValue": "example.org",
+    "filename": "stops.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_url",
+   "notice": {
+    "csvRowNumber": 6,
+    "fieldName": "stop_url",
+    "fieldValue": "http://example.org/a b",
+    "filename": "stops.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_url",
+   "notice": {
+    "csvRowNumber": 8,
+    "fieldName": "stop_url",
+    "fieldValue": "http://1.2.3.4:99999/",
+    "filename": "stops.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "number_out_of_range",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "min_width",
+    "fieldType": "positive float",
+    "fieldValue": 0.0,
+    "filename": "pathways.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "number_out_of_range",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "stair_count",
+    "fieldType": "non-zero integer",
+    "fieldValue": 0,
+    "filename": "pathways.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "number_out_of_range",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "traversal_time",
+    "fieldType": "positive integer",
+    "fieldValue": 0,
+    "filename": "pathways.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "number_out_of_range",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "length",
+    "fieldType": "non-negative float",
+    "fieldValue": -0.0,
+    "filename": "pathways.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "number_out_of_range",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "min_width",
+    "fieldType": "positive float",
+    "fieldValue": -0.0,
+    "filename": "pathways.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "number_out_of_range",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "route_sort_order",
+    "fieldType": "non-negative integer",
+    "fieldValue": -1,
+    "filename": "routes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "number_out_of_range",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "shape_dist_traveled",
+    "fieldType": "non-negative float",
+    "fieldValue": -0.0,
+    "filename": "stop_times.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "number_out_of_range",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "stop_sequence",
+    "fieldType": "non-negative integer",
+    "fieldValue": -2,
+    "filename": "stop_times.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "number_out_of_range",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "traversal_time",
+    "fieldType": "positive integer",
+    "fieldValue": -1,
+    "filename": "pathways.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "number_out_of_range",
+   "notice": {
+    "csvRowNumber": 4,
+    "fieldName": "min_width",
+    "fieldType": "positive float",
+    "fieldValue": 0.0,
+    "filename": "pathways.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "number_out_of_range",
+   "notice": {
+    "csvRowNumber": 4,
+    "fieldName": "shape_dist_traveled",
+    "fieldType": "non-negative float",
+    "fieldValue": -1.5,
+    "filename": "stop_times.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "number_out_of_range",
+   "notice": {
+    "csvRowNumber": 4,
+    "fieldName": "stop_lat",
+    "fieldType": "latitude within [-90, 90]",
+    "fieldValue": 91.0,
+    "filename": "stops.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "number_out_of_range",
+   "notice": {
+    "csvRowNumber": 5,
+    "fieldName": "stop_lon",
+    "fieldType": "longitude within [-180, 180]",
+    "fieldValue": -181.5,
+    "filename": "stops.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "number_out_of_range",
+   "notice": {
+    "csvRowNumber": 7,
+    "fieldName": "stop_lat",
+    "fieldType": "latitude within [-90, 90]",
+    "fieldValue": -90.0001,
+    "filename": "stops.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "number_out_of_range",
+   "notice": {
+    "csvRowNumber": 7,
+    "fieldName": "stop_lon",
+    "fieldType": "longitude within [-180, 180]",
+    "fieldValue": Infinity,
+    "filename": "stops.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "unexpected_enum_value",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "exception_type",
+    "fieldValue": 3,
+    "filename": "calendar_dates.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unexpected_enum_value",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "sunday",
+    "fieldValue": 2,
+    "filename": "calendar.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unexpected_enum_value",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "timepoint",
+    "fieldValue": 2,
+    "filename": "stop_times.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unexpected_enum_value",
+   "notice": {
+    "csvRowNumber": 4,
+    "fieldName": "is_bidirectional",
+    "fieldValue": 2,
+    "filename": "pathways.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unexpected_enum_value",
+   "notice": {
+    "csvRowNumber": 4,
+    "fieldName": "pathway_mode",
+    "fieldValue": 8,
+    "filename": "pathways.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unexpected_enum_value",
+   "notice": {
+    "csvRowNumber": 4,
+    "fieldName": "route_type",
+    "fieldValue": 17,
+    "filename": "routes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unexpected_enum_value",
+   "notice": {
+    "csvRowNumber": 5,
+    "fieldName": "location_type",
+    "fieldValue": 9,
+    "filename": "stops.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unexpected_enum_value",
+   "notice": {
+    "csvRowNumber": 5,
+    "fieldName": "wheelchair_boarding",
+    "fieldValue": 3,
+    "filename": "stops.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unexpected_enum_value",
+   "notice": {
+    "csvRowNumber": 7,
+    "fieldName": "wheelchair_boarding",
+    "fieldValue": -1,
+    "filename": "stops.txt"
+   },
+   "severity": "WARNING"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}
