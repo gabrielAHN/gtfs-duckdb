@@ -4,6 +4,17 @@
   {
    "code": "duplicate_key",
    "notice": {
+    "fieldName1": "pathway_id",
+    "fieldValue1": "P1",
+    "filename": "pathways.txt",
+    "newCsvRowNumber": 4,
+    "oldCsvRowNumber": 2
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "duplicate_key",
+   "notice": {
     "fieldName1": "route_id",
     "fieldValue1": "R1",
     "filename": "routes.txt",
@@ -118,6 +129,33 @@
     "csvRowNumberTripId2FirstStopTime": 2,
     "tripId1": "T1",
     "tripId2": "T1"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "length",
+    "filename": "pathways.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "length",
+    "filename": "pathways.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 4,
+    "fieldName": "length",
+    "filename": "pathways.txt"
    },
    "severity": "WARNING"
   },
