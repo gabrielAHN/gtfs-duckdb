@@ -1,0 +1,12 @@
+﻿#comment
+ stop_id , stop_name ,stop_lat,stop_lon
+
+S1,"First ""Stop""",40.75,-73.98
+S2,"Second
+Stop",40.76,-73.97
+# another comment
+S3,Third"s,40.77,-73.96
+S4,"Fourth"x,40.78,-73.95
+S5,Fifth,40.7.9,-73.94
+	
+S6,"Six"  ,40.8,-73.9
