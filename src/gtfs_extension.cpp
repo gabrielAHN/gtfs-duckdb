@@ -223,6 +223,10 @@ static string ValidateDataset(ClientContext &context, const FunctionParameters &
 		}
 		date = "DATE " + QuoteLiteral(text);
 	}
+	// read_blob reads a path with *, ? or [ as a glob pattern, which can match another directory's files instead.
+	if (directory.find_first_of("*?[") != string::npos) {
+		throw InvalidInputException("gtfs_validate: %s has *, ? or [, which DuckDB reads as a file pattern", directory);
+	}
 	auto &fs = FileSystem::GetFileSystem(context);
 	vector<string> paths;
 	vector<uint8_t> present;

@@ -136,6 +136,15 @@ class PipelineTest(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "is not a directory"):
                 harness.run(Path(tmp) / "no-such-feed")
 
+    def test_directory_with_pattern_characters_is_an_error(self):
+        # read_blob reads "feed[1]/stops.txt" as a pattern: with a sibling feed1 it reads feed1/stops.txt instead.
+        for name, sibling in (("feed[1]", "feed1"), ("feed*", "feedx"), ("feed?", "feedx")):
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as tmp:
+                feed = harness.materialize("base", Path(tmp) / name)
+                harness.materialize("base", Path(tmp) / sibling)
+                with self.assertRaisesRegex(RuntimeError, "which DuckDB reads as a file pattern"):
+                    harness.run(feed)
+
     def test_validation_date_defaults_to_current_date(self):
         with tempfile.TemporaryDirectory() as tmp:
             feed = harness.materialize("base", Path(tmp) / "feed")

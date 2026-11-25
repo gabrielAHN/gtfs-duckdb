@@ -101,6 +101,8 @@ def file_values(table, path):
 def pragma_sql(feed_dir, date):
     """The statements PRAGMA gtfs_validate(feed_dir, date) executes (src/gtfs_extension.cpp mirrors this)."""
     feed_dir = Path(feed_dir)
+    if any(c in str(feed_dir) for c in "*?["):
+        raise RuntimeError(f"gtfs_validate: {feed_dir} has *, ? or [, which DuckDB reads as a file pattern")
     if not any((feed_dir / f"{table}.txt").is_file() for table in FILES) and not feed_dir.is_dir():
         raise RuntimeError(f"gtfs_validate: {feed_dir} is not a directory")
     parts = [

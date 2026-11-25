@@ -46,7 +46,9 @@ SELECT code, severity, summary FROM gtfs_validation_rules() ORDER BY code;
 `gtfs_validate` does not import the feed and does not change the dataset or pending edits. It keeps its results in
 temporary tables named `gtfs_validation_*` and `gtfs_v_*`, which the next validation replaces, and works in temporary
 tables named `gtfs_vc_*`, which it empties when it finishes. Do not use these names for your own tables. Pass `''` to
-read the files in the working directory. A directory that does not exist, a file path or NULL is an error.
+read the files in the working directory. A directory that does not exist, a file path or NULL is an error, and so is
+a directory whose path has `*`, `?` or `[`: DuckDB reads such a path as a file pattern, which can match another
+directory's files. Rename it, or validate it through a link.
 
 The rules need DuckDB's `json` extension. Most DuckDB builds include it, and others load it automatically on first
 use. If automatic loading is turned off, run `LOAD json;` first.

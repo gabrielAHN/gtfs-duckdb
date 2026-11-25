@@ -53,7 +53,9 @@ A *macro* section holds only `CREATE OR REPLACE MACRO` statements; the extension
 Placeholders are replaced as plain text before parsing, so a placeholder must never appear in a comment: a newline in
 a directory name would end the comment and run the rest of the name as SQL (`test_validation.py` checks every section).
 `{{DIRECTORY}}` and `{{PATH}}` are replaced last, so the text of a path is never scanned for placeholders. The PRAGMA
-raises an error when the directory is NULL, or when it finds no file and the directory does not exist.
+raises an error when the directory is NULL, when its path has `*`, `?` or `[` (`read_blob` would read it as a glob
+pattern: `feed[1]/stops.txt` matches `feed1/stops.txt`, and DuckDB has no escape for these characters), or when it
+finds no file and the directory does not exist.
 
 `test/validation/harness.py` emulates exactly this with a
 stock DuckDB CLI (it creates the macros with `CREATE OR REPLACE MACRO`), so the SQL can be developed and tested without
