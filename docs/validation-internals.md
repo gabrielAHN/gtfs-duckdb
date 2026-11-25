@@ -172,6 +172,23 @@ The severity is not part of the notice: `validate_finish.sql` takes it from the 
   physical plan of a query after a validation; `PlanTest` uses it to check that the stop distance rules hash-join on
   their grid cells.
 
+## URLs with non-ASCII hosts (IDN)
+
+`gtfs_vc_url_ok` ports commons-validator 1.6 `UrlValidator.isValid`, which converts the authority with
+`java.net.IDN.toASCII` before the ASCII checks. The `gtfs_vc_idn_*` macros in `validate_core.sql` emulate it (RFC 3491
+nameprep, RFC 3492 Punycode) and run only for authorities with a code point above U+007F. The nameprep data comes from
+the oracle's own JDK 17 (its internal `StringPrep` and `UCharacter`, read by reflection), never from a Unicode data
+file: the code points whose map plus NFKC differs from their NFC (the rest is left to DuckDB's `nfc_normalize()`), the
+refused code points (unassigned in Unicode 3.2 or mapped to a prohibited one) and the bidi classes R/AL and L. It sits
+between `-- BEGIN GENERATED` and `-- END GENERATED`; regenerate it, and the corpus, from the repository root with
+
+    java --add-opens java.base/java.net=ALL-UNNAMED --add-opens java.base/jdk.internal.icu.text=ALL-UNNAMED --add-exports java.base/jdk.internal.icu.lang=ALL-UNNAMED -cp <gtfs-validator cli jar> test/validation/idn/GenIdn.java sql/validate_core.sql test/validation/idn/corpus.tsv
+
+(Java 17; the output is the same bytes on every run). `test/validation/idn/corpus.tsv` holds hosts with Java's
+`IDN.toASCII` result (or `ERROR`) and URLs with `UrlValidator`'s answer; `test/test_idn.py` checks the SQL against it
+on every DuckDB binary, without Java. Keep the lambdas shallow: DuckDB 2.0 binds a lambda body more than once, so the
+steps are chained through macro arguments instead of nested.
+
 ## Testing
 
 - Fixtures: `test/validation/feeds/<name>/`. A fixture holds only the files it changes; `harness.materialize` copies

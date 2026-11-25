@@ -4,7 +4,7 @@
 
 - `PRAGMA gtfs_validate(directory[, date])` checks the files `gtfs_import` reads (stops, pathways, routes, trips, stop_times, shapes, calendar and calendar_dates) with the rules of the [MobilityData GTFS validator](https://github.com/MobilityData/gtfs-validator), ported to SQL. It reports the notices the official validator reports for those files, with the same codes, severities and fields, returns one row per code and keeps every notice in the `gtfs_validation_notices` table. It does not import the feed or change the dataset. See [docs/validation.md](docs/validation.md).
 - `gtfs_validation_rules()` lists the 111 rules. The other validation macros are internal.
-- `test/test_validation.py` compares the notices for 51 small feeds with the official validator's (8.0.2-SNAPSHOT, commit `f9f4b9e`) on DuckDB v2.0.0 and v1.4.3, without building the extension, and CI runs it against the built extension. `test/validation/harness.py diff` compares a whole feed; the New York City Subway feed matches.
+- `test/test_validation.py` compares the notices for 57 small feeds with the official validator's (8.0.2-SNAPSHOT, commit `f9f4b9e`) on DuckDB v2.0.0 and v1.4.3, without building the extension, and CI runs it against the built extension. `test/validation/harness.py diff` compares a whole feed; the New York City Subway feed matches.
 
 ## 1.0.2
 

@@ -1,0 +1,135 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_file",
+   "notice": {
+    "filename": "shapes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 10,
+    "stopId": "S9",
+    "stopName": "Ninth Stop"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 11,
+    "stopId": "S10",
+    "stopName": "Tenth Stop"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 12,
+    "stopId": "S11",
+    "stopName": "Eleventh Stop"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 13,
+    "stopId": "S12",
+    "stopName": "Twelfth Stop"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 14,
+    "stopId": "S13",
+    "stopName": "Thirteenth Stop"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 4,
+    "stopId": "S3",
+    "stopName": "Third Stop"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 5,
+    "stopId": "S4",
+    "stopName": "Fourth Stop"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 6,
+    "stopId": "S5",
+    "stopName": "Fifth Stop"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 7,
+    "stopId": "S6",
+    "stopName": "Sixth Stop"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 8,
+    "stopId": "S7",
+    "stopName": "Seventh Stop"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 9,
+    "stopId": "S8",
+    "stopName": "Eighth Stop"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stops_too_close",
+   "notice": {
+    "csvRowNumber1": 8,
+    "csvRowNumber2": 9,
+    "stopId1": "S7",
+    "stopId2": "S8",
+    "stopLat1": 40.7,
+    "stopLat2": 40.700001,
+    "stopLon1": -73.9,
+    "stopLon2": -73.9
+   },
+   "severity": "WARNING"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

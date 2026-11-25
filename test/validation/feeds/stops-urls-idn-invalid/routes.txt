@@ -1,0 +1,12 @@
+route_id,agency_id,route_short_name,route_long_name,route_type,route_url
+R1,A,1,Main Street,3,https://example.org/
+R2,A,2,Unknown TLD,3,https://bücher.example/
+R3,A,3,Prohibited,3,https://a⿰.com/
+R4,A,4,Bidi mix,3,https://aא.com/
+R5,A,5,Bidi digit last,3,https://א1.com/
+R6,A,6,ACE prefix,3,https://xn--ü.com/
+R7,A,7,Too long,3,https://üaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com/
+R8,A,8,Unassigned,3,https://aȡ.com/
+R9,A,9,Unknown IDN TLD,3,https://例え.テスト/
+R10,A,10,Port,3,https://ä.de:99999/
+R11,A,11,Valid,3,https://ä.de:8080/
