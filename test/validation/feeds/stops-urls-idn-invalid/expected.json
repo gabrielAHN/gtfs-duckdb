@@ -1,0 +1,105 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "invalid_url",
+   "notice": {
+    "csvRowNumber": 10,
+    "fieldName": "route_url",
+    "fieldValue": "https://\u4f8b\u3048.\u30c6\u30b9\u30c8/",
+    "filename": "routes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_url",
+   "notice": {
+    "csvRowNumber": 11,
+    "fieldName": "route_url",
+    "fieldValue": "https://\u00e4.de:99999/",
+    "filename": "routes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_url",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "route_url",
+    "fieldValue": "https://b\u00fccher.example/",
+    "filename": "routes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_url",
+   "notice": {
+    "csvRowNumber": 4,
+    "fieldName": "route_url",
+    "fieldValue": "https://a\u2ff0.com/",
+    "filename": "routes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_url",
+   "notice": {
+    "csvRowNumber": 5,
+    "fieldName": "route_url",
+    "fieldValue": "https://a\u05d0.com/",
+    "filename": "routes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_url",
+   "notice": {
+    "csvRowNumber": 6,
+    "fieldName": "route_url",
+    "fieldValue": "https://\u05d01.com/",
+    "filename": "routes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_url",
+   "notice": {
+    "csvRowNumber": 7,
+    "fieldName": "route_url",
+    "fieldValue": "https://xn--\u00fc.com/",
+    "filename": "routes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_url",
+   "notice": {
+    "csvRowNumber": 8,
+    "fieldName": "route_url",
+    "fieldValue": "https://\u00fcaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com/",
+    "filename": "routes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_url",
+   "notice": {
+    "csvRowNumber": 9,
+    "fieldName": "route_url",
+    "fieldValue": "https://a\u0221.com/",
+    "filename": "routes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

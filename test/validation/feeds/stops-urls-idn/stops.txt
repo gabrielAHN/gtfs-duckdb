@@ -1,0 +1,14 @@
+stop_id,stop_name,stop_lat,stop_lon,stop_url
+S1,First Stop,40.7500,-73.9800,https://münchen.de/
+S2,Second Stop,40.7600,-73.9700,https://例え.jp/
+S3,Third Stop,40.7700,-73.9600,https://example.рф/
+S4,Fourth Stop,40.7710,-73.9500,https://ñandú.com.ar/
+S5,Fifth Stop,40.7720,-73.9400,https://MÜNCHEN.DE/a?b=c
+S6,Sixth Stop,40.7730,-73.9300,https://example。com/
+S7,Seventh Stop,40.7000000,-73.9000,https://１２７.０.０.１/
+S8,Eighth Stop,40.7000010,-73.9000,https://user@straße.de:8080/x
+S9,Ninth Stop,40.7740,-73.9200,https://ü@example.com/
+S10,Tenth Stop,40.7750,-73.9100,https://ﬁ.com/
+S11,Eleventh Stop,40.7760,-73.8900,https://אב.co.il/
+S12,Twelfth Stop,40.7770,-73.8800,https://üaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com/
+S13,Thirteenth Stop,40.7780,-73.8700,https://münchen.de./
