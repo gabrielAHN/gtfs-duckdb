@@ -59,19 +59,36 @@ From the command line, [GTFS Tools](https://github.com/gabrielAHN/gtfs-tools) ru
 ## Memory
 
 Each file is read whole, so the memory a validation needs grows with the largest file, usually `stop_times.txt`.
-Measured with DuckDB v2.0.0 on a Mac (peak resident memory of the DuckDB process):
+Measured on a Mac with the statements the PRAGMA runs, at the default number of threads (peak resident memory of the
+DuckDB process):
 
-| stop_times.txt | memory_limit | Peak memory | Time |
-|---|---|---|---|
-| 42 MB (New York City Subway) | default | 2.9 GiB | 3.5 s |
-| 42 MB | `'2GB'` | 2.3 GiB | 3.6 s |
-| 42 MB | `'1GB'` | 1.6 GiB | 4.4 s |
-| 150 MB (the same feed, 4 times over) | `'2GB'` | 3.0 GiB | 11 s |
+| DuckDB | stop_times.txt | memory_limit | Peak memory | Time |
+|---|---|---|---|---|
+| v2.0.0 | 37 MB (New York City Subway) | default | 2.4 GiB | 3.4 s |
+| v2.0.0 | 37 MB | `'2GB'` | 2.2 GiB | 2.9 s |
+| v2.0.0 | 37 MB | `'1GB'` | 1.5 GiB | 5.0 s |
+| v2.0.0 | 37 MB | `'512MB'` | 1.0 GiB | 5.2 s |
+| v2.0.0 | 150 MB (the same feed, 4 times over) | default | 4.1 GiB | 6.3 s |
+| v2.0.0 | 150 MB | `'2GB'` | 2.8 GiB | 9.1 s |
+| v2.0.0 | 150 MB | `'1GB'` | 2.0 GiB | 12 s |
+| v1.4.3 | 37 MB | default | 3.9 GiB | 4.1 s |
+| v1.4.3 | 37 MB | `'2GB'` | 3.0 to 3.4 GiB | 4.5 s |
+| v1.4.3 | 37 MB | `'1.5GB'` | 3.0 GiB | 5.1 s |
+| v1.4.3 | 37 MB | `'1GB'` | out of memory | |
+| v1.4.3 | 150 MB | `'2GB'` or `'3GB'` | out of memory | |
 
-`SET memory_limit` lowers the peak by spilling to disk, at some cost in time. With `memory_limit='512MB'` the New
-York feed fails with an out-of-memory error. The peak can exceed the limit, and grows with the file: about 7 times the
-extra size between the two files above. At that rate a 1 GB `stop_times.txt`, as some national feeds have, would need
-about 9 GiB (an estimate, not measured).
+`SET memory_limit` lowers the peak by spilling to disk, at some cost in time. The peak can exceed the limit, and grows
+with the file: with DuckDB v2.0.0 at `memory_limit='2GB'`, by about 5 times the extra size between the two files
+above. At that rate a 1 GB `stop_times.txt`, as some national feeds have, would need about 7 GiB (an estimate, not
+measured).
+
+DuckDB v1.4, the version of DuckDB-WASM that GTFS Viz runs in the browser, needs more. With `SET threads=1` the New York
+feed takes 9.6 s at `memory_limit='2GB'`. The 150 MB file runs out of memory at 2 GB on one thread too, and with
+`memory_limit='4GB'` its memory footprint passed 6.7 GiB before it was stopped (not measured further). Run one at a time
+at 2 GB, three rules run out of memory on it: the travel speed rules (`fast_travel_between_consecutive_stops` and
+`fast_travel_between_far_stops`), `duplicate_trips`, and the matching of stops to shapes (`stop_too_far_from_shape`,
+`stop_too_far_from_shape_using_user_distance`, `stop_has_too_many_matches_for_shape` and
+`stops_match_shape_out_of_order`). Use DuckDB v2.0 for feeds larger than New York City's.
 
 ## What is validated
 
@@ -129,5 +146,5 @@ The rules follow the official validator's Java code, but a few cases can still c
 
 Each rule has small feeds whose expected notices are the official validator's own output (the 8.0.2-SNAPSHOT CLI,
 commit `f9f4b9e`), compared notice by notice, field by field, on DuckDB v2.0.0 and v1.4.3. Decimal fields such as
-distances and speeds must match to 6 significant digits, and coordinates to 9. A whole real feed, the New York City Subway, is compared
-the same way. See [validation-internals.md](validation-internals.md#testing).
+distances and speeds must match to 6 significant digits, and coordinates to 9. A whole real feed, the New York City
+Subway, is compared the same way on both versions. See [validation-internals.md](validation-internals.md#testing).

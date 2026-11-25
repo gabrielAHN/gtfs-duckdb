@@ -29,7 +29,7 @@ as if those files were valid and `frequencies.txt` were absent.
 | `sql/validate_begin.sql` | statements | core | records the validation date and directory |
 | `sql/validate_load.sql` | statements | core | loads one existing file into `gtfs_v_<table>` and records its notices |
 | `sql/validate_missing.sql` | statements | core | records one missing file |
-| `sql/validate_finish.sql` | statements | core | runs every rule group into `gtfs_validation_notices`; its last statement is the PRAGMA's result |
+| `sql/validate_finish.sql` | statements | core | runs every rule macro of every group, one statement each, into `gtfs_validation_notices`; its last statement is the PRAGMA's result |
 | `sql/validate_rules_stops.sql` | macros | stops | `gtfs_validate_rules_stops()` |
 | `sql/validate_rules_stop_times.sql` | macros | stoptimes | `gtfs_validate_rules_stop_times()` |
 | `sql/validate_rules_routes_calendar.sql` | macros | routescal | `gtfs_validate_rules_routes_calendar()` |
@@ -147,9 +147,13 @@ The severity is not part of the notice: `validate_finish.sql` takes it from the 
 
 ## Writing a rule group
 
-- Entry point: `gtfs_validate_rules_<group>()`, a table macro returning `(code, notice)`. Name helper macros
-  `gtfs_vr_<group>_<name>`. Add no new tables: derive everything from the `gtfs_v_*` tables, `gtfs_validation_files`,
-  `gtfs_validation_columns` and `gtfs_validation_state`.
+- Entry point: `gtfs_validate_rules_<group>()`, a table macro returning `(code, notice)`: the `UNION ALL` of the
+  group's rule macros. Name helper macros `gtfs_vr_<group>_<name>`. Add no new tables: derive everything from the
+  `gtfs_v_*` tables, `gtfs_validation_files`, `gtfs_validation_columns` and `gtfs_validation_state`.
+- List a new rule macro in the entry point and, in the same order, under the group's comment in
+  `validate_finish.sql`, which runs each rule macro in its own statement: run as one `UNION ALL`, DuckDB v1.4 kept
+  the state of every rule at once and ran out of memory on the New York City Subway feed at `memory_limit='2GB'`.
+  `test_validation.py` checks that the two lists match.
 - Name macro parameters so they never equal a column of a table the body reads (`p_trip_id`, not `trip_id`): DuckDB
   reports a conflicting column name or silently binds the column.
 - Port the Java classes your group owns, rule for rule, including thresholds, comparison operators, ordering, which
@@ -158,6 +162,11 @@ The severity is not part of the notice: `validate_finish.sql` takes it from the 
   spatial, httpfs or other extension, no `INSTALL`/`LOAD`.
 - Must scale to a large feed: the NYC subway feed (562,944 stop_times, 5 MB of shapes) must validate in well under a
   minute. Avoid unbounded self-joins: partition by trip, shape or a coordinate grid.
+- Join on plain columns. An equality whose sides span three relations, such as `l2.cx = l1.cx + o.dx` over a cross
+  join with `o`, is not a join key: DuckDB joins on the other conditions and filters, so a grid lookup became a
+  comparison of every stop with every other one. Compute the key in a CTE first. `harness.plan()` returns the
+  physical plan of a query after a validation; `PlanTest` uses it to check that the stop distance rules hash-join on
+  their grid cells.
 
 ## Testing
 
