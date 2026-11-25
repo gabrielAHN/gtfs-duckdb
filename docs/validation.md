@@ -86,6 +86,11 @@ The 8 files `gtfs_import` reads: `stops.txt`, `pathways.txt`, `routes.txt`, `tri
   stops too close to each other, unusable or unused trips, fast travel between stops, expired calendars and stops too
   far from their trip's shape.
 
+URLs are checked as the official validator checks them, internationalized domain names such as `https://例え.jp/`
+included: the host is converted to punycode as Java 17 does first. As in the official validator, a field that fails
+its check (an `invalid_url`, for example) is an error that makes its whole file unparsable, and the rules that need
+that file are then skipped.
+
 ## Not validated
 
 Other files and the rules that need them: `agency.txt`, `feed_info.txt`, `frequencies.txt`, `transfers.txt`,
@@ -107,8 +112,6 @@ The rules follow the official validator's Java code, but a few cases can still c
   with its short name lowercases the whole names, where Java applies context rules such as the Greek final sigma, so a
   name built for it can come out differently. Unicode letter classes come from DuckDB's regular expressions, whose
   Unicode version can differ from Java 17's for recently added letters.
-- URLs whose host has non-ASCII letters (internationalized domain names such as `https://例え.jp/`) are reported as
-  `invalid_url`. The official validator converts them to punycode first and accepts them.
 - The official validator asks for `shapes.txt` (`missing_recommended_file`) only when every file of the feed parses,
   `agency.txt` and the other files this port does not read included. This port checks only the files it reads, so a
   feed with a missing or broken `agency.txt` still gets the notice.
