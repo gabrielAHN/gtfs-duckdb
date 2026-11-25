@@ -31,7 +31,20 @@ foreach(
   drop
   add_geometry
   prepare_route_cache
-  reset_route_cache)
+  reset_route_cache
+  validate_common
+  validate_registry
+  validate_core
+  validate_rules_stops
+  validate_rules_stop_times
+  validate_rules_routes_calendar
+  validate_rules_shapes
+  validate_rules_generated
+  validate_schema
+  validate_begin
+  validate_load
+  validate_missing
+  validate_finish)
   set_property(
     DIRECTORY
     APPEND

@@ -183,6 +183,61 @@ static string ImportDataset(ClientContext &context, const FunctionParameters &pa
 	return result + InitializeDataset(context, parameters);
 }
 
+// PRAGMA gtfs_validate(directory[, date]) runs the validate_* statement sections (docs/validation-internals.md):
+// schema, begin, one load or missing section per validated file, then finish, whose last statement is the result.
+struct GtfsValidatedFile {
+	const char *table;
+	bool required;
+};
+
+static const GtfsValidatedFile GTFS_VALIDATED_FILES[] = {
+    {"stops", false},      {"pathways", false}, {"routes", true},   {"trips", true},
+    {"stop_times", true},  {"shapes", false},   {"calendar", false}, {"calendar_dates", false},
+};
+
+static bool IsIsoDate(const string &text) {
+	if (text.size() != 10 || text[4] != '-' || text[7] != '-') {
+		return false;
+	}
+	for (idx_t i = 0; i < text.size(); i++) {
+		if (i != 4 && i != 7 && (text[i] < '0' || text[i] > '9')) {
+			return false;
+		}
+	}
+	return true;
+}
+
+static string ValidateDataset(ClientContext &context, const FunctionParameters &parameters) {
+	auto directory = parameters.values[0].IsNull() ? string() : StringValue::Get(parameters.values[0]);
+	if (parameters.values.size() > 2) {
+		throw InvalidInputException("gtfs_validate takes a directory and an optional date (YYYY-MM-DD)");
+	}
+	string date = "current_date";
+	if (parameters.values.size() == 2 && !parameters.values[1].IsNull()) {
+		auto text = StringValue::Get(parameters.values[1]);
+		if (!IsIsoDate(text)) {
+			throw InvalidInputException("gtfs_validate: the date must be YYYY-MM-DD, got %s", text);
+		}
+		date = "DATE " + QuoteLiteral(text);
+	}
+	auto &fs = FileSystem::GetFileSystem(context);
+	// Fixed placeholders first; the user-supplied directory and paths last, so their text is never rescanned.
+	auto begin = StringUtil::Replace(GTFS_VALIDATE_BEGIN_SQL, "{{DATE}}", date);
+	string result = string(GTFS_VALIDATE_SCHEMA_SQL) + "\n" +
+	                StringUtil::Replace(begin, "{{DIRECTORY}}", QuoteLiteral(directory)) + "\n";
+	for (auto &file : GTFS_VALIDATED_FILES) {
+		auto name = string(file.table) + ".txt";
+		auto path = directory.empty() ? name : fs.JoinPath(directory, name);
+		string section = fs.FileExists(path) ? GTFS_VALIDATE_LOAD_SQL : GTFS_VALIDATE_MISSING_SQL;
+		section = StringUtil::Replace(section, "{{TABLE}}", file.table);
+		section = StringUtil::Replace(section, "{{FILE}}", QuoteLiteral(name));
+		section = StringUtil::Replace(section, "{{REQUIRED}}", file.required ? "true" : "false");
+		section = StringUtil::Replace(section, "{{PATH}}", QuoteLiteral(path));
+		result += section + "\n";
+	}
+	return result + GTFS_VALIDATE_FINISH_SQL;
+}
+
 static void LoadInternal(ExtensionLoader &loader) {
 	loader.RegisterFunction(PragmaFunction::PragmaStatement("gtfs_prepare_route_cache", prepare_route_cache));
 	loader.RegisterFunction(PragmaFunction::PragmaStatement("gtfs_reset_route_cache", reset_route_cache));
@@ -210,7 +265,12 @@ static void LoadInternal(ExtensionLoader &loader) {
 	loader.RegisterFunction(PragmaFunction::PragmaStatement("gtfs_init", InitializeDataset));
 	loader.RegisterFunction(PragmaFunction::PragmaStatement("gtfs_refresh", InitializeDataset));
 	loader.RegisterFunction(PragmaFunction::PragmaCall("gtfs_import", ImportDataset, {LogicalType::VARCHAR}));
-	for (auto sql : {GTFS_LOAD_SQL, GTFS_INIT_SQL, GTFS_REROUTE_SQL, GTFS_SONIFY_SQL}) {
+	loader.RegisterFunction(
+	    PragmaFunction::PragmaCall("gtfs_validate", ValidateDataset, {LogicalType::VARCHAR}, LogicalType::VARCHAR));
+	for (auto sql : {GTFS_LOAD_SQL, GTFS_INIT_SQL, GTFS_REROUTE_SQL, GTFS_SONIFY_SQL, GTFS_VALIDATE_COMMON_SQL,
+	                 GTFS_VALIDATE_REGISTRY_SQL, GTFS_VALIDATE_CORE_SQL, GTFS_VALIDATE_RULES_STOPS_SQL,
+	                 GTFS_VALIDATE_RULES_STOP_TIMES_SQL, GTFS_VALIDATE_RULES_ROUTES_CALENDAR_SQL,
+	                 GTFS_VALIDATE_RULES_SHAPES_SQL, GTFS_VALIDATE_RULES_GENERATED_SQL}) {
 		auto parser = CreateParser<Parser>(0);
 		parser.ParseQuery(sql);
 		for (auto &statement : parser.statements) {
