@@ -89,12 +89,13 @@ The rules follow the official validator's Java code, but a few cases can still c
   hash map order. This port reproduces that order, except when a single hash bucket holds 8 or more trips.
 - Java's check for overlapping trips in a block treats services whose first common date is 1 January 1970 as never
   overlapping. This port reports those trips.
-- Distances add up in a different order, so a distance or speed within about 10⁻¹² of a limit can fall on the other
-  side of it.
+- Distances add up in a different order, and DuckDB's `sin`, `cos` and `atan2` can differ from Java's in the last
+  bit. A distance or speed within about 10⁻¹² of a limit can fall on the other side of it, and a match location in a
+  shape notice (`match`, `match1`, `match2`) can differ in its last digit.
 
 ## How it is tested
 
 Each rule has small feeds whose expected notices are the official validator's own output (the 8.0.2-SNAPSHOT CLI,
 commit `f9f4b9e`), compared notice by notice, field by field, on DuckDB v2.0.0 and v1.4.3. Decimal fields such as
-distances and speeds must match to 6 significant digits. A whole real feed, the New York City Subway, is compared
+distances and speeds must match to 6 significant digits, and coordinates to 9. A whole real feed, the New York City Subway, is compared
 the same way. See [validation-internals.md](validation-internals.md#testing).
