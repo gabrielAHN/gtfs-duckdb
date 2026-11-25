@@ -1,0 +1,12 @@
+route_id,service_id,trip_id,trip_headsign,shape_id
+R1,SV,TA1,Head,SA
+R1,SV,TA2,Head,SA
+R1,SV,TA3,Head,SA
+R1,SV,TA4,Head,SA
+RX,SV,TA5,Head,SA
+R1,SV,TA6,Head,SA
+R1,SV,TA7,Head,SA
+R1,SV,TB1,Head,SB
+R1,SV,TC1,Head,SC
+R2,SV,TR1,Head,SR
+R1,SV,TR2,Head,SR2
