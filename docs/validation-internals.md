@@ -153,7 +153,11 @@ The severity is not part of the notice: `validate_finish.sql` takes it from the 
 - List a new rule macro in the entry point and, in the same order, under the group's comment in
   `validate_finish.sql`, which runs each rule macro in its own statement: run as one `UNION ALL`, DuckDB v1.4 kept
   the state of every rule at once and ran out of memory on the New York City Subway feed at `memory_limit='2GB'`.
-  `test_validation.py` checks that the two lists match.
+  `test_validation.py` checks that the two lists match. Write each statement on one line,
+  `INSERT INTO gtfs_vc_rule_notices SELECT code, notice FROM <rule macro>();`, and keep the group comments and
+  statements together, with no other line between them, not even a blank one: the check reads the list up to its first
+  other line and reports any later line naming a rule macro or a group, so a statement commented out or moved is never
+  counted as run.
 - Name macro parameters so they never equal a column of a table the body reads (`p_trip_id`, not `trip_id`): DuckDB
   reports a conflicting column name or silently binds the column.
 - Port the Java classes your group owns, rule for rule, including thresholds, comparison operators, ordering, which

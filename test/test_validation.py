@@ -49,9 +49,9 @@ GROUP_HEADER = re.compile(r"-- (gtfs_validate_rules_\w+)\(\)")
 
 def rule_lists(finish_text=None):
     """The rule macros of each gtfs_validate_rules_<group>() macro; the ones validate_finish.sql runs under each group's
-    comment, in its section of rule statements (headers and statements only, ended by its first other line); and the
-    other lines of validate_finish.sql naming a rule macro. A rule's line must be its whole statement, so a statement
-    commented out, edited or moved out of the section is reported instead of counted."""
+    comment, read from its list of group comments and statements, which ends at its first other line; and the other
+    lines of validate_finish.sql naming a rule macro, and the group comments after that list. A rule's line must be its
+    whole statement, so a statement commented out, edited or moved is reported instead of counted."""
     groups = {}
     for path in sorted(SQL_DIR.glob("validate_rules_*.sql")):
         text = re.sub(r"--[^\n]*", "", path.read_text())
@@ -59,18 +59,18 @@ def rule_lists(finish_text=None):
         groups[match.group(1)] = re.findall(r"\bFROM (gtfs_vr_\w+)\(\)", match.group(2))
     if finish_text is None:
         finish_text = (SQL_DIR / "validate_finish.sql").read_text()
-    finish, group, stray = {}, None, []
+    finish, group, ended, stray = {}, None, False, []
     for line in finish_text.splitlines():
         header, statement = GROUP_HEADER.fullmatch(line), RULE_STATEMENT.fullmatch(line)
-        if header:
+        if header and not ended:
             group = finish.setdefault(header.group(1), [])
         elif statement and group is not None:
             group.append(statement.group(1))
         else:
-            if "gtfs_vr_" in line:
+            if header or "gtfs_vr_" in line:
                 stray.append(line)
             if finish:
-                group = None
+                group, ended = None, True
     return groups, finish, stray
 
 
@@ -182,6 +182,7 @@ class PipelineTest(unittest.TestCase):
         rule, following = lines[first], lines[first + 1]
         self.assertTrue(RULE_STATEMENT.fullmatch(following.rstrip("\n")))
         last = max(i for i, line in enumerate(lines) if RULE_STATEMENT.fullmatch(line.rstrip("\n")))
+        group_of_last = next(line for line in reversed(lines[:last]) if GROUP_HEADER.fullmatch(line.rstrip("\n")))
         edits = {
             "commented out": text.replace(rule, "-- " + rule, 1),
             "removed": text.replace(rule, "", 1),
@@ -190,6 +191,10 @@ class PipelineTest(unittest.TestCase):
             "under another group": text.replace(rule, "", 1).replace(lines[last], lines[last] + rule, 1),
             "after the section": text.replace(rule, "", 1) + rule,
             "last rule after the section": text.replace(lines[last], "", 1) + lines[last],
+            "last rule under its group's comment again after the section": text.replace(lines[last], "", 1)
+            + group_of_last
+            + lines[last],
+            "blank line in the section": text.replace(rule, rule + "\n", 1),
             "edited": text.replace(rule, rule.replace("();", "() WHERE false;"), 1),
         }
         for name, edited in edits.items():
