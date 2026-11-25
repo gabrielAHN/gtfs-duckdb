@@ -104,7 +104,8 @@ FROM gtfs_v_routes r
 WHERE r.route_short_name IS NOT NULL AND length(r.route_short_name) > 12
 UNION ALL
 -- route_long_name starts (ignoring case) with route_short_name, followed by nothing or by an optional whitespace and
--- one of whitespace, '-', '(' or ')'.
+-- one of whitespace, '-', '(' or ')'. Java's remainder.matches("^\\s?[\\s\\-\\(\\)].*") spelled out for RE2: Java's \s
+-- is [ \t\n\x0B\f\r] (RE2's lacks \x0B) and Java's '.' excludes the line terminators \n \r U+0085 U+2028 U+2029.
 SELECT 'route_long_name_contains_short_name',
   gtfs_validation_notice(json_object('routeId', coalesce(r.route_id, ''), 'csvRowNumber', r.csv_row_number,
                                      'routeShortName', r.route_short_name, 'routeLongName', r.route_long_name))
@@ -112,19 +113,20 @@ FROM gtfs_v_routes r
 WHERE r.route_long_name IS NOT NULL AND r.route_short_name IS NOT NULL
   AND starts_with(lower(r.route_long_name), lower(r.route_short_name))
   AND (length(r.route_long_name) = length(r.route_short_name)
-       OR regexp_full_match(substr(r.route_long_name, length(r.route_short_name) + 1), '\s?[\s\-\(\)].*'))
+       OR regexp_full_match(substr(r.route_long_name, length(r.route_short_name) + 1),
+                            '[ \t\n\x0B\f\r]?[ \t\n\x0B\f\r\-()][^\n\r\x{85}\x{2028}\x{2029}]*'))
 UNION ALL
 -- route_desc equal (ignoring case) to route_short_name, else to route_long_name: one notice at most.
 SELECT 'same_name_and_description_for_route',
   gtfs_validation_notice(json_object('csvRowNumber', r.csv_row_number, 'routeId', coalesce(r.route_id, ''),
                                      'routeDesc', r.route_desc,
                                      'specifiedField', CASE WHEN r.route_short_name IS NOT NULL
-                                                             AND lower(r.route_desc) = lower(r.route_short_name)
+                                                             AND gtfs_validation_equals_ignore_case(r.route_desc, r.route_short_name)
                                                             THEN 'route_short_name' ELSE 'route_long_name' END))
 FROM gtfs_v_routes r
 WHERE r.route_desc IS NOT NULL
-  AND ((r.route_short_name IS NOT NULL AND lower(r.route_desc) = lower(r.route_short_name))
-       OR (r.route_long_name IS NOT NULL AND lower(r.route_desc) = lower(r.route_long_name)))
+  AND ((r.route_short_name IS NOT NULL AND gtfs_validation_equals_ignore_case(r.route_desc, r.route_short_name))
+       OR (r.route_long_name IS NOT NULL AND gtfs_validation_equals_ignore_case(r.route_desc, r.route_long_name)))
 UNION ALL
 SELECT 'route_color_contrast',
   gtfs_validation_notice(json_object('routeId', coalesce(r.route_id, ''), 'csvRowNumber', r.csv_row_number,

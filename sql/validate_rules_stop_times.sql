@@ -470,7 +470,7 @@ WHERE t.trip_headsign IS NOT NULL
   AND o.idx < o.trip_size - 1
   AND o.first_stop_id IS DISTINCT FROM o.last_stop_id
   AND s.stop_name IS NOT NULL
-  AND (lower(s.stop_name) = lower(t.trip_headsign) OR upper(s.stop_name) = upper(t.trip_headsign));
+  AND gtfs_validation_equals_ignore_case(s.stop_name, t.trip_headsign);
 
 -- StopTimeTravelSpeedValidator: fast_travel_between_consecutive_stops, fast_travel_between_far_stops.
 -- Trips are grouped by (route_id, ordered stop_id/arrival/departure list, absent times as 0). Each group is validated

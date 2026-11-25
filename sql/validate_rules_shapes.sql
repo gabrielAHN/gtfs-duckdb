@@ -513,9 +513,11 @@ WITH p AS MATERIALIZED (
               WHEN a_closer THEN [a_x, a_y, a_z] ELSE [b_x, b_y, b_z] END AS c
   FROM interp2
 ), ll AS (
-  -- new S2LatLng(point) in degrees: [atan2(z, sqrt(x^2 + y^2)), atan2(y, x)].
+  -- new S2LatLng(point) in degrees: [atan2(z + 0.0, sqrt(x^2 + y^2)), atan2(y + 0.0, x + 0.0)]. S2's + 0.0 turns -0.0
+  -- into 0.0, so a zero coordinate prints as 0.0 and atan2(0.0, x < 0) gives +180, never -180.
   SELECT nid, w, slot, atan2(yx[1], yx[2]) * '57.29577951308232'::DOUBLE AS deg
-  FROM (SELECT nid, w, unnest([[c[3], sqrt(c[1] * c[1] + c[2] * c[2])], [c[2], c[1]]]) AS yx, unnest([1, 2]) AS slot
+  FROM (SELECT nid, w, unnest([[c[3] + 0.0, sqrt(c[1] * c[1] + c[2] * c[2])], [c[2] + 0.0, c[1] + 0.0]]) AS yx,
+               unnest([1, 2]) AS slot
         FROM located)
 ), latlng AS (
   SELECT nid, list(deg ORDER BY slot) FILTER (WHERE w = 1) AS m1, list(deg ORDER BY slot) FILTER (WHERE w = 2) AS m2

@@ -75,7 +75,7 @@ SELECT 'same_name_and_description_for_stop',
   gtfs_validation_notice(json_object('csvRowNumber', csv_row_number, 'stopId', stop_id, 'stopDesc', stop_desc))
 FROM gtfs_v_stops
 WHERE stop_name IS NOT NULL AND stop_desc IS NOT NULL
-  AND length(stop_name) = length(stop_desc) AND lower(stop_name) = lower(stop_desc)
+  AND gtfs_validation_equals_ignore_case(stop_name, stop_desc)
   AND (gtfs_validation_has_column('stops.txt', 'stop_name') OR gtfs_validation_has_column('stops.txt', 'location_type'));
 
 -- StopRequiredLocationValidator

@@ -758,6 +758,14 @@ FROM gtfs_vc_records WHERE kind IN ('ws', 'row') ORDER BY rec_no LIMIT 1;
 -- (4096) or more than maxColumns (512) values. Positions are recomputed from the text with offsets (only when such a
 -- record exists): charIndex is the offset after the first char past 4096 (or after the terminator of the 513th value),
 -- lineIndex the line feeds before it, record the data records before it.
+
+-- ArgumentUtils.displayLineSeparators(text, true): each CR or LF becomes [cr] or [lf] followed by the character itself;
+-- a CR LF or LF CR pair becomes [crlf] or [lfcr] followed by the pair.
+CREATE OR REPLACE MACRO gtfs_vc_display_line_separators(s) AS (
+  replace(replace(replace(replace(regexp_replace(s, '(\r\n|\n\r|\r|\n)', '[\1]\1', 'g'),
+    '[' || chr(13) || chr(10) || ']', '[crlf]'), '[' || chr(10) || chr(13) || ']', '[lfcr]'),
+    '[' || chr(13) || ']', '[cr]'), '[' || chr(10) || ']', '[lf]')
+);
 CREATE OR REPLACE MACRO gtfs_vc_failure() AS TABLE
 WITH f AS (
   SELECT rec_no, fields,
@@ -810,6 +818,16 @@ SELECT rec_no, at_header,
     'message', CASE WHEN is_long
         THEN 'Length of parsed input (4097) exceeds the maximum number of characters defined in your parser settings (4096). '
         ELSE 'java.lang.ArrayIndexOutOfBoundsException - Index 512 out of bounds for length 512' END
+      || CASE WHEN is_long AND (contains(parsed, chr(10)) OR contains(parsed, chr(13)))
+              THEN chr(10) || 'Identified line separator characters in the parsed content. This may be the cause of '
+                || 'the error. The line separator in your parser settings is set to ''[lf]''. Parsed content: '
+                || gtfs_vc_display_line_separators(parsed)
+              ELSE '' END
+      || CASE WHEN is_long AND contains(parsed, chr(0))
+              THEN chr(10) || 'Identified ' || (length(parsed) - length(replace(parsed, chr(0), ''))) || ' null characters ('''
+                || chr(0) || ''') on parsed content. This may indicate the data is corrupt or its encoding is invalid. '
+                || 'Parsed content:' || chr(10) || chr(9) || 'Parsed content: ' || replace(parsed, chr(0), '\0')
+              ELSE '' END
       || chr(10) || gtfs_vc_parser_settings()
       || 'Internal state when error was thrown: line=' || line_index || ', column=' || column_index
       || ', record=' || record || ', charIndex=' || char_index
@@ -898,10 +916,13 @@ CREATE OR REPLACE MACRO gtfs_vc_timezone_ok(s) AS (
 -- commons-validator 1.6 UrlValidator.getInstance().isValid: URL_REGEX parts, scheme http/https/ftp, an authority
 -- (AUTHORITY_REGEX: [IPv6] or userinfo@host, port, nothing else), PATH_REGEX without '//' and without '..' above the
 -- root (URI.normalize), a query without whitespace. Hosts: DomainValidator (labels, a known TLD) or an IPv4 address.
-CREATE OR REPLACE MACRO gtfs_vc_url_re() AS ('^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?$');
+-- Java's '.' excludes the line terminators \n \r U+0085 U+2028 U+2029; RE2's '.' only excludes \n, so it is spelled out.
+CREATE OR REPLACE MACRO gtfs_vc_url_re() AS (
+  '^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\?([^#]*))?(#([^\n\r\x{85}\x{2028}\x{2029}]*))?$'
+);
 CREATE OR REPLACE MACRO gtfs_vc_authority_re() AS (
   '^(?:\[([0-9a-fA-F:]+)\]|(?:(?:[a-zA-Z0-9%-._~!$&''()*+,;=]+(?::[a-zA-Z0-9%-._~!$&''()*+,;=]*)?@)?([A-Za-z0-9.-]*)))'
-  || '(?::([0-9]*))?(.*)$'
+  || '(?::([0-9]*))?([^\n\r\x{85}\x{2028}\x{2029}]*)$'
 );
 CREATE OR REPLACE MACRO gtfs_vc_domain_re() AS (
   '^(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+([A-Za-z](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)\.?$'

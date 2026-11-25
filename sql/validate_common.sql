@@ -14,6 +14,13 @@ CREATE OR REPLACE MACRO gtfs_validation_distance_m(lat1, lon1, lat2, lon2) AS (
 -- gtfs_validation_notice(json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, ...)).
 CREATE OR REPLACE MACRO gtfs_validation_notice(fields) AS (json_merge_patch('{}', fields));
 
+-- Java's a.equalsIgnoreCase(b): same length, and every character pair equal after toUpperCase then toLowerCase.
+-- DuckDB's upper and lower map one code point at a time, so the whole-string form compares the same pairs.
+-- (Plain lower() misses pairs such as final sigma and sigma, or long s and s, that Java treats as equal.)
+CREATE OR REPLACE MACRO gtfs_validation_equals_ignore_case(a, b) AS (
+  length(a) = length(b) AND lower(upper(a)) = lower(upper(b))
+);
+
 -- GtfsTime.toHHMMSS(): seconds since midnight -> 'HH:MM:SS' (hours can exceed 24).
 CREATE OR REPLACE MACRO gtfs_validation_time_text(seconds) AS (
   CASE WHEN seconds IS NULL THEN NULL

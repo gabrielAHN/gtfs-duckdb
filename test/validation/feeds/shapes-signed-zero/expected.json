@@ -1,0 +1,126 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_too_far_from_shape",
+   "notice": {
+    "geoDistanceToShape": 1159.4662782798507,
+    "match": [
+     10.0,
+     0.0
+    ],
+    "shapeId": "SHM",
+    "stopId": "Z",
+    "stopName": "Za",
+    "stopTimeCsvRowNumber": 5,
+    "tripCsvRowNumber": 3,
+    "tripId": "T2"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_too_far_from_shape",
+   "notice": {
+    "geoDistanceToShape": 1160.9109380953182,
+    "match": [
+     0.0,
+     29.999999999999993
+    ],
+    "shapeId": "SHQ",
+    "stopId": "X",
+    "stopName": "Xa",
+    "stopTimeCsvRowNumber": 2,
+    "tripCsvRowNumber": 2,
+    "tripId": "T1"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_too_far_from_shape",
+   "notice": {
+    "geoDistanceToShape": 1160.9109380953182,
+    "match": [
+     0.0,
+     29.999999999999993
+    ],
+    "shapeId": "SHQ",
+    "stopId": "X2",
+    "stopName": "Xb",
+    "stopTimeCsvRowNumber": 4,
+    "tripCsvRowNumber": 2,
+    "tripId": "T1"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_too_far_from_shape",
+   "notice": {
+    "geoDistanceToShape": 328.5123369152582,
+    "match": [
+     10.005000013437542,
+     -3.942467745558004e-19
+    ],
+    "shapeId": "SHM",
+    "stopId": "W2",
+    "stopName": "Wb",
+    "stopTimeCsvRowNumber": 7,
+    "tripCsvRowNumber": 3,
+    "tripId": "T2"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_too_far_from_shape",
+   "notice": {
+    "geoDistanceToShape": 328.5123369152582,
+    "match": [
+     10.005000013437542,
+     3.942467745558004e-19
+    ],
+    "shapeId": "SHM",
+    "stopId": "W",
+    "stopName": "Wa",
+    "stopTimeCsvRowNumber": 6,
+    "tripCsvRowNumber": 3,
+    "tripId": "T2"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_too_far_from_shape",
+   "notice": {
+    "geoDistanceToShape": 333.585303532452,
+    "match": [
+     -7.765026088435918e-19,
+     30.004999999999992
+    ],
+    "shapeId": "SHQ",
+    "stopId": "Y",
+    "stopName": "Ya",
+    "stopTimeCsvRowNumber": 3,
+    "tripCsvRowNumber": 2,
+    "tripId": "T1"
+   },
+   "severity": "WARNING"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}
