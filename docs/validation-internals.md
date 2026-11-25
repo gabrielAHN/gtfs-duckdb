@@ -158,7 +158,8 @@ The severity is not part of the notice: `validate_finish.sql` takes it from the 
   the jar and Java 17; see the harness docstring). Name fixtures by group: `core-`, `generated-`, `stops-`,
   `stoptimes-`, `routescal-`, `shapes-`. The oracle exports at most 1000 notices per code; keep fixtures small.
 - `python3 -m unittest discover -s test -p 'test_validation.py' -v` runs every fixture on DuckDB 2.0.0 and 1.4.3 and
-  compares our notices with expected.json (floats with a relative tolerance of 1e-6). `GTFS_VALIDATION_SCOPE=stops`
+  compares our notices with expected.json (decimals with a relative tolerance of 1e-6, coordinate pairs such as a
+  shape match location with 1e-9). `GTFS_VALIDATION_SCOPE=stops`
   (groups: core, generated, stops, stoptimes, routescal, shapes) limits the comparison to codes the stops group owns;
   codes shared with another group must then only produce no extra notice. CI runs the same tests against the built
   extension (`GTFS_EXTENSION`).

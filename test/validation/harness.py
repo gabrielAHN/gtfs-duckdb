@@ -334,10 +334,21 @@ def in_scope(report, rules, strict=True):
 # ---------------------------------------------------------------- comparison
 
 
+def _is_number(v):
+    return isinstance(v, (int, float)) and not isinstance(v, bool)
+
+
+def _inexact(v):
+    """Decimal scalars, and number lists holding a float (S2LatLng pairs such as `match`), compare with a tolerance."""
+    if isinstance(v, float):
+        return not float(v).is_integer()
+    return isinstance(v, list) and bool(v) and all(map(_is_number, v)) and any(isinstance(x, float) for x in v)
+
+
 def _split(notice):
     exact, floats = {}, {}
     for k, v in notice.items():
-        if isinstance(v, float) and not float(v).is_integer():
+        if _inexact(v):
             floats[k] = v
         else:
             exact[k] = v
@@ -345,13 +356,24 @@ def _split(notice):
 
 
 def _close(a, b):
+    """Decimal fields match to rel_tol 1e-6; coordinate lists to 1e-9 (about 1 cm), which still absorbs last-bit
+    differences between DuckDB's and Java's sin, cos and atan2."""
     if set(a) != set(b):
         return False
-    return all(math.isclose(a[k], b[k], rel_tol=1e-6, abs_tol=1e-9) for k in a)
+    for k in a:
+        x, y = a[k], b[k]
+        if isinstance(x, list) or isinstance(y, list):
+            if not (isinstance(x, list) and isinstance(y, list) and len(x) == len(y)):
+                return False
+            if not all(math.isclose(p, q, rel_tol=1e-9, abs_tol=1e-12) for p, q in zip(x, y)):
+                return False
+        elif not math.isclose(x, y, rel_tol=1e-6, abs_tol=1e-9):
+            return False
+    return True
 
 
 def compare(ours, theirs):
-    """Multiset comparison of [{code, severity, notice}]; float fields match with rel_tol 1e-6.
+    """Multiset comparison of [{code, severity, notice}]; inexact fields match as in _close.
     Returns (missing: in theirs not ours, extra: in ours not theirs)."""
     buckets = defaultdict(list)
     for t in theirs:
