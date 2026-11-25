@@ -11,10 +11,11 @@ DELETE FROM gtfs_vc_state;
 DELETE FROM gtfs_vc_rows;
 DELETE FROM gtfs_vc_cells;
 DELETE FROM gtfs_vc_notices;
+INSERT INTO gtfs_vc_text SELECT {{FILE}}, TRY(decode(content)), NULL, content FROM read_blob({{PATH}});
+UPDATE gtfs_vc_text SET text = gtfs_vc_decode_invalid(content) WHERE text IS NULL;
 -- BOMInputStream strips one UTF-8 BOM and univocity a second one.
-INSERT INTO gtfs_vc_text
-SELECT {{FILE}}, regexp_replace(t, '^\x{FEFF}\x{FEFF}?', ''), gtfs_vc_invalid_line_ending_row(t)
-FROM (SELECT gtfs_vc_decode(content) AS t FROM read_blob({{PATH}}));
+UPDATE gtfs_vc_text SET text = regexp_replace(text, '^\x{FEFF}\x{FEFF}?', ''),
+  invalid_line_ending_row = gtfs_vc_invalid_line_ending_row(text), content = NULL;
 INSERT INTO gtfs_vc_records SELECT * FROM gtfs_vc_parse_records();
 CREATE OR REPLACE TEMP TABLE gtfs_vc_fail AS SELECT * FROM gtfs_vc_failure();
 INSERT INTO gtfs_validation_generic_notices SELECT 'csv_parsing_failed', notice FROM gtfs_vc_fail;

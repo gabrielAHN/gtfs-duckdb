@@ -626,7 +626,18 @@ CREATE OR REPLACE MACRO gtfs_vc_parser_settings() AS (
 -- GENERATED-END
 
 -- Whitespace for univocity (skip bits as whitespace) and String.trim(): every char <= ' '.
-CREATE OR REPLACE MACRO gtfs_vc_ws() AS (array_to_string(list_transform(range(0, 33), lambda i: chr(i::INTEGER)), ''));
+CREATE OR REPLACE MACRO gtfs_vc_ws() AS (
+  chr(0) || chr(1) || chr(2) || chr(3) || chr(4) || chr(5) || chr(6) || chr(7) || chr(8) || chr(9) || chr(10)
+  || chr(11) || chr(12) || chr(13) || chr(14) || chr(15) || chr(16) || chr(17) || chr(18) || chr(19) || chr(20) || chr(21) || chr(22) || chr(23) || chr(24) || chr(25) || chr(26) || chr(27) || chr(28) || chr(29) || chr(30) || chr(31) || chr(32)
+);
+
+-- String.trim() and univocity's whitespace trimming: chars <= ' ' at both ends (cheap when there are none).
+CREATE OR REPLACE MACRO gtfs_vc_trim(x) AS (
+  CASE WHEN regexp_matches(x, '^[\x00-\x20]|[\x00-\x20]$') THEN regexp_replace(x, '^[\x00-\x20]+|[\x00-\x20]+$', '', 'g')
+       ELSE x END
+);
+CREATE OR REPLACE MACRO gtfs_vc_ltrim(x) AS (regexp_replace(x, '^[\x00-\x20]+', ''));
+CREATE OR REPLACE MACRO gtfs_vc_rtrim(x) AS (regexp_replace(x, '[\x00-\x20]+$', ''));
 
 -- ---------------------------------------------------------------- decoding
 
@@ -645,13 +656,12 @@ CREATE OR REPLACE MACRO gtfs_vc_utf8_token_re() AS (
   || '|E0[AB][0-9A-F]|E[1-9A-F][89AB][0-9A-F]'
   || '|..'
 );
--- Bytes -> text as CsvFile decodes them (CodingErrorAction.REPLACE with U+FFFD). The slow branch only runs on
--- invalid UTF-8.
-CREATE OR REPLACE MACRO gtfs_vc_decode(content) AS (
-  coalesce(TRY(decode(content)),
-           decode(unhex(array_to_string(list_transform(
-             regexp_extract_all(hex(content), gtfs_vc_utf8_token_re()),
-             lambda t: CASE WHEN regexp_full_match(t, gtfs_vc_utf8_valid_re()) THEN t ELSE 'EFBFBD' END), ''))))
+-- Bytes that are not valid UTF-8 -> text as CsvFile decodes them (CodingErrorAction.REPLACE with U+FFFD).
+-- validate_load.sql only calls it when decode() fails.
+CREATE OR REPLACE MACRO gtfs_vc_decode_invalid(content) AS (
+  decode(unhex(array_to_string(list_transform(
+    regexp_extract_all(hex(content), gtfs_vc_utf8_token_re()),
+    lambda t: CASE WHEN regexp_full_match(t, gtfs_vc_utf8_valid_re()) THEN t ELSE 'EFBFBD' END), '')))
 );
 -- LineEndingCheckingInputStream: line (1 + LFs before it) of the first CR not followed by LF, NULL if none.
 CREATE OR REPLACE MACRO gtfs_vc_invalid_line_ending_row(content_text) AS (
@@ -680,8 +690,10 @@ WITH fast_lines AS (
 fast AS (
   SELECT line_no AS rec_no, line_no AS csv_row_number,
     CASE WHEN line = '' THEN 'empty' WHEN starts_with(line, '#') THEN 'comment'
-         WHEN trim(line, gtfs_vc_ws()) = '' THEN 'ws' ELSE 'row' END AS kind,
-    list_transform(string_split(line, ','), lambda f: nullif(trim(f, gtfs_vc_ws()), '')) AS fields
+         WHEN gtfs_vc_trim(line) = '' THEN 'ws' ELSE 'row' END AS kind,
+    CASE WHEN regexp_matches(line, '[\x00-\x20]')
+         THEN list_transform(string_split(line, ','), lambda f: nullif(gtfs_vc_trim(f), ''))
+         ELSE list_transform(string_split(line, ','), lambda f: nullif(f, '')) END AS fields
   FROM fast_lines
 ),
 tokens AS (
@@ -697,7 +709,7 @@ tok1 AS (
 tok2 AS (
   SELECT *, sum(starts_record::INTEGER) OVER w AS rec_no, sum(nl) OVER w AS line_end,
     starts_record AND starts_with(body, '#') AS is_comment,
-    ltrim(body, gtfs_vc_ws()) AS lb
+    gtfs_vc_ltrim(body) AS lb
   FROM tok1 WINDOW w AS (ORDER BY tok_no ROWS UNBOUNDED PRECEDING)
 ),
 tok3 AS (
@@ -709,12 +721,12 @@ tok3 AS (
 tok4 AS (
   SELECT rec_no, tok_no, line_end, is_comment, quoted, body,
     CASE WHEN is_comment THEN NULL
-         WHEN NOT quoted THEN nullif(trim(body, gtfs_vc_ws()), '')
+         WHEN NOT quoted THEN nullif(gtfs_vc_trim(body), '')
          -- unclosed quote: the rest of the file
          WHEN NOT regexp_matches(lb, '^"(?:[^"]|"")*"[^,\n]*$') THEN nullif(replace(lb[2:], '""', '"'), '')
-         WHEN trim(q.r, gtfs_vc_ws()) = '' THEN nullif(replace(q.c, '""', '"'), '')
+         WHEN gtfs_vc_trim(q.r) = '' THEN nullif(replace(q.c, '""', '"'), '')
          -- text after the closing quote: univocity keeps the quotes and that text
-         ELSE '"' || replace(q.c, '""', '"') || '"' || rtrim(q.r, gtfs_vc_ws())
+         ELSE '"' || replace(q.c, '""', '"') || '"' || gtfs_vc_rtrim(q.r)
     END AS value
   FROM tok3
 ),
@@ -722,7 +734,7 @@ slow AS (
   SELECT rec_no, max(line_end) AS csv_row_number,
     CASE WHEN bool_or(is_comment) THEN 'comment'
          WHEN count(*) = 1 AND NOT bool_or(quoted) AND max(body) = '' THEN 'empty'
-         WHEN count(*) = 1 AND NOT bool_or(quoted) AND trim(max(body), gtfs_vc_ws()) = '' THEN 'ws'
+         WHEN count(*) = 1 AND NOT bool_or(quoted) AND gtfs_vc_trim(max(body)) = '' THEN 'ws'
          ELSE 'row' END AS kind,
     list(value ORDER BY tok_no) AS fields
   FROM tok4 GROUP BY rec_no
@@ -734,7 +746,7 @@ SELECT rec_no, csv_row_number, kind, fields, list_max(list_transform(fields, lam
 -- The header record: the first record that is not empty or a comment (a whitespace-only one gives one empty name).
 CREATE OR REPLACE MACRO gtfs_vc_header_record() AS TABLE
 SELECT rec_no, csv_row_number,
-  CASE WHEN kind = 'ws' THEN [''] ELSE list_transform(fields, lambda f: coalesce(trim(f, gtfs_vc_ws()), '')) END AS names
+  CASE WHEN kind = 'ws' THEN [''] ELSE list_transform(fields, lambda f: coalesce(gtfs_vc_trim(f), '')) END AS names
 FROM gtfs_vc_records WHERE kind IN ('ws', 'row') ORDER BY rec_no LIMIT 1;
 
 -- univocity TextParsingException (csv_parsing_failed): the first record with a value longer than maxCharsPerColumn
@@ -770,8 +782,8 @@ hr AS (SELECT rec_no, names FROM gtfs_vc_header_record()),
 c AS (
   SELECT e.rec_no, e.is_long, e.fields, e.long_pos,
     CASE WHEN e.is_long
-         THEN rt.body_start + (length(rt.tok) - 1 - length(ltrim(rt.tok[2:], gtfs_vc_ws())))
-              + starts_with(ltrim(rt.tok[2:], gtfs_vc_ws()), '"')::INTEGER + 4096 + 1
+         THEN rt.body_start + (length(rt.tok) - 1 - length(gtfs_vc_ltrim(rt.tok[2:])))
+              + starts_with(gtfs_vc_ltrim(rt.tok[2:]), '"')::INTEGER + 4096 + 1
          ELSE rt.body_start + length(rt.tok) END AS char_index,
     (SELECT count(*) FROM gtfs_vc_records r, hr
      WHERE r.kind = 'row' AND r.rec_no > hr.rec_no AND r.rec_no < e.rec_no) AS record,
@@ -842,9 +854,9 @@ CREATE OR REPLACE MACRO gtfs_vc_int(s) AS (
 );
 -- Double.parseDouble: trims chars <= ' ', decimal with optional exponent and f/F/d/D suffix, NaN, Infinity.
 CREATE OR REPLACE MACRO gtfs_vc_double(s) AS (
-  CASE WHEN regexp_full_match(trim(s, gtfs_vc_ws()),
+  CASE WHEN regexp_full_match(gtfs_vc_trim(s),
               '[+-]?(?:NaN|Infinity|(?:[0-9]+\.?[0-9]*|\.[0-9]+)(?:[eE][+-]?[0-9]+)?[fFdD]?)')
-       THEN TRY_CAST(regexp_replace(trim(s, gtfs_vc_ws()), '[fFdD]$', '') AS DOUBLE) END
+       THEN TRY_CAST(regexp_replace(gtfs_vc_trim(s), '[fFdD]$', '') AS DOUBLE) END
 );
 -- GtfsTime.fromString: (\d{1,3}):(\d\d):(\d\d), minutes and seconds below 60 -> seconds since midnight.
 CREATE OR REPLACE MACRO gtfs_vc_time(s) AS (
@@ -955,7 +967,7 @@ raw AS (
     CASE WHEN c.column_index IS NOT NULL THEN r.fields[c.column_index + 1] END AS raw
   FROM gtfs_vc_rows r CROSS JOIN cols c WHERE r.length_ok
 ),
-trimmed AS (SELECT *, trim(raw, gtfs_vc_ws()) AS v FROM raw)
+trimmed AS (SELECT *, gtfs_vc_trim(raw) AS v FROM raw)
 SELECT csv_row_number, col_ord, column_name, kind, java_type, level, bounds, raw, v,
   CASE WHEN kind IN ('integer', 'enum') THEN gtfs_vc_int(v)
        WHEN kind = 'time' THEN gtfs_vc_time(v)
@@ -964,68 +976,77 @@ SELECT csv_row_number, col_ord, column_name, kind, java_type, level, bounds, raw
   CASE WHEN kind = 'date' THEN gtfs_vc_date(v) END AS vdt
 FROM trimmed;
 
+-- Integer/Double.compareTo(0) as a sign: -0.0 is below 0.0 and NaN above everything.
+CREATE OR REPLACE MACRO gtfs_vc_cmp0(p_kind, p_vi, p_vd) AS (
+  CASE WHEN p_kind = 'integer' THEN sign(p_vi)
+       WHEN isnan(p_vd) THEN 1 WHEN p_vd = 0 AND signbit(p_vd) THEN -1 ELSE sign(p_vd) END
+);
+
 -- RowParser / DefaultFieldValidator notices of the cells (fieldValue: raw for the value checks, trimmed after).
+-- Each branch scans gtfs_vc_cells with its own cheap filter first: a shared CTE lets DuckDB OR every branch's
+-- condition into one filter and run the URL and timezone checks on every cell.
 CREATE OR REPLACE MACRO gtfs_vc_cell_notices(p_file) AS TABLE
-WITH c AS (SELECT * FROM gtfs_vc_cells),
-n AS (
+WITH n AS (
   SELECT csv_row_number,
     CASE level WHEN 'REQUIRED' THEN 'missing_required_field' ELSE 'missing_recommended_field' END AS code,
     json_object('filename', p_file, 'csvRowNumber', csv_row_number, 'fieldName', column_name) AS notice
-  FROM c WHERE raw IS NULL AND level IN ('REQUIRED', 'RECOMMENDED')
+  FROM gtfs_vc_cells WHERE raw IS NULL AND level IN ('REQUIRED', 'RECOMMENDED')
   UNION ALL
   SELECT csv_row_number, 'invalid_character', json_object('filename', p_file, 'csvRowNumber', csv_row_number,
     'fieldName', column_name, 'fieldValue', raw)
-  FROM c WHERE contains(raw, chr(65533))
+  FROM gtfs_vc_cells WHERE contains(raw, chr(65533))
   UNION ALL
   SELECT csv_row_number, 'new_line_in_value', json_object('filename', p_file, 'csvRowNumber', csv_row_number,
     'fieldName', column_name, 'fieldValue', raw)
-  FROM c WHERE contains(raw, chr(10)) OR contains(raw, chr(13))
+  FROM gtfs_vc_cells WHERE contains(raw, chr(10)) OR contains(raw, chr(13))
   UNION ALL
   SELECT csv_row_number, 'leading_or_trailing_whitespaces', json_object('filename', p_file,
     'csvRowNumber', csv_row_number, 'fieldName', column_name, 'fieldValue', raw)
-  FROM c WHERE v <> raw
+  FROM gtfs_vc_cells WHERE v <> raw
   UNION ALL
   SELECT csv_row_number, 'non_ascii_or_non_printable_char', json_object('filename', p_file,
     'csvRowNumber', csv_row_number, 'fieldName', column_name, 'fieldValue', v)
-  FROM c WHERE kind = 'id' AND regexp_matches(v, '[^\x20-\x7E]')
+  FROM gtfs_vc_cells WHERE kind = 'id' AND regexp_matches(v, '[^\x20-\x7E]')
   UNION ALL
   SELECT csv_row_number, 'invalid_url', json_object('filename', p_file, 'csvRowNumber', csv_row_number,
     'fieldName', column_name, 'fieldValue', v)
-  FROM c WHERE kind = 'url' AND v IS NOT NULL AND NOT gtfs_vc_url_ok(v)
+  FROM (SELECT * FROM gtfs_vc_cells WHERE kind = 'url' AND v IS NOT NULL) WHERE NOT gtfs_vc_url_ok(v)
+  UNION ALL
+  SELECT csv_row_number, 'invalid_timezone', json_object('filename', p_file, 'csvRowNumber', csv_row_number,
+    'fieldName', column_name, 'fieldValue', v)
+  FROM (SELECT * FROM gtfs_vc_cells WHERE kind = 'timezone' AND v IS NOT NULL) WHERE NOT gtfs_vc_timezone_ok(v)
   UNION ALL
   SELECT csv_row_number,
-    CASE kind WHEN 'integer' THEN 'invalid_integer' WHEN 'enum' THEN 'invalid_integer' WHEN 'time' THEN 'invalid_time'
-      WHEN 'color' THEN 'invalid_color' WHEN 'date' THEN 'invalid_date' WHEN 'timezone' THEN 'invalid_timezone'
-      ELSE 'invalid_float' END,
+    CASE kind WHEN 'time' THEN 'invalid_time' WHEN 'color' THEN 'invalid_color' WHEN 'date' THEN 'invalid_date'
+      WHEN 'integer' THEN 'invalid_integer' WHEN 'enum' THEN 'invalid_integer' ELSE 'invalid_float' END,
     json_object('filename', p_file, 'csvRowNumber', csv_row_number, 'fieldName', column_name, 'fieldValue', v)
-  FROM c WHERE v IS NOT NULL AND CASE
-      WHEN kind IN ('integer', 'enum', 'time', 'color') THEN vi IS NULL
-      WHEN kind IN ('float', 'latitude', 'longitude') THEN vd IS NULL
-      WHEN kind = 'date' THEN vdt IS NULL
-      WHEN kind = 'timezone' THEN NOT gtfs_vc_timezone_ok(v)
-      ELSE false END
+  FROM gtfs_vc_cells
+  WHERE v IS NOT NULL AND vi IS NULL AND vd IS NULL AND vdt IS NULL
+    AND kind IN ('integer', 'enum', 'time', 'color', 'float', 'latitude', 'longitude', 'date')
   UNION ALL
   SELECT csv_row_number, 'unexpected_enum_value', json_object('filename', p_file, 'csvRowNumber', csv_row_number,
     'fieldName', column_name, 'fieldValue', vi::INTEGER)
-  FROM c WHERE kind = 'enum' AND vi IS NOT NULL AND gtfs_validation_enum_name(java_type, vi) = 'UNRECOGNIZED'
+  FROM (SELECT * FROM gtfs_vc_cells WHERE kind = 'enum' AND vi IS NOT NULL)
+  WHERE gtfs_validation_enum_name(java_type, vi) = 'UNRECOGNIZED'
   UNION ALL
   -- checkBounds: Integer/Double.compareTo(0) (-0.0 is below 0.0, NaN above), asLatitude / asLongitude ranges
   SELECT csv_row_number, 'number_out_of_range', json_object('filename', p_file, 'csvRowNumber', csv_row_number,
-    'fieldName', column_name, 'fieldType', bounds_text, 'fieldValue', fv)
-  FROM (
-    SELECT csv_row_number, column_name, kind, bounds, vd,
-      CASE kind WHEN 'latitude' THEN 'latitude within [-90, 90]' WHEN 'longitude' THEN 'longitude within [-180, 180]'
-        ELSE CASE bounds WHEN 'POSITIVE' THEN 'positive ' WHEN 'NON_NEGATIVE' THEN 'non-negative ' ELSE 'non-zero ' END
-             || CASE kind WHEN 'integer' THEN 'integer' ELSE 'float' END END AS bounds_text,
-      CASE WHEN kind = 'integer' THEN to_json(vi::INTEGER) ELSE to_json(vd) END AS fv,
-      CASE WHEN kind = 'integer' THEN sign(vi)
-           WHEN isnan(vd) THEN 1 WHEN vd = 0 AND signbit(vd) THEN -1 ELSE sign(vd) END AS cmp
-    FROM c WHERE (kind = 'integer' AND vi IS NOT NULL AND bounds IS NOT NULL)
-      OR (kind = 'float' AND vd IS NOT NULL AND bounds IS NOT NULL)
-      OR (kind IN ('latitude', 'longitude') AND vd IS NOT NULL)
-  ) WHERE CASE WHEN kind = 'latitude' THEN isnan(vd) OR NOT (-90 <= vd AND vd <= 90)
-               WHEN kind = 'longitude' THEN isnan(vd) OR NOT (-180 <= vd AND vd <= 180)
-               WHEN bounds = 'POSITIVE' THEN cmp <= 0 WHEN bounds = 'NON_NEGATIVE' THEN cmp < 0 ELSE cmp = 0 END
+    'fieldName', column_name,
+    'fieldType', CASE kind WHEN 'latitude' THEN 'latitude within [-90, 90]'
+                           WHEN 'longitude' THEN 'longitude within [-180, 180]'
+                           ELSE CASE bounds WHEN 'POSITIVE' THEN 'positive ' WHEN 'NON_NEGATIVE' THEN 'non-negative '
+                                            ELSE 'non-zero ' END
+                                || CASE kind WHEN 'integer' THEN 'integer' ELSE 'float' END END,
+    'fieldValue', CASE WHEN kind = 'integer' THEN to_json(vi::INTEGER) ELSE to_json(vd) END)
+  FROM gtfs_vc_cells
+  WHERE (vi IS NOT NULL OR vd IS NOT NULL) AND kind IN ('integer', 'float', 'latitude', 'longitude')
+    AND CASE WHEN kind = 'latitude' THEN isnan(vd) OR NOT (-90 <= vd AND vd <= 90)
+             WHEN kind = 'longitude' THEN isnan(vd) OR NOT (-180 <= vd AND vd <= 180)
+             WHEN bounds = 'POSITIVE' THEN gtfs_vc_cmp0(kind, vi, vd) <= 0
+             WHEN bounds = 'NON_NEGATIVE' THEN gtfs_vc_cmp0(kind, vi, vd) < 0
+             WHEN bounds = 'NON_ZERO' THEN gtfs_vc_cmp0(kind, vi, vd) = 0
+             ELSE false
+        END
 )
 SELECT n.csv_row_number, n.code, gtfs_validation_notice(n.notice) AS notice, r.severity = 'ERROR' AS err
 FROM n JOIN gtfs_validation_rules() r USING (code);

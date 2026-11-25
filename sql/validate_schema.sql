@@ -122,9 +122,9 @@ CREATE OR REPLACE TEMP TABLE gtfs_v_calendar_dates (
 -- GENERATED-END
 -- CORE-TABLES (core workstream tables below this line)
 -- Loader working tables, refilled for each loaded file by validate_load.sql (see validate_core.sql).
--- The file being loaded: decoded text (Java's UTF-8 decoding, U+FFFD for malformed bytes, BOMs stripped) and the
+-- The file being loaded (content: its bytes while it is decoded): decoded text (Java's UTF-8 decoding, U+FFFD for malformed bytes, BOMs stripped) and the
 -- line of the first invalid line ending (LineEndingCheckingInputStream), NULL when every line ends in LF or CRLF.
-CREATE OR REPLACE TEMP TABLE gtfs_vc_text (filename VARCHAR, text VARCHAR, invalid_line_ending_row BIGINT);
+CREATE OR REPLACE TEMP TABLE gtfs_vc_text (filename VARCHAR, text VARCHAR, invalid_line_ending_row BIGINT, content BLOB);
 -- Its CSV records as univocity returns them: kind comment / empty / ws (only whitespace) / row, the line number the
 -- record ends on (CsvRow.getRowNumber) and the values (NULL for an empty value).
 CREATE OR REPLACE TEMP TABLE gtfs_vc_records (
