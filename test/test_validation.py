@@ -42,6 +42,38 @@ EXACT = {c for c, r in RULES.items() if set(r["owners"]) <= SCOPE}
 NO_EXTRA = {c for c, r in RULES.items() if set(r["owners"]) & SCOPE} - EXACT
 
 
+SQL_DIR = Path(harness.__file__).resolve().parents[2] / "sql"
+RULE_STATEMENT = re.compile(r"INSERT INTO gtfs_vc_rule_notices SELECT code, notice FROM (gtfs_vr_\w+)\(\);")
+GROUP_HEADER = re.compile(r"-- (gtfs_validate_rules_\w+)\(\)")
+
+
+def rule_lists(finish_text=None):
+    """The rule macros of each gtfs_validate_rules_<group>() macro; the ones validate_finish.sql runs under each group's
+    comment, in its section of rule statements (headers and statements only, ended by its first other line); and the
+    other lines of validate_finish.sql naming a rule macro. A rule's line must be its whole statement, so a statement
+    commented out, edited or moved out of the section is reported instead of counted."""
+    groups = {}
+    for path in sorted(SQL_DIR.glob("validate_rules_*.sql")):
+        text = re.sub(r"--[^\n]*", "", path.read_text())
+        match = re.search(r"MACRO (gtfs_validate_rules_\w+)\(\) AS TABLE(.*?);", text, re.S)
+        groups[match.group(1)] = re.findall(r"\bFROM (gtfs_vr_\w+)\(\)", match.group(2))
+    if finish_text is None:
+        finish_text = (SQL_DIR / "validate_finish.sql").read_text()
+    finish, group, stray = {}, None, []
+    for line in finish_text.splitlines():
+        header, statement = GROUP_HEADER.fullmatch(line), RULE_STATEMENT.fullmatch(line)
+        if header:
+            group = finish.setdefault(header.group(1), [])
+        elif statement and group is not None:
+            group.append(statement.group(1))
+        else:
+            if "gtfs_vr_" in line:
+                stray.append(line)
+            if finish:
+                group = None
+    return groups, finish, stray
+
+
 def compare_in_scope(ours, theirs):
     ours = [r for r in ours if r["code"] in EXACT | NO_EXTRA]
     theirs = [r for r in theirs if r["code"] in EXACT | NO_EXTRA]
@@ -137,21 +169,34 @@ class PipelineTest(unittest.TestCase):
     def test_finish_runs_every_rule_macro_of_every_group(self):
         # validate_finish.sql runs the rule macros one statement at a time (see its header), listed under a comment
         # naming their group: the lists must be the group macros' own.
-        sql = Path(harness.__file__).resolve().parents[2] / "sql"
-        groups = {}
-        for path in sql.glob("validate_rules_*.sql"):
-            match = re.search(r"MACRO (gtfs_validate_rules_\w+)\(\) AS TABLE(.*?);", path.read_text(), re.S)
-            groups[match.group(1)] = re.findall(r"\bFROM (gtfs_vr_\w+)\(\)", match.group(2))
-        finish, group = {}, None
-        for line in (sql / "validate_finish.sql").read_text().splitlines():
-            header = re.fullmatch(r"-- (gtfs_validate_rules_\w+)\(\)", line)
-            if header:
-                group = finish.setdefault(header.group(1), [])
-            for macro in re.findall(r"\bFROM (gtfs_vr_\w+)\(\)", line):
-                self.assertIsNotNone(group, line)
-                group.append(macro)
+        groups, finish, stray = rule_lists()
+        self.assertEqual(stray, [])
         self.assertEqual(len(groups), 5)
         self.assertEqual(finish, groups)
+
+    def test_rule_list_check_reports_each_kind_of_drift(self):
+        # Each edit of validate_finish.sql below must fail test_finish_runs_every_rule_macro_of_every_group.
+        text = (SQL_DIR / "validate_finish.sql").read_text()
+        lines = text.splitlines(keepends=True)
+        first = next(i for i, line in enumerate(lines) if RULE_STATEMENT.fullmatch(line.rstrip("\n")))
+        rule, following = lines[first], lines[first + 1]
+        self.assertTrue(RULE_STATEMENT.fullmatch(following.rstrip("\n")))
+        last = max(i for i, line in enumerate(lines) if RULE_STATEMENT.fullmatch(line.rstrip("\n")))
+        edits = {
+            "commented out": text.replace(rule, "-- " + rule, 1),
+            "removed": text.replace(rule, "", 1),
+            "run twice": text.replace(rule, rule + rule, 1),
+            "reordered": text.replace(rule + following, following + rule, 1),
+            "under another group": text.replace(rule, "", 1).replace(lines[last], lines[last] + rule, 1),
+            "after the section": text.replace(rule, "", 1) + rule,
+            "last rule after the section": text.replace(lines[last], "", 1) + lines[last],
+            "edited": text.replace(rule, rule.replace("();", "() WHERE false;"), 1),
+        }
+        for name, edited in edits.items():
+            with self.subTest(edit=name):
+                self.assertNotEqual(edited, text)
+                groups, finish, stray = rule_lists(edited)
+                self.assertTrue(stray or finish != groups)
 
     def test_missing_directory_is_an_error(self):
         with tempfile.TemporaryDirectory() as tmp:
