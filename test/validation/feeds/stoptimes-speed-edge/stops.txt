@@ -1,0 +1,5 @@
+stop_id,stop_name,stop_lat,stop_lon
+SA,Alpha,40.7000,-74.0000
+SB,Bravo,40.7540,-74.0000
+SC,Charlie,40.8080,-74.0000
+SN,Nowhere,,
