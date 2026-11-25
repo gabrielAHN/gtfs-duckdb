@@ -57,18 +57,19 @@ From the command line, [GTFS Tools](https://github.com/gabrielAHN/gtfs-tools) ru
 ## Memory
 
 Each file is read whole, so the memory a validation needs grows with the largest file, usually `stop_times.txt`.
-Measured with DuckDB v2.0.0 on a Mac:
+Measured with DuckDB v2.0.0 on a Mac (peak resident memory of the DuckDB process):
 
 | stop_times.txt | memory_limit | Peak memory | Time |
 |---|---|---|---|
-| 42 MB (New York City Subway) | default | 3.0 GB | 3.5 s |
-| 42 MB | 2 GB | 2.3 GB | 3.6 s |
-| 42 MB | 1 GB | 1.6 GB | 4.4 s |
-| 150 MB (the same feed, 4 times over) | 2 GB | 3.1 GB | 11 s |
+| 42 MB (New York City Subway) | default | 2.9 GiB | 3.5 s |
+| 42 MB | `'2GB'` | 2.3 GiB | 3.6 s |
+| 42 MB | `'1GB'` | 1.6 GiB | 4.4 s |
+| 150 MB (the same feed, 4 times over) | `'2GB'` | 3.0 GiB | 11 s |
 
 `SET memory_limit` lowers the peak by spilling to disk, at some cost in time. With `memory_limit='512MB'` the New
-York feed fails with an out-of-memory error. Feeds whose `stop_times.txt` reaches 1 GB or more, as some national feeds'
-do, need more memory than most computers have.
+York feed fails with an out-of-memory error. The peak can exceed the limit, and grows with the file: about 7 times the
+extra size between the two files above. At that rate a 1 GB `stop_times.txt`, as some national feeds have, would need
+about 9 GiB (an estimate, not measured).
 
 ## What is validated
 
