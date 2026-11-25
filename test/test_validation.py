@@ -10,6 +10,7 @@ out-of-scope group must produce no notice the oracle lacks. Unset means every gr
 
 Run: python3 -m unittest test.test_validation -v     (from the repository root)
 """
+
 import json
 import os
 import subprocess
@@ -63,8 +64,10 @@ class RegistryTest(unittest.TestCase):
                 for row in harness.notices(feed):
                     self.assertIn(row["code"], RULES, f"{name}: unregistered code")
                     fields = set(RULES[row["code"]]["notice_fields"])
-                    self.assertTrue(set(row["notice"]) <= fields,
-                                    f"{name}: {row['code']} has unknown keys {set(row['notice']) - fields}")
+                    self.assertTrue(
+                        set(row["notice"]) <= fields,
+                        f"{name}: {row['code']} has unknown keys {set(row['notice']) - fields}",
+                    )
                     self.assertEqual(row["severity"], RULES[row["code"]]["severity"], f"{name}: {row['code']}")
 
 
@@ -106,8 +109,11 @@ class PipelineTest(unittest.TestCase):
     def test_validation_date_defaults_to_current_date(self):
         with tempfile.TemporaryDirectory() as tmp:
             feed = harness.materialize("base", Path(tmp) / "feed")
-            out = harness.run(feed, date=None, queries={
-                "state": "SELECT validation_date = current_date AS today FROM gtfs_validation_state"})
+            out = harness.run(
+                feed,
+                date=None,
+                queries={"state": "SELECT validation_date = current_date AS today FROM gtfs_validation_state"},
+            )
         self.assertEqual(out["state"], [{"today": True}])
 
 

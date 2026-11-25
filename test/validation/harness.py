@@ -16,6 +16,7 @@ CLI:
   python3 test/validation/harness.py expect <fixture> [...]                     write <fixture>/expected.json from the oracle
   python3 test/validation/harness.py diff <feed dir|zip> [--date D] [--bin B]   ours vs oracle (in-scope notices)
 """
+
 import fnmatch
 import hashlib
 import json
@@ -41,9 +42,16 @@ FILES = ["stops", "pathways", "routes", "trips", "stop_times", "shapes", "calend
 REQUIRED = {"routes", "trips", "stop_times"}
 GTFS_FILENAMES = {f + ".txt" for f in FILES}
 # Sections whose CREATE OR REPLACE MACRO statements the extension registers at LOAD.
-MACRO_SECTIONS = ["validate_common", "validate_registry", "validate_core", "validate_rules_stops",
-                  "validate_rules_stop_times", "validate_rules_routes_calendar", "validate_rules_shapes",
-                  "validate_rules_generated"]
+MACRO_SECTIONS = [
+    "validate_common",
+    "validate_registry",
+    "validate_core",
+    "validate_rules_stops",
+    "validate_rules_stop_times",
+    "validate_rules_routes_calendar",
+    "validate_rules_shapes",
+    "validate_rules_generated",
+]
 # Sections PRAGMA gtfs_validate executes, with placeholders replaced before parsing.
 STATEMENT_SECTIONS = ["validate_schema", "validate_begin", "validate_load", "validate_missing", "validate_finish"]
 STUB_MARKER = "GTFS_VALIDATION_STUB"
@@ -79,15 +87,21 @@ def date_expr(date):
 
 
 def file_values(table, path):
-    return {"TABLE": table, "FILE": quote(table + ".txt"), "PATH": quote(path),
-            "REQUIRED": "true" if table in REQUIRED else "false"}
+    return {
+        "TABLE": table,
+        "FILE": quote(table + ".txt"),
+        "PATH": quote(path),
+        "REQUIRED": "true" if table in REQUIRED else "false",
+    }
 
 
 def pragma_sql(feed_dir, date):
     """The statements PRAGMA gtfs_validate(feed_dir, date) executes (src/gtfs_extension.cpp mirrors this)."""
     feed_dir = Path(feed_dir)
-    parts = [section("validate_schema"),
-             subst(section("validate_begin"), DATE=date_expr(date), DIRECTORY=quote(str(feed_dir)))]
+    parts = [
+        section("validate_schema"),
+        subst(section("validate_begin"), DATE=date_expr(date), DIRECTORY=quote(str(feed_dir))),
+    ]
     stub = STUB_MARKER in section("validate_load")
     for table in FILES:
         path = feed_dir / f"{table}.txt"
@@ -113,28 +127,38 @@ def reference_load_sql(table, path):
             continue
         v = f"NULLIF(trim(\"{name}\"), '')"
         expr = {
-            "float": f"TRY_CAST({v} AS DOUBLE)", "latitude": f"TRY_CAST({v} AS DOUBLE)",
-            "longitude": f"TRY_CAST({v} AS DOUBLE)", "integer": f"TRY_CAST({v} AS INTEGER)",
-            "enum": f"TRY_CAST({v} AS INTEGER)", "date": f"TRY_STRPTIME({v}, '%Y%m%d')::DATE",
-            "time": (f"CASE WHEN regexp_full_match({v}, '[0-9]{{1,3}}:[0-9]{{2}}:[0-9]{{2}}') THEN "
-                     f"split_part({v}, ':', 1)::INTEGER * 3600 + split_part({v}, ':', 2)::INTEGER * 60 + "
-                     f"split_part({v}, ':', 3)::INTEGER END"),
+            "float": f"TRY_CAST({v} AS DOUBLE)",
+            "latitude": f"TRY_CAST({v} AS DOUBLE)",
+            "longitude": f"TRY_CAST({v} AS DOUBLE)",
+            "integer": f"TRY_CAST({v} AS INTEGER)",
+            "enum": f"TRY_CAST({v} AS INTEGER)",
+            "date": f"TRY_STRPTIME({v}, '%Y%m%d')::DATE",
+            "time": (
+                f"CASE WHEN regexp_full_match({v}, '[0-9]{{1,3}}:[0-9]{{2}}:[0-9]{{2}}') THEN "
+                f"split_part({v}, ':', 1)::INTEGER * 3600 + split_part({v}, ':', 2)::INTEGER * 60 + "
+                f"split_part({v}, ':', 3)::INTEGER END"
+            ),
             "color": f"CASE WHEN regexp_full_match({v}, '[0-9A-Fa-f]{{6}}') THEN ('0x' || {v})::INTEGER END",
         }.get(kind, v)
         cols.append(expr)
     if not header:
         return ""
-    columns = "".join(f"INSERT INTO gtfs_validation_columns VALUES ({quote(table + '.txt')}, {quote(h)}, {i});\n"
-                      for i, h in enumerate(header))
-    return columns + (f"INSERT INTO gtfs_v_{table} SELECT row_number() OVER () + 1, " + ", ".join(cols) +
-            f" FROM read_csv({quote(path)}, header=true, all_varchar=true, delim=',', quote='\"');\n"
-            f"UPDATE gtfs_validation_files SET row_count = (SELECT count(*) FROM gtfs_v_{table}) "
-            f"WHERE filename = {quote(table + '.txt')};")
+    columns = "".join(
+        f"INSERT INTO gtfs_validation_columns VALUES ({quote(table + '.txt')}, {quote(h)}, {i});\n"
+        for i, h in enumerate(header)
+    )
+    return columns + (
+        f"INSERT INTO gtfs_v_{table} SELECT row_number() OVER () + 1, "
+        + ", ".join(cols)
+        + f" FROM read_csv({quote(path)}, header=true, all_varchar=true, delim=',', quote='\"');\n"
+        f"UPDATE gtfs_validation_files SET row_count = (SELECT count(*) FROM gtfs_v_{table}) "
+        f"WHERE filename = {quote(table + '.txt')};"
+    )
 
 
 QUERIES = {
     "notices": "SELECT code, severity, filename, csv_row_number, notice::VARCHAR AS notice "
-               "FROM gtfs_validation_notices ORDER BY ALL",
+    "FROM gtfs_validation_notices ORDER BY ALL",
     "files": "SELECT * FROM gtfs_validation_files ORDER BY filename",
 }
 
@@ -175,10 +199,14 @@ def notices(feed_dir, date=DEFAULT_DATE, bin=None):
 
 # ---------------------------------------------------------------- fixtures
 
+
 def fixture_names(pattern=None):
     pattern = pattern or os.environ.get("GTFS_VALIDATION_FIXTURES", "*")
-    return sorted(p.name for p in FEEDS.iterdir()
-                  if p.is_dir() and fnmatch.fnmatch(p.name, pattern) and (p / "expected.json").exists())
+    return sorted(
+        p.name
+        for p in FEEDS.iterdir()
+        if p.is_dir() and fnmatch.fnmatch(p.name, pattern) and (p / "expected.json").exists()
+    )
 
 
 def materialize(name, dest):
@@ -206,6 +234,7 @@ def expected(name):
 
 # ---------------------------------------------------------------- oracle
 
+
 def oracle_report(feed, date=DEFAULT_DATE):
     """MobilityData report.json for a feed dir or zip, cached by content."""
     jar = os.environ.get("GTFS_VALIDATOR_JAR", str(REF / "tools/oracle/jar/gtfs-validator-8.0.2-SNAPSHOT-cli.jar"))
@@ -222,8 +251,12 @@ def oracle_report(feed, date=DEFAULT_DATE):
     if cached.exists():
         return json.loads(cached.read_text())
     with tempfile.TemporaryDirectory(prefix="oracle-") as out:
-        proc = subprocess.run([java, "-jar", jar, "-i", str(feed), "-o", out, "-d", date, "-svu"],
-                              capture_output=True, text=True, timeout=7200)
+        proc = subprocess.run(
+            [java, "-jar", jar, "-i", str(feed), "-o", out, "-d", date, "-svu"],
+            capture_output=True,
+            text=True,
+            timeout=7200,
+        )
         report = Path(out, "report.json")
         if not report.exists():
             raise RuntimeError(f"oracle failed ({proc.returncode}): {proc.stderr[-3000:]}")
@@ -237,8 +270,11 @@ FILE_KEYS = ("filename", "childFilename", "parentFilename")
 def out_of_scope_emitter(code, notice):
     """Oracle notices on validated files whose Java emitter reads a file this port does not read."""
     # RouteAgencyIdValidator (agency.txt + routes.txt): routes.agency_id required or recommended by agency count.
-    if code in ("missing_required_field", "missing_recommended_field") and notice.get("filename") == "routes.txt" \
-            and notice.get("fieldName") == "agency_id":
+    if (
+        code in ("missing_required_field", "missing_recommended_field")
+        and notice.get("filename") == "routes.txt"
+        and notice.get("fieldName") == "agency_id"
+    ):
         return True
     return False
 
@@ -246,10 +282,22 @@ def out_of_scope_emitter(code, notice):
 def registry(bin=None):
     bin = bin or duckdb_bins()[0]
     env = {k: v for k, v in os.environ.items() if k != "AI_AGENT"}
-    proc = subprocess.run([bin, "-json", ":memory:", "-c", f".read {SQL / 'validate_registry.sql'}",
-                           "-c", "SELECT * FROM gtfs_validation_rules() ORDER BY code"],
-                          capture_output=True, text=True, env=env, check=True)
-    text = proc.stdout[proc.stdout.index("["):]
+    proc = subprocess.run(
+        [
+            bin,
+            "-json",
+            ":memory:",
+            "-c",
+            f".read {SQL / 'validate_registry.sql'}",
+            "-c",
+            "SELECT * FROM gtfs_validation_rules() ORDER BY code",
+        ],
+        capture_output=True,
+        text=True,
+        env=env,
+        check=True,
+    )
+    text = proc.stdout[proc.stdout.index("[") :]
     return {r["code"]: r for r in json.loads(text)}
 
 
@@ -275,6 +323,7 @@ def in_scope(report, rules, strict=True):
 
 
 # ---------------------------------------------------------------- comparison
+
 
 def _split(notice):
     exact, floats = {}, {}
@@ -329,6 +378,7 @@ def strip(rows):
 
 # ---------------------------------------------------------------- CLI
 
+
 def _feed_dir(arg, tmp):
     p = Path(arg)
     if p.is_dir():
@@ -343,6 +393,7 @@ def _feed_dir(arg, tmp):
 
 def main(argv):
     import argparse
+
     ap = argparse.ArgumentParser()
     ap.add_argument("cmd", choices=["run", "expect", "diff"])
     ap.add_argument("targets", nargs="+")

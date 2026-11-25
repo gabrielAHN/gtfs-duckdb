@@ -191,8 +191,8 @@ struct GtfsValidatedFile {
 };
 
 static const GtfsValidatedFile GTFS_VALIDATED_FILES[] = {
-    {"stops", false},      {"pathways", false}, {"routes", true},   {"trips", true},
-    {"stop_times", true},  {"shapes", false},   {"calendar", false}, {"calendar_dates", false},
+    {"stops", false},     {"pathways", false}, {"routes", true},    {"trips", true},
+    {"stop_times", true}, {"shapes", false},   {"calendar", false}, {"calendar_dates", false},
 };
 
 static bool IsIsoDate(const string &text) {
