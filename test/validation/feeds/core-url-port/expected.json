@@ -1,0 +1,95 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "invalid_url",
+   "notice": {
+    "csvRowNumber": 10,
+    "fieldName": "route_url",
+    "fieldValue": "https://example.org:99999999999999999999999999999999/",
+    "filename": "routes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_url",
+   "notice": {
+    "csvRowNumber": 11,
+    "fieldName": "route_url",
+    "fieldValue": "https://192.0.2.1:99999999999/",
+    "filename": "routes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_url",
+   "notice": {
+    "csvRowNumber": 13,
+    "fieldName": "route_url",
+    "fieldValue": "https://m\u00fcnchen.de:99999999999/",
+    "filename": "routes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_url",
+   "notice": {
+    "csvRowNumber": 14,
+    "fieldName": "route_url",
+    "fieldValue": "https://user:pw@example.org:4294967296/",
+    "filename": "routes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_url",
+   "notice": {
+    "csvRowNumber": 6,
+    "fieldName": "route_url",
+    "fieldValue": "https://example.org:65536/",
+    "filename": "routes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_url",
+   "notice": {
+    "csvRowNumber": 7,
+    "fieldName": "route_url",
+    "fieldValue": "https://example.org:2147483647/",
+    "filename": "routes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_url",
+   "notice": {
+    "csvRowNumber": 8,
+    "fieldName": "route_url",
+    "fieldValue": "https://example.org:2147483648/",
+    "filename": "routes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_url",
+   "notice": {
+    "csvRowNumber": 9,
+    "fieldName": "route_url",
+    "fieldValue": "https://example.org:99999999999/",
+    "filename": "routes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

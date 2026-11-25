@@ -1,0 +1,14 @@
+route_id,agency_id,route_short_name,route_long_name,route_type,route_url
+R1,A,1,Plain,3,https://example.org/
+R2,A,2,Empty port,3,https://example.org:/
+R3,A,3,Highest port,3,https://example.org:65535/
+R4,A,4,Zero-padded port,3,https://example.org:000000000000000000000000080/
+R5,A,5,Above 16 bits,3,https://example.org:65536/
+R6,A,6,Int max,3,https://example.org:2147483647/
+R7,A,7,Int max plus one,3,https://example.org:2147483648/
+R8,A,8,Eleven digits,3,https://example.org:99999999999/
+R9,A,9,Thirty-two digits,3,https://example.org:99999999999999999999999999999999/
+R10,A,10,IPv4 host,3,https://192.0.2.1:99999999999/
+R11,A,11,IPv6 host,3,http://[2001:db8::1]:99999999999/
+R12,A,12,IDN host,3,https://münchen.de:99999999999/
+R13,A,13,User info,3,https://user:pw@example.org:4294967296/
