@@ -1,0 +1,5 @@
+route_id,agency_id,route_short_name,route_long_name,route_type,continuous_pickup,continuous_drop_off
+R1,A,1,Main Street,3,0,
+R2,A,2,Second Avenue,3,,
+R3,A,3,Third Avenue,3,1,2
+R4,A,4,Fourth Avenue,3,7,1

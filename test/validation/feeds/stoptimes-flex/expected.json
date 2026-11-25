@@ -1,0 +1,252 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "forbidden_arrival_or_departure_time",
+   "notice": {
+    "arrivalTime": "08:00:00",
+    "csvRowNumber": 6,
+    "endPickupDropOffWindow": "09:00:00",
+    "startPickupDropOffWindow": "08:00:00"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "forbidden_drop_off_type",
+   "notice": {
+    "csvRowNumber": 12,
+    "endPickupDropOffWindow": "09:00:00",
+    "startPickupDropOffWindow": "08:00:00"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "forbidden_drop_off_type",
+   "notice": {
+    "csvRowNumber": 13,
+    "endPickupDropOffWindow": "09:00:00",
+    "startPickupDropOffWindow": "08:00:00"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "forbidden_geography_id",
+   "notice": {
+    "csvRowNumber": 15,
+    "locationId": "L1",
+    "stopId": "S1"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "forbidden_geography_id",
+   "notice": {
+    "csvRowNumber": 17,
+    "locationGroupId": "LG1",
+    "stopId": "S1"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "forbidden_geography_id",
+   "notice": {
+    "csvRowNumber": 18,
+    "locationGroupId": "LG1",
+    "locationId": "L1"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "forbidden_pickup_type",
+   "notice": {
+    "csvRowNumber": 11,
+    "endPickupDropOffWindow": "09:00:00",
+    "startPickupDropOffWindow": "08:00:00"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "forbidden_pickup_type",
+   "notice": {
+    "csvRowNumber": 12,
+    "endPickupDropOffWindow": "09:00:00",
+    "startPickupDropOffWindow": "08:00:00"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "forbidden_pickup_type",
+   "notice": {
+    "csvRowNumber": 13,
+    "endPickupDropOffWindow": "09:00:00",
+    "startPickupDropOffWindow": "08:00:00"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "forbidden_shape_dist_traveled",
+   "notice": {
+    "csvRowNumber": 18,
+    "locationGroupId": "LG1",
+    "locationId": "L1",
+    "shapeDistTraveled": 2.0,
+    "tripId": "T7"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "forbidden_shape_dist_traveled",
+   "notice": {
+    "csvRowNumber": 5,
+    "locationGroupId": "",
+    "locationId": "L1",
+    "shapeDistTraveled": 5.5,
+    "tripId": "T2"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_pickup_drop_off_window",
+   "notice": {
+    "csvRowNumber": 8,
+    "endPickupDropOffWindow": "10:00:00",
+    "startPickupDropOffWindow": "10:00:00"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_pickup_drop_off_window",
+   "notice": {
+    "csvRowNumber": 9,
+    "endPickupDropOffWindow": "10:00:00",
+    "startPickupDropOffWindow": "11:00:00"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_pickup_or_drop_off_window",
+   "notice": {
+    "csvRowNumber": 10,
+    "endPickupDropOffWindow": "10:30:00"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_pickup_or_drop_off_window",
+   "notice": {
+    "csvRowNumber": 14,
+    "endPickupDropOffWindow": "09:00:00"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_pickup_or_drop_off_window",
+   "notice": {
+    "csvRowNumber": 7,
+    "startPickupDropOffWindow": "09:00:00"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 4,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 5,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 6,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 7,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 8,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_required_field",
+   "notice": {
+    "csvRowNumber": 16,
+    "fieldName": "stop_id",
+    "filename": "stop_times.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_stop_times_record",
+   "notice": {
+    "csvRowNumber": 6,
+    "locationGroupId": "",
+    "locationId": "L1",
+    "tripId": "T3"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_time_with_only_arrival_or_departure_time",
+   "notice": {
+    "csvRowNumber": 6,
+    "specifiedField": "arrival_time",
+    "stopSequence": 1,
+    "tripId": "T3"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "unusable_trip",
+   "notice": {
+    "csvRowNumber": 4,
+    "tripId": "T3"
+   },
+   "severity": "WARNING"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

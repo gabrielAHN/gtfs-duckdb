@@ -1,0 +1,119 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "fast_travel_between_consecutive_stops",
+   "notice": {
+    "arrivalTime2": "08:03:00",
+    "csvRowNumber1": 2,
+    "csvRowNumber2": 4,
+    "departureTime1": "08:00:00",
+    "distanceKm": 12.009070927167377,
+    "routeId": "R1",
+    "speedKph": 180.13606390751065,
+    "stopId1": "SA",
+    "stopId2": "SC",
+    "stopName1": "Alpha",
+    "stopName2": "Charlie",
+    "stopSequence1": 1,
+    "stopSequence2": 3,
+    "tripCsvRowNumber": 2,
+    "tripId": "U1"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "fast_travel_between_consecutive_stops",
+   "notice": {
+    "arrivalTime2": "08:03:00",
+    "csvRowNumber1": 5,
+    "csvRowNumber2": 8,
+    "departureTime1": "08:00:00",
+    "distanceKm": 12.009070927167377,
+    "routeId": "R1",
+    "speedKph": 180.13606390751065,
+    "stopId1": "SA",
+    "stopId2": "SC",
+    "stopName1": "Alpha",
+    "stopName2": "Charlie",
+    "stopSequence1": 1,
+    "stopSequence2": 4,
+    "tripCsvRowNumber": 3,
+    "tripId": "U2"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "fast_travel_between_far_stops",
+   "notice": {
+    "arrivalTime2": "08:10:00",
+    "csvRowNumber1": 9,
+    "csvRowNumber2": 10,
+    "departureTime1": "08:00:00",
+    "distanceKm": 8666.32303115264,
+    "routeId": "R1",
+    "speedKph": 47270.852897196215,
+    "stopId1": "SN",
+    "stopId2": "SA",
+    "stopName1": "Nowhere",
+    "stopName2": "Alpha",
+    "stopSequence1": 1,
+    "stopSequence2": 2,
+    "tripCsvRowNumber": 4,
+    "tripId": "U3"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "foreign_key_violation",
+   "notice": {
+    "childFieldName": "stop_id",
+    "childFilename": "stop_times.txt",
+    "csvRowNumber": 3,
+    "fieldValue": "SX",
+    "parentFieldName": "stop_id",
+    "parentFilename": "stops.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "foreign_key_violation",
+   "notice": {
+    "childFieldName": "stop_id",
+    "childFilename": "stop_times.txt",
+    "csvRowNumber": 7,
+    "fieldValue": "SX",
+    "parentFieldName": "stop_id",
+    "parentFilename": "stops.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_recommended_file",
+   "notice": {
+    "filename": "shapes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_time_with_only_arrival_or_departure_time",
+   "notice": {
+    "csvRowNumber": 7,
+    "specifiedField": "departure_time",
+    "stopSequence": 3,
+    "tripId": "U2"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_without_location",
+   "notice": {
+    "csvRowNumber": 5,
+    "locationType": "STOP",
+    "stopId": "SN"
+   },
+   "severity": "ERROR"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

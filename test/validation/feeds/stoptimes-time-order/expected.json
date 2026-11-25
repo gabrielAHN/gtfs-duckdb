@@ -1,0 +1,192 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "duplicate_trips",
+   "notice": {
+    "csvRowNumberTripId1FirstStopTime": 10,
+    "csvRowNumberTripId2FirstStopTime": 11,
+    "tripId1": "TC",
+    "tripId2": "TD"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 4,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 5,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 6,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 7,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 8,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_file",
+   "notice": {
+    "filename": "shapes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_trip_edge",
+   "notice": {
+    "csvRowNumber": 6,
+    "specifiedField": "departure_time",
+    "stopSequence": 5,
+    "tripId": "TA"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_trip_edge",
+   "notice": {
+    "csvRowNumber": 7,
+    "specifiedField": "arrival_time",
+    "stopSequence": 1,
+    "tripId": "TB"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_time_with_arrival_before_previous_departure_time",
+   "notice": {
+    "arrivalTime": "07:59:00",
+    "csvRowNumber": 5,
+    "departureTime": "08:00:00",
+    "prevCsvRowNumber": 2,
+    "tripId": "TA"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_time_with_only_arrival_or_departure_time",
+   "notice": {
+    "csvRowNumber": 4,
+    "specifiedField": "arrival_time",
+    "stopSequence": 3,
+    "tripId": "TA"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_time_with_only_arrival_or_departure_time",
+   "notice": {
+    "csvRowNumber": 6,
+    "specifiedField": "arrival_time",
+    "stopSequence": 5,
+    "tripId": "TA"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_time_with_only_arrival_or_departure_time",
+   "notice": {
+    "csvRowNumber": 7,
+    "specifiedField": "departure_time",
+    "stopSequence": 1,
+    "tripId": "TB"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "too_many_consecutive_stop_times_with_same_time",
+   "notice": {
+    "entityCount": 6,
+    "time": "09:00:00",
+    "tripId": "TE"
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "too_many_consecutive_stop_times_with_same_time",
+   "notice": {
+    "entityCount": 8,
+    "time": "11:00:00",
+    "tripId": "TG"
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "unsorted_stop_times",
+   "notice": {
+    "endCsvRowNumber": 10,
+    "startCsvRowNumber": 9,
+    "tripId": "TC"
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "unsorted_stop_times",
+   "notice": {
+    "endCsvRowNumber": 13,
+    "startCsvRowNumber": 11,
+    "tripId": "TD"
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "unsorted_stop_times",
+   "notice": {
+    "endCsvRowNumber": 19,
+    "startCsvRowNumber": 12,
+    "tripId": "TE"
+   },
+   "severity": "INFO"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

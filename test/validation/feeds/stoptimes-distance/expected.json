@@ -1,0 +1,54 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "decreasing_or_equal_stop_time_distance",
+   "notice": {
+    "csvRowNumber": 3,
+    "prevCsvRowNumber": 2,
+    "prevShapeDistTraveled": 0.0,
+    "prevStopSequence": 1,
+    "shapeDistTraveled": 0.0,
+    "stopId": "S2",
+    "stopSequence": 2,
+    "tripId": "T1"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "decreasing_or_equal_stop_time_distance",
+   "notice": {
+    "csvRowNumber": 6,
+    "prevCsvRowNumber": 5,
+    "prevShapeDistTraveled": 1.0,
+    "prevStopSequence": 4,
+    "shapeDistTraveled": 0.5,
+    "stopId": "S1",
+    "stopSequence": 5,
+    "tripId": "T1"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "forbidden_shape_dist_traveled",
+   "notice": {
+    "csvRowNumber": 7,
+    "locationGroupId": "",
+    "locationId": "L1",
+    "shapeDistTraveled": 0.9,
+    "tripId": "T1"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}
