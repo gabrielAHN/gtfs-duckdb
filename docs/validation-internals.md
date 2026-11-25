@@ -159,9 +159,12 @@ The severity is not part of the notice: `validate_finish.sql` takes it from the 
   `stoptimes-`, `routescal-`, `shapes-`. The oracle exports at most 1000 notices per code; keep fixtures small.
 - `python3 -m unittest discover -s test -p 'test_validation.py' -v` runs every fixture on DuckDB 2.0.0 and 1.4.3 and
   compares our notices with expected.json (floats with a relative tolerance of 1e-6). `GTFS_VALIDATION_SCOPE=stops`
-  (groups: core, generated, stops, stoptimes, routescal, shapes) limits the comparison to codes the stops group owns; codes shared with another group must then only produce no
-  extra notice. CI runs the same tests against the built extension (`GTFS_EXTENSION`).
+  (groups: core, generated, stops, stoptimes, routescal, shapes) limits the comparison to codes the stops group owns;
+  codes shared with another group must then only produce no extra notice. CI runs the same tests against the built
+  extension (`GTFS_EXTENSION`).
 - `python3 test/validation/harness.py diff <feed dir or zip>` compares a whole feed with the oracle, code by code.
-- Until the core group replaces it, `validate_load.sql` carries the `GTFS_VALIDATION_STUB` marker and the harness fills
-  `gtfs_v_<table>` with a naive loader: header-based, every file reported parsed, no notices. Rule-group fixtures must
-  therefore be plain, valid CSV.
+- A notice whose file field names alternatives (`calendar.txt or calendar_dates.txt`) is in scope when every
+  alternative is one of the 8 files.
+- While a branch's `validate_load.sql` carries the `GTFS_VALIDATION_STUB` marker, the harness fills `gtfs_v_<table>`
+  itself with a naive loader (header-based, every file reported parsed, no notices). The marker let rule groups be
+  written before the loader existed; the finished loader no longer has it.

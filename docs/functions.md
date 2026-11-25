@@ -12,6 +12,28 @@ Imports a GTFS feed from a directory in one call: creates the edit tables, drops
 PRAGMA gtfs_import('feed');
 ```
 
+## Validation
+
+### gtfs_validate(directory[, date])
+
+Checks the GTFS files `gtfs_import` reads (stops, pathways, routes, trips, stop_times, shapes, calendar and calendar_dates) with the rules of the [MobilityData GTFS validator](https://github.com/MobilityData/gtfs-validator), ported to SQL. It returns one row per notice code (`severity`, `code`, `total_notices`), errors first, and keeps every notice in the `gtfs_validation_notices` table. `date` (`YYYY-MM-DD`, default today) is the date that rules about expired or future service check against. It does not import the feed or change the dataset. See [validation.md](validation.md).
+
+```sql
+PRAGMA gtfs_validate('feed');
+PRAGMA gtfs_validate('feed', '2026-11-24');
+SELECT code, filename, csv_row_number, notice FROM gtfs_validation_notices WHERE severity = 'ERROR';
+```
+
+### gtfs_validation_rules()
+
+Lists every rule `gtfs_validate` checks: `code`, `severity`, `notice_fields` and `notice_field_types`, `reachable` (false for the rules that cannot fire on these 8 files) and a `summary`.
+
+```sql
+SELECT code, severity, summary FROM gtfs_validation_rules() ORDER BY code;
+```
+
+The other `gtfs_validation_*` macros and the `gtfs_validate_rules_*`, `gtfs_vc_*` and `gtfs_vr_*` macros are internal parts of `gtfs_validate`. They can change in any release.
+
 ## Scalar Macros
 
 Utility macros for data conversion, available in any SQL query.
