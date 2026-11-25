@@ -208,7 +208,10 @@ static bool IsIsoDate(const string &text) {
 }
 
 static string ValidateDataset(ClientContext &context, const FunctionParameters &parameters) {
-	auto directory = parameters.values[0].IsNull() ? string() : StringValue::Get(parameters.values[0]);
+	if (parameters.values[0].IsNull()) {
+		throw InvalidInputException("gtfs_validate: the directory must not be NULL");
+	}
+	auto directory = StringValue::Get(parameters.values[0]);
 	if (parameters.values.size() > 2) {
 		throw InvalidInputException("gtfs_validate takes a directory and an optional date (YYYY-MM-DD)");
 	}
@@ -221,14 +224,30 @@ static string ValidateDataset(ClientContext &context, const FunctionParameters &
 		date = "DATE " + QuoteLiteral(text);
 	}
 	auto &fs = FileSystem::GetFileSystem(context);
-	// Fixed placeholders first; the user-supplied directory and paths last, so their text is never rescanned.
+	vector<string> paths;
+	vector<uint8_t> present;
+	bool any_present = false;
+	for (auto &file : GTFS_VALIDATED_FILES) {
+		auto name = string(file.table) + ".txt";
+		paths.push_back(directory.empty() ? name : fs.JoinPath(directory, name));
+		present.push_back(fs.FileExists(paths.back()));
+		any_present = any_present || present.back();
+	}
+	// A typo or a file path would otherwise validate as a feed with every file missing. Only checked when no file was
+	// found, so file systems that serve files without directories (DuckDB-WASM registered files) still work.
+	if (!any_present && !directory.empty() && !fs.DirectoryExists(directory)) {
+		throw InvalidInputException("gtfs_validate: %s is not a directory", directory);
+	}
+	// Fixed placeholders first; the user-supplied directory and paths last, so their text is never rescanned. The
+	// sections keep placeholders out of comments (test_validation.py checks), so a newline in a path stays in a string.
 	auto begin = StringUtil::Replace(GTFS_VALIDATE_BEGIN_SQL, "{{DATE}}", date);
 	string result = string(GTFS_VALIDATE_SCHEMA_SQL) + "\n" +
 	                StringUtil::Replace(begin, "{{DIRECTORY}}", QuoteLiteral(directory)) + "\n";
-	for (auto &file : GTFS_VALIDATED_FILES) {
+	for (idx_t i = 0; i < paths.size(); i++) {
+		auto &file = GTFS_VALIDATED_FILES[i];
 		auto name = string(file.table) + ".txt";
-		auto path = directory.empty() ? name : fs.JoinPath(directory, name);
-		string section = fs.FileExists(path) ? GTFS_VALIDATE_LOAD_SQL : GTFS_VALIDATE_MISSING_SQL;
+		auto &path = paths[i];
+		string section = present[i] ? GTFS_VALIDATE_LOAD_SQL : GTFS_VALIDATE_MISSING_SQL;
 		section = StringUtil::Replace(section, "{{TABLE}}", file.table);
 		section = StringUtil::Replace(section, "{{FILE}}", QuoteLiteral(name));
 		section = StringUtil::Replace(section, "{{REQUIRED}}", file.required ? "true" : "false");

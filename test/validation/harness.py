@@ -37,7 +37,6 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[2]
 SQL = REPO / "sql"
 FEEDS = Path(__file__).resolve().parent / "feeds"
-TYPED_SCHEMA = json.loads((Path(__file__).resolve().parent / "typed_schema.json").read_text())
 REF = Path(os.environ["GTFS_VALIDATION_REF"]).expanduser() if os.environ.get("GTFS_VALIDATION_REF") else None
 DEFAULT_DATE = "2026-11-24"
 
@@ -58,7 +57,6 @@ MACRO_SECTIONS = [
 ]
 # Sections PRAGMA gtfs_validate executes, with placeholders replaced before parsing.
 STATEMENT_SECTIONS = ["validate_schema", "validate_begin", "validate_load", "validate_missing", "validate_finish"]
-STUB_MARKER = "GTFS_VALIDATION_STUB"
 
 
 def duckdb_bins():
@@ -91,73 +89,30 @@ def date_expr(date):
 
 
 def file_values(table, path):
+    # Same order as the C++ PRAGMA: the user-supplied path last, so its text is never rescanned.
     return {
         "TABLE": table,
         "FILE": quote(table + ".txt"),
-        "PATH": quote(path),
         "REQUIRED": "true" if table in REQUIRED else "false",
+        "PATH": quote(path),
     }
 
 
 def pragma_sql(feed_dir, date):
     """The statements PRAGMA gtfs_validate(feed_dir, date) executes (src/gtfs_extension.cpp mirrors this)."""
     feed_dir = Path(feed_dir)
+    if not any((feed_dir / f"{table}.txt").is_file() for table in FILES) and not feed_dir.is_dir():
+        raise RuntimeError(f"gtfs_validate: {feed_dir} is not a directory")
     parts = [
         section("validate_schema"),
         subst(section("validate_begin"), DATE=date_expr(date), DIRECTORY=quote(str(feed_dir))),
     ]
-    stub = STUB_MARKER in section("validate_load")
     for table in FILES:
         path = feed_dir / f"{table}.txt"
-        if path.is_file():
-            parts.append(subst(section("validate_load"), **file_values(table, str(path))))
-            if stub:
-                parts.append(reference_load_sql(table, path))
-        else:
-            parts.append(subst(section("validate_missing"), **file_values(table, str(path))))
+        name = "validate_load" if path.is_file() else "validate_missing"
+        parts.append(subst(section(name), **file_values(table, str(path))))
     parts.append(section("validate_finish"))
     return parts
-
-
-def reference_load_sql(table, path):
-    """Naive typed load used only while validate_load.sql is a stub: header-based, no notices, no CSV edge cases."""
-    raw = Path(path).read_bytes().decode("utf-8", "replace").lstrip("\ufeff")
-    header = [h.strip().strip('"') for h in raw.splitlines()[0].split(",")] if raw.strip() else []
-    cols = []
-    for col in TYPED_SCHEMA[table][1:]:
-        name, kind = col["name"], col["kind"]
-        if name not in header:
-            cols.append(f"NULL::{col['type']}")
-            continue
-        v = f"NULLIF(trim(\"{name}\"), '')"
-        expr = {
-            "float": f"TRY_CAST({v} AS DOUBLE)",
-            "latitude": f"TRY_CAST({v} AS DOUBLE)",
-            "longitude": f"TRY_CAST({v} AS DOUBLE)",
-            "integer": f"TRY_CAST({v} AS INTEGER)",
-            "enum": f"TRY_CAST({v} AS INTEGER)",
-            "date": f"TRY_STRPTIME({v}, '%Y%m%d')::DATE",
-            "time": (
-                f"CASE WHEN regexp_full_match({v}, '[0-9]{{1,3}}:[0-9]{{2}}:[0-9]{{2}}') THEN "
-                f"split_part({v}, ':', 1)::INTEGER * 3600 + split_part({v}, ':', 2)::INTEGER * 60 + "
-                f"split_part({v}, ':', 3)::INTEGER END"
-            ),
-            "color": f"CASE WHEN regexp_full_match({v}, '[0-9A-Fa-f]{{6}}') THEN ('0x' || {v})::INTEGER END",
-        }.get(kind, v)
-        cols.append(expr)
-    if not header:
-        return ""
-    columns = "".join(
-        f"INSERT INTO gtfs_validation_columns VALUES ({quote(table + '.txt')}, {quote(h)}, {i});\n"
-        for i, h in enumerate(header)
-    )
-    return columns + (
-        f"INSERT INTO gtfs_v_{table} SELECT row_number() OVER () + 1, "
-        + ", ".join(cols)
-        + f" FROM read_csv({quote(path)}, header=true, all_varchar=true, delim=',', quote='\"');\n"
-        f"UPDATE gtfs_validation_files SET row_count = (SELECT count(*) FROM gtfs_v_{table}) "
-        f"WHERE filename = {quote(table + '.txt')};"
-    )
 
 
 QUERIES = {
@@ -355,9 +310,19 @@ def _split(notice):
     return json.dumps(exact, sort_keys=True), floats
 
 
+def _near(x, y, rel_tol, abs_tol):
+    if isinstance(x, float) and isinstance(y, float):
+        if math.isnan(x) and math.isnan(y):
+            return True
+        if x == 0 and y == 0:
+            # report.json prints -0.0 and 0.0 differently, and atan2 tells them apart: the sign must match.
+            return math.copysign(1.0, x) == math.copysign(1.0, y)
+    return math.isclose(x, y, rel_tol=rel_tol, abs_tol=abs_tol)
+
+
 def _close(a, b):
     """Decimal fields match to rel_tol 1e-6; coordinate lists to 1e-9 (about 1 cm), which still absorbs last-bit
-    differences between DuckDB's and Java's sin, cos and atan2."""
+    differences between DuckDB's and Java's sin, cos and atan2. NaN matches NaN."""
     if set(a) != set(b):
         return False
     for k in a:
@@ -365,9 +330,9 @@ def _close(a, b):
         if isinstance(x, list) or isinstance(y, list):
             if not (isinstance(x, list) and isinstance(y, list) and len(x) == len(y)):
                 return False
-            if not all(math.isclose(p, q, rel_tol=1e-9, abs_tol=1e-12) for p, q in zip(x, y)):
+            if not all(_near(p, q, 1e-9, 1e-12) for p, q in zip(x, y)):
                 return False
-        elif not math.isclose(x, y, rel_tol=1e-6, abs_tol=1e-9):
+        elif not _near(x, y, 1e-6, 1e-9):
             return False
     return True
 

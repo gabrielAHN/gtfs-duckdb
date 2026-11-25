@@ -50,7 +50,12 @@ A *macro* section holds only `CREATE OR REPLACE MACRO` statements; the extension
    trips and stop_times: `GtfsTableDescriptor.isRequired()`);
 4. `validate_finish.sql`.
 
-Placeholders are replaced as plain text before parsing. `test/validation/harness.py` emulates exactly this with a
+Placeholders are replaced as plain text before parsing, so a placeholder must never appear in a comment: a newline in
+a directory name would end the comment and run the rest of the name as SQL (`test_validation.py` checks every section).
+`{{DIRECTORY}}` and `{{PATH}}` are replaced last, so the text of a path is never scanned for placeholders. The PRAGMA
+raises an error when the directory is NULL, or when it finds no file and the directory does not exist.
+
+`test/validation/harness.py` emulates exactly this with a
 stock DuckDB CLI (it creates the macros with `CREATE OR REPLACE MACRO`), so the SQL can be developed and tested without
 building the extension. A DuckDB session binds a macro's tables when the macro is created, which is why every table a
 macro reads must be created by `validate_schema.sql` (the harness runs it before creating the macros).
@@ -67,6 +72,8 @@ All are TEMP tables, recreated empty by `validate_schema.sql` on every run.
 - `gtfs_validation_columns(filename, column_name, column_index)`: the header of each loaded file, as `CsvHeader` holds it.
 - `gtfs_validation_generic_notices(code, notice)`: notices from the core group.
 - `gtfs_validation_notices(code, severity, filename, csv_row_number, notice)`: the result, filled by `validate_finish.sql`.
+- `gtfs_vc_*`: the loader's working tables (the text, records, header, cells and notices of the file being loaded).
+  `validate_finish.sql` empties them.
 - `gtfs_v_<table>` for the 8 files: the entities. Columns: `csv_row_number BIGINT` and every field of the Java schema
   (`test/validation/typed_schema.json`, generated from `Gtfs*Schema.java`).
 
@@ -159,13 +166,11 @@ The severity is not part of the notice: `validate_finish.sql` takes it from the 
   `stoptimes-`, `routescal-`, `shapes-`. The oracle exports at most 1000 notices per code; keep fixtures small.
 - `python3 -m unittest discover -s test -p 'test_validation.py' -v` runs every fixture on DuckDB 2.0.0 and 1.4.3 and
   compares our notices with expected.json (decimals with a relative tolerance of 1e-6, coordinate pairs such as a
-  shape match location with 1e-9). `GTFS_VALIDATION_SCOPE=stops`
+  shape match location with 1e-9; a zero must have the same sign, since report.json prints `-0.0`, and NaN matches
+  NaN). `GTFS_VALIDATION_SCOPE=stops`
   (groups: core, generated, stops, stoptimes, routescal, shapes) limits the comparison to codes the stops group owns;
   codes shared with another group must then only produce no extra notice. CI runs the same tests against the built
   extension (`GTFS_EXTENSION`).
 - `python3 test/validation/harness.py diff <feed dir or zip>` compares a whole feed with the oracle, code by code.
 - A notice whose file field names alternatives (`calendar.txt or calendar_dates.txt`) is in scope when every
   alternative is one of the 8 files.
-- While a branch's `validate_load.sql` carries the `GTFS_VALIDATION_STUB` marker, the harness fills `gtfs_v_<table>`
-  itself with a naive loader (header-based, every file reported parsed, no notices). The marker let rule groups be
-  written before the loader existed; the finished loader no longer has it.

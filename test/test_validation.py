@@ -106,6 +106,34 @@ class PipelineTest(unittest.TestCase):
         counts = Counter(r["code"] for r in out["notices"])
         self.assertEqual({r["code"]: r["total_notices"] for r in out["summary"]}, dict(counts))
 
+    def test_placeholders_are_not_in_comments(self):
+        # The PRAGMA substitutes the directory into every placeholder; inside a -- comment a newline would end the
+        # comment and run the rest of the directory name as SQL.
+        for path in sorted((Path(harness.__file__).resolve().parents[2] / "sql").glob("validate_*.sql")):
+            for number, line in enumerate(path.read_text().splitlines(), 1):
+                if "--" in line:
+                    self.assertNotIn("{{", line[line.index("--") :], f"{path.name}:{number}")
+
+    def test_directory_text_cannot_run_sql(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            feed = harness.materialize("base", Path(tmp) / "x\nCREATE TABLE pwned AS SELECT 42 AS x;\n--")
+            out = harness.run(feed, queries={"pwned": "SELECT count(*) AS n FROM duckdb_tables() WHERE table_name = 'pwned'"})
+        self.assertEqual(out["pwned"], [{"n": 0}])
+        self.assertTrue(out["notices"] is not None)
+
+    def test_working_tables_are_emptied(self):
+        tables = ["gtfs_vc_text", "gtfs_vc_records", "gtfs_vc_header", "gtfs_vc_state", "gtfs_vc_rows", "gtfs_vc_cells"]
+        sql = " UNION ALL ".join(f"SELECT '{t}' AS t, count(*) AS n FROM {t}" for t in tables + ["gtfs_vc_notices"])
+        with tempfile.TemporaryDirectory() as tmp:
+            feed = harness.materialize("base", Path(tmp) / "feed")
+            out = harness.run(feed, queries={"left": sql})
+        self.assertEqual({r["t"]: r["n"] for r in out["left"]}, {t: 0 for t in tables + ["gtfs_vc_notices"]})
+
+    def test_missing_directory_is_an_error(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaisesRegex(RuntimeError, "is not a directory"):
+                harness.run(Path(tmp) / "no-such-feed")
+
     def test_validation_date_defaults_to_current_date(self):
         with tempfile.TemporaryDirectory() as tmp:
             feed = harness.materialize("base", Path(tmp) / "feed")

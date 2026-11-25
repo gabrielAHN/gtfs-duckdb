@@ -1,7 +1,8 @@
 -- Statement section (core workstream), run once per validated file that exists, in the order
 -- stops, pathways, routes, trips, stop_times, shapes, calendar, calendar_dates.
--- Placeholders, replaced before parsing: {{TABLE}} (bare name, e.g. stop_times), {{FILE}} (quoted literal, e.g. 'stop_times.txt'),
--- {{PATH}} (quoted literal path), {{REQUIRED}} (true/false: GtfsTableDescriptor.isRequired()).
+-- Placeholders, replaced before parsing, each in double braces (never inside a comment, see validate_begin.sql):
+-- TABLE (bare name, e.g. stop_times), FILE (quoted literal, e.g. 'stop_times.txt'), PATH (quoted literal path) and
+-- REQUIRED (true/false: GtfsTableDescriptor.isRequired()).
 -- Port of CsvFileLoader.load (macros in validate_core.sql): read the file once, parse its records, check the header,
 -- then rows, cells and entities, and record its TableStatus and notices.
 DELETE FROM gtfs_vc_text;
