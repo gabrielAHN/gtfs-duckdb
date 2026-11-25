@@ -1,0 +1,140 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "empty_row",
+   "notice": {
+    "csvRowNumber": 14,
+    "filename": "stops.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "invalid_character",
+   "notice": {
+    "csvRowNumber": 7,
+    "fieldName": "stop_name",
+    "fieldValue": "Fi\ufffdth",
+    "filename": "stops.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_line_ending",
+   "notice": {
+    "filename": "routes.txt",
+    "rowNumber": 2
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_row_length",
+   "notice": {
+    "csvRowNumber": 8,
+    "filename": "stops.txt",
+    "headerCount": 5,
+    "rowLength": 4
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_row_length",
+   "notice": {
+    "csvRowNumber": 9,
+    "filename": "stops.txt",
+    "headerCount": 5,
+    "rowLength": 6
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "leading_or_trailing_whitespaces",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "trip_headsign",
+    "fieldValue": " ",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "leading_or_trailing_whitespaces",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "stop_name",
+    "fieldValue": "  Second Stop ",
+    "filename": "stops.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_required_field",
+   "notice": {
+    "csvRowNumber": 10,
+    "fieldName": "stop_id",
+    "filename": "stops.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "new_line_in_value",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "route_long_name",
+    "fieldValue": "Main\rStreet",
+    "filename": "routes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "new_line_in_value",
+   "notice": {
+    "csvRowNumber": 5,
+    "fieldName": "stop_name",
+    "fieldValue": "Third\nStop",
+    "filename": "stops.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "new_line_in_value",
+   "notice": {
+    "csvRowNumber": 5,
+    "fieldName": "trip_headsign",
+    "fieldValue": "x\r\ny",
+    "filename": "trips.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "non_ascii_or_non_printable_char",
+   "notice": {
+    "csvRowNumber": 13,
+    "fieldName": "stop_id",
+    "fieldValue": "S\u0001X",
+    "filename": "stops.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "non_ascii_or_non_printable_char",
+   "notice": {
+    "csvRowNumber": 6,
+    "fieldName": "stop_id",
+    "fieldValue": "S4\u00e9",
+    "filename": "stops.txt"
+   },
+   "severity": "WARNING"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

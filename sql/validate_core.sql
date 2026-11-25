@@ -878,8 +878,65 @@ CREATE OR REPLACE MACRO gtfs_vc_timezone_ok(s) AS (
   OR (regexp_matches(s, '^UT[+-]') AND gtfs_vc_offset_ok(s[3:]))
   OR list_contains(gtfs_vc_zone_ids(), s)
 );
--- UrlValidator.getInstance().isValid (commons-validator): schemes http, https, ftp.
-CREATE OR REPLACE MACRO gtfs_vc_url_ok(s) AS (true);
+-- commons-validator 1.6 UrlValidator.getInstance().isValid: URL_REGEX parts, scheme http/https/ftp, an authority
+-- (AUTHORITY_REGEX: [IPv6] or userinfo@host, port, nothing else), PATH_REGEX without '//' and without '..' above the
+-- root (URI.normalize), a query without whitespace. Hosts: DomainValidator (labels, a known TLD) or an IPv4 address.
+CREATE OR REPLACE MACRO gtfs_vc_url_re() AS ('^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?$');
+CREATE OR REPLACE MACRO gtfs_vc_authority_re() AS (
+  '^(?:\[([0-9a-fA-F:]+)\]|(?:(?:[a-zA-Z0-9%-._~!$&''()*+,;=]+(?::[a-zA-Z0-9%-._~!$&''()*+,;=]*)?@)?([A-Za-z0-9.-]*)))'
+  || '(?::([0-9]*))?(.*)$'
+);
+CREATE OR REPLACE MACRO gtfs_vc_domain_re() AS (
+  '^(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+([A-Za-z](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)\.?$'
+);
+-- InetAddressValidator.isValidInet4Address
+CREATE OR REPLACE MACRO gtfs_vc_ipv4_ok(h) AS (
+  regexp_full_match(h, '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
+  AND list_bool_and(list_transform(string_split(h, '.'),
+        lambda o: TRY_CAST(o AS INTEGER) <= 255 AND (length(o) = 1 OR NOT starts_with(o, '0'))))
+);
+-- InetAddressValidator.isValidInet6Address (h holds only hex digits and ':')
+CREATE OR REPLACE MACRO gtfs_vc_ipv6_ok(h) AS (
+  (NOT contains(h, '::') OR strpos(h, '::') = length(h) - strpos(reverse(h), '::'))
+  AND NOT (starts_with(h, ':') AND NOT starts_with(h, '::'))
+  AND NOT (ends_with(h, ':') AND NOT ends_with(h, '::'))
+  AND list_bool_and(list_transform(string_split(h, ':'), lambda o: length(o) <= 4))
+  AND NOT contains(h, ':::')
+  AND CASE WHEN contains(h, '::')
+           THEN len(list_filter(string_split(h, ':'), lambda o: o <> '')) <= 7
+           ELSE len(string_split(h, ':')) = 8 END
+);
+CREATE OR REPLACE MACRO gtfs_vc_host_ok(h) AS (
+  (length(h) <= 253 AND regexp_full_match(h, gtfs_vc_domain_re())
+   AND list_contains(gtfs_vc_tlds(), lower(regexp_extract(h, gtfs_vc_domain_re(), 1))))
+  OR gtfs_vc_ipv4_ok(h)
+);
+CREATE OR REPLACE MACRO gtfs_vc_authority_ok(a) AS (
+  CASE WHEN NOT regexp_full_match(a, gtfs_vc_authority_re()) THEN false
+       ELSE (CASE WHEN regexp_extract(a, gtfs_vc_authority_re(), 1) <> ''
+                  THEN gtfs_vc_ipv6_ok(regexp_extract(a, gtfs_vc_authority_re(), 1))
+                  ELSE gtfs_vc_host_ok(regexp_extract(a, gtfs_vc_authority_re(), 2))
+                       AND (regexp_extract(a, gtfs_vc_authority_re(), 3) = ''
+                            OR TRY_CAST(regexp_extract(a, gtfs_vc_authority_re(), 3) AS INTEGER) BETWEEN 0 AND 65535) END)
+            AND trim(regexp_extract(a, gtfs_vc_authority_re(), 4), gtfs_vc_ws()) = '' END
+);
+-- isValidPath: PATH_REGEX, no '//', and URI.normalize() does not start with '/..': no '..' segment while no segment
+-- is left to remove.
+CREATE OR REPLACE MACRO gtfs_vc_path_ok(p) AS (
+  regexp_full_match(p, '(/[-A-Za-z0-9_:@&?=+,.!/~*''%$;()]*)?') AND NOT contains(p, '//')
+  AND coalesce(list_min(list_transform(range(1, len(string_split(p, '/')) + 1), lambda i: list_sum(list_transform(
+        string_split(p, '/')[1:i],
+        lambda g: CASE WHEN g = '..' THEN -1 WHEN g IN ('', '.') THEN 0 ELSE 1 END)))), 0) >= 0
+);
+CREATE OR REPLACE MACRO gtfs_vc_url_ok(s) AS (
+  CASE WHEN NOT regexp_full_match(s, gtfs_vc_url_re()) THEN false
+       ELSE regexp_full_match(regexp_extract(s, gtfs_vc_url_re(), 2), '[A-Za-z][A-Za-z0-9+.-]*')
+            AND lower(regexp_extract(s, gtfs_vc_url_re(), 2)) IN ('http', 'https', 'ftp')
+            AND regexp_extract(s, gtfs_vc_url_re(), 3) <> ''
+            AND gtfs_vc_authority_ok(regexp_extract(s, gtfs_vc_url_re(), 4))
+            AND gtfs_vc_path_ok(regexp_extract(s, gtfs_vc_url_re(), 5))
+            AND NOT regexp_matches(regexp_extract(s, gtfs_vc_url_re(), 7), '[ \t\n\x0B\f\r]') END
+);
 
 -- ---------------------------------------------------------------- cells and row notices
 
@@ -966,8 +1023,8 @@ n AS (
     FROM c WHERE (kind = 'integer' AND vi IS NOT NULL AND bounds IS NOT NULL)
       OR (kind = 'float' AND vd IS NOT NULL AND bounds IS NOT NULL)
       OR (kind IN ('latitude', 'longitude') AND vd IS NOT NULL)
-  ) WHERE CASE WHEN kind = 'latitude' THEN NOT (-90 <= vd AND vd <= 90) AND NOT isnan(vd)
-               WHEN kind = 'longitude' THEN NOT (-180 <= vd AND vd <= 180) AND NOT isnan(vd)
+  ) WHERE CASE WHEN kind = 'latitude' THEN isnan(vd) OR NOT (-90 <= vd AND vd <= 90)
+               WHEN kind = 'longitude' THEN isnan(vd) OR NOT (-180 <= vd AND vd <= 180)
                WHEN bounds = 'POSITIVE' THEN cmp <= 0 WHEN bounds = 'NON_NEGATIVE' THEN cmp < 0 ELSE cmp = 0 END
 )
 SELECT n.csv_row_number, n.code, gtfs_validation_notice(n.notice) AS notice, r.severity = 'ERROR' AS err
