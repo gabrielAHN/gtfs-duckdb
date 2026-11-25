@@ -105,9 +105,9 @@ The 8 files `gtfs_import` reads: `stops.txt`, `pathways.txt`, `routes.txt`, `tri
 
 URLs are checked as the official validator checks them, internationalized domain names such as `https://例え.jp/`
 included. As Java 17 does, an authority with a non-ASCII character is first converted whole, with user info, host and
-port, by `IDN.toASCII`, which turns each non-ASCII label into punycode. As in the official validator, a field that fails
-its check (an `invalid_url`, for example) is an error that makes its whole file unparsable, and the rules that need that
-file are then skipped.
+port, by `IDN.toASCII`: nameprep (mapping, case folding and NFKC) first, then punycode for each label that is still
+non-ASCII. As in the official validator, a field that fails its check (an `invalid_url`, for example) is an error that
+makes its whole file unparsable, and the rules that need that file are then skipped.
 
 ## Not validated
 

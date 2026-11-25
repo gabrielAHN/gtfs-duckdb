@@ -184,12 +184,12 @@ between `-- BEGIN GENERATED` and `-- END GENERATED`; regenerate it, and the corp
 
     java --add-opens java.base/java.net=ALL-UNNAMED --add-opens java.base/jdk.internal.icu.text=ALL-UNNAMED --add-exports java.base/jdk.internal.icu.lang=ALL-UNNAMED -cp <gtfs-validator cli jar> test/validation/idn/GenIdn.java sql/validate_core.sql test/validation/idn/corpus.tsv
 
-(Java 17; the output is the same bytes on every run). CI's Format Check runs clang-format on `GenIdn.java` too
-(`scripts/format.py` covers `.java` files under `test/`); formatting it does not change its output.
-`test/validation/idn/corpus.tsv` holds hosts with Java's `IDN.toASCII` result (or `ERROR`) and URLs with
+(Java 17; the output is the same bytes on every run). CI's Format Check runs clang-format on `GenIdn.java` too (DuckDB's
+`scripts/format.py`, run by `make format-check`, covers `.java` files under `test/`); formatting it does not change its
+output. `test/validation/idn/corpus.tsv` holds hosts with Java's `IDN.toASCII` result (or `ERROR`) and URLs with
 `UrlValidator`'s answer; `test/test_idn.py` checks the SQL against it on every DuckDB binary, without Java. Keep the
-lambdas shallow: DuckDB 2.0 binds a lambda body more than once, so the steps are chained through macro arguments
-instead of nested lambdas.
+lambdas shallow: DuckDB 2.0 binds a lambda body more than once, so the steps are chained through macro arguments instead
+of nested lambdas.
 
 ## Testing
 
