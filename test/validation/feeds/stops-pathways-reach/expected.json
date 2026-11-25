@@ -1,0 +1,207 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "location_without_parent_station",
+   "notice": {
+    "csvRowNumber": 20,
+    "locationType": 2,
+    "stopId": "EN2",
+    "stopName": "Entrance Two"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_file",
+   "notice": {
+    "filename": "shapes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "pathway_dangling_generic_node",
+   "notice": {
+    "csvRowNumber": 14,
+    "parentStation": "STA",
+    "stopId": "GN2",
+    "stopName": ""
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "pathway_unreachable_location",
+   "notice": {
+    "csvRowNumber": 12,
+    "hasEntrance": false,
+    "hasExit": false,
+    "locationType": 4,
+    "parentStation": "PB",
+    "stopId": "BA2",
+    "stopName": "Boarding Two"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "pathway_unreachable_location",
+   "notice": {
+    "csvRowNumber": 14,
+    "hasEntrance": false,
+    "hasExit": false,
+    "locationType": 3,
+    "parentStation": "STA",
+    "stopId": "GN2",
+    "stopName": ""
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "pathway_unreachable_location",
+   "notice": {
+    "csvRowNumber": 21,
+    "hasEntrance": true,
+    "hasExit": false,
+    "locationType": 0,
+    "parentStation": "STC",
+    "stopId": "PC",
+    "stopName": "Platform C"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "pathway_unreachable_location",
+   "notice": {
+    "csvRowNumber": 7,
+    "hasEntrance": true,
+    "hasExit": false,
+    "locationType": 0,
+    "parentStation": "STA",
+    "stopId": "P2",
+    "stopName": "Platform In Only"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "pathway_unreachable_location",
+   "notice": {
+    "csvRowNumber": 8,
+    "hasEntrance": false,
+    "hasExit": true,
+    "locationType": 0,
+    "parentStation": "STA",
+    "stopId": "P3",
+    "stopName": "Platform Out Only"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "pathway_unreachable_location",
+   "notice": {
+    "csvRowNumber": 9,
+    "hasEntrance": false,
+    "hasExit": false,
+    "locationType": 0,
+    "parentStation": "STA",
+    "stopId": "P4",
+    "stopName": "Platform Isolated"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 10,
+    "stopId": "PB",
+    "stopName": "Platform Boarding"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 17,
+    "stopId": "P6",
+    "stopName": "Platform B"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 18,
+    "stopId": "Q1",
+    "stopName": "Loose Stop"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 21,
+    "stopId": "PC",
+    "stopName": "Platform C"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 6,
+    "stopId": "P1",
+    "stopName": "Platform Both"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 7,
+    "stopId": "P2",
+    "stopName": "Platform In Only"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 8,
+    "stopId": "P3",
+    "stopName": "Platform Out Only"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 9,
+    "stopId": "P4",
+    "stopName": "Platform Isolated"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "wrong_parent_location_type",
+   "notice": {
+    "csvRowNumber": 15,
+    "expectedLocationType": 0,
+    "locationType": 4,
+    "parentCsvRowNumber": 11,
+    "parentLocationType": 4,
+    "parentStation": "BA1",
+    "parentStopName": "Boarding One",
+    "stopId": "BX",
+    "stopName": "Too Deep"
+   },
+   "severity": "ERROR"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

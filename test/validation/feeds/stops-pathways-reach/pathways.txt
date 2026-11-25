@@ -1,0 +1,9 @@
+pathway_id,from_stop_id,to_stop_id,pathway_mode,is_bidirectional,length
+PA1,EN1,GN1,1,1,1
+PA2,GN1,P1,1,1,1
+PA3,GN1,P2,1,0,1
+PA4,P3,EN1,1,0,1
+PA5,GN1,BA1,1,1,1
+PA6,BA2,GN2,1,1,1
+PA7,EN1,Q1,1,1,1
+PA8,EN2,PC,1,0,1

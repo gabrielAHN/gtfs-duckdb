@@ -1,0 +1,21 @@
+stop_id,stop_name,stop_lat,stop_lon,location_type,parent_station
+S1,First Stop,40.7500,-73.9800,0,
+S2,Second Stop,40.7600,-73.9700,0,
+STA,Station A,40.7000,-73.9000,1,
+EN1,Entrance One,40.7010,-73.9000,2,STA
+P1,Platform Both,40.7020,-73.9000,0,STA
+P2,Platform In Only,40.7030,-73.9000,0,STA
+P3,Platform Out Only,40.7040,-73.9000,0,STA
+P4,Platform Isolated,40.7050,-73.9000,0,STA
+PB,Platform Boarding,40.7060,-73.9000,0,STA
+BA1,Boarding One,,,4,PB
+BA2,Boarding Two,,,4,PB
+GN1,,,,3,STA
+GN2,,,,3,STA
+BX,Too Deep,,,4,BA1
+STB,Station B,40.8000,-73.9000,1,
+P6,Platform B,40.8010,-73.9000,0,STB
+Q1,Loose Stop,40.9000,-73.9000,0,
+STC,Station C,40.9100,-73.9000,1,
+EN2,Entrance Two,40.9110,-73.9000,2,
+PC,Platform C,40.9120,-73.9000,0,STC

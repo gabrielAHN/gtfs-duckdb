@@ -1,0 +1,110 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "foreign_key_violation",
+   "notice": {
+    "childFieldName": "stop_id",
+    "childFilename": "stop_times.txt",
+    "csvRowNumber": 9,
+    "fieldValue": "NOSUCH",
+    "parentFieldName": "stop_id",
+    "parentFilename": "stops.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "location_with_unexpected_stop_time",
+   "notice": {
+    "csvRowNumber": 4,
+    "stopId": "ST",
+    "stopName": "Station",
+    "stopTimeCsvRowNumber": 2
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "location_with_unexpected_stop_time",
+   "notice": {
+    "csvRowNumber": 5,
+    "stopId": "EN",
+    "stopName": "Entrance",
+    "stopTimeCsvRowNumber": 6
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "location_with_unexpected_stop_time",
+   "notice": {
+    "csvRowNumber": 6,
+    "stopId": "U7",
+    "stopName": "Unrecognized",
+    "stopTimeCsvRowNumber": 7
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_file",
+   "notice": {
+    "filename": "shapes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 7,
+    "stopId": "SN",
+    "stopName": "Unused Stop"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 8,
+    "stopId": "SM",
+    "stopName": "Unused Stop Two"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unexpected_enum_value",
+   "notice": {
+    "csvRowNumber": 6,
+    "fieldName": "location_type",
+    "fieldValue": 7,
+    "filename": "stops.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unsorted_stop_times",
+   "notice": {
+    "endCsvRowNumber": 3,
+    "startCsvRowNumber": 2,
+    "tripId": "T2"
+   },
+   "severity": "INFO"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

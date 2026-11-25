@@ -1,0 +1,23 @@
+stop_id,stop_name,stop_desc,stop_lat,stop_lon,location_type,parent_station,platform_code,stop_access
+S1,First Stop,,40.7500,-73.9800,,,,
+S2,Second Stop,,40.7600,-73.9700,,,,
+ST1,Station One,,40.7010,-73.9000,1,,,
+ST2,Station Two,,40.7020,-73.9000,1,ST1,,
+P1,Platform One,,40.7030,-73.9000,0,,1A,
+E1,Entrance One,,40.7040,-73.9000,2,,,
+G1,,,,,3,,,
+B1,,,,,4,,,
+N0,,,40.7050,-73.9000,0,ST1,,
+N1,,,40.7060,-73.9000,1,,,
+N2,,,40.7070,-73.9000,2,ST1,,
+U7,,,,,7,,,
+D1,Same Desc,SAME desc,40.7080,-73.9000,0,ST1,,
+D2,Other Name,Different Thing,40.7090,-73.9000,0,ST1,,
+L0,No Lat,,,-73.9000,0,ST1,,
+L1,No Lon Station,,40.7100,,1,,,
+L2,No Loc Entrance,,,,2,ST1,,
+A0,Access No Parent,,40.7110,-73.9000,0,,,1
+A1,Access With Parent,,40.7120,-73.9000,0,ST1,,0
+A2,Access Station,,40.7130,-73.9000,1,,,0
+A3,Access Unknown,,40.7140,-73.9000,0,,,5
+A4,Access Node,,,,3,ST1,,1

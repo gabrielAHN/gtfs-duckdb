@@ -1,0 +1,376 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "child_stop_far_from_parent_station",
+   "notice": {
+    "childStopId": "K2",
+    "childStopLat": 40.87001,
+    "childStopLon": -73.95,
+    "distance": 3336.964986336238,
+    "parentStationId": "E1",
+    "parentStationLat": 40.84,
+    "parentStationLon": -73.95
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_file",
+   "notice": {
+    "filename": "shapes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "point_near_origin",
+   "notice": {
+    "csvRowNumber": 18,
+    "entityId": "H1",
+    "filename": "stops.txt",
+    "latFieldName": "stop_lat",
+    "latFieldValue": 0.5,
+    "lonFieldName": "stop_lon",
+    "lonFieldValue": 0.5
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "point_near_origin",
+   "notice": {
+    "csvRowNumber": 19,
+    "entityId": "H2",
+    "filename": "stops.txt",
+    "latFieldName": "stop_lat",
+    "latFieldValue": 0.5,
+    "lonFieldName": "stop_lon",
+    "lonFieldValue": 0.5
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stations_too_close",
+   "notice": {
+    "csvRowNumber1": 24,
+    "csvRowNumber2": 26,
+    "stopId1": "K1",
+    "stopId2": "K3",
+    "stopLat1": 40.87,
+    "stopLat2": 40.870005,
+    "stopLon1": -73.95,
+    "stopLon2": -73.95
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stations_too_close",
+   "notice": {
+    "csvRowNumber1": 8,
+    "csvRowNumber2": 9,
+    "stopId1": "C1",
+    "stopId2": "C2",
+    "stopLat1": 40.82,
+    "stopLat2": 40.820009,
+    "stopLon1": -73.95,
+    "stopLon2": -73.95
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_too_close_to_non_parent_station",
+   "notice": {
+    "stationCsvRowNumber": 10,
+    "stationId": "D2",
+    "stationLat": 40.83,
+    "stationLon": -73.95,
+    "stopCsvRowNumber": 11,
+    "stopId": "D1",
+    "stopLat": 40.8300135,
+    "stopLon": -73.95
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_too_close_to_non_parent_station",
+   "notice": {
+    "stationCsvRowNumber": 24,
+    "stationId": "K1",
+    "stationLat": 40.87,
+    "stationLon": -73.95,
+    "stopCsvRowNumber": 25,
+    "stopId": "K2",
+    "stopLat": 40.87001,
+    "stopLon": -73.95
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_too_close_to_non_parent_station",
+   "notice": {
+    "stationCsvRowNumber": 26,
+    "stationId": "K3",
+    "stationLat": 40.870005,
+    "stationLon": -73.95,
+    "stopCsvRowNumber": 25,
+    "stopId": "K2",
+    "stopLat": 40.87001,
+    "stopLon": -73.95
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 11,
+    "stopId": "D1",
+    "stopName": "Delta Stop"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 13,
+    "stopId": "E2",
+    "stopName": "Echo Stop"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 15,
+    "stopId": "F2",
+    "stopName": "Foxtrot Stop"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 16,
+    "stopId": "G1",
+    "stopName": "Golf One"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 17,
+    "stopId": "G2",
+    "stopName": "Golf Two"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 18,
+    "stopId": "H1",
+    "stopName": "Hotel One"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 19,
+    "stopId": "H2",
+    "stopName": "Hotel Two"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 20,
+    "stopId": "I1",
+    "stopName": "India One"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 21,
+    "stopId": "I2",
+    "stopName": "India Two"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 22,
+    "stopId": "J1",
+    "stopName": "Juliet One"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 23,
+    "stopId": "J2",
+    "stopName": "Juliet Two"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 25,
+    "stopId": "K2",
+    "stopName": "Kilo Stop"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 4,
+    "stopId": "A1",
+    "stopName": "Alpha One"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 5,
+    "stopId": "A2",
+    "stopName": "Alpha Two"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 6,
+    "stopId": "B1",
+    "stopName": "Bravo One"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 7,
+    "stopId": "B2",
+    "stopName": "Bravo Two"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stops_too_close",
+   "notice": {
+    "csvRowNumber1": 16,
+    "csvRowNumber2": 17,
+    "stopId1": "G1",
+    "stopId2": "G2",
+    "stopLat1": 40.86,
+    "stopLat2": 40.86,
+    "stopLon1": -73.95,
+    "stopLon2": -73.95
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stops_too_close",
+   "notice": {
+    "csvRowNumber1": 20,
+    "csvRowNumber2": 21,
+    "stopId1": "I1",
+    "stopId2": "I2",
+    "stopLat1": 70.0,
+    "stopLat2": 70.0,
+    "stopLon1": 10.0,
+    "stopLon2": 10.00005
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stops_too_close",
+   "notice": {
+    "csvRowNumber1": 22,
+    "csvRowNumber2": 23,
+    "stopId1": "J1",
+    "stopId2": "J2",
+    "stopLat1": 10.0,
+    "stopLat2": 10.0,
+    "stopLon1": 179.999991,
+    "stopLon2": -179.999991
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stops_too_close",
+   "notice": {
+    "csvRowNumber1": 4,
+    "csvRowNumber2": 5,
+    "stopId1": "A1",
+    "stopId2": "A2",
+    "stopLat1": 40.8,
+    "stopLat2": 40.8000179,
+    "stopLon1": -73.95,
+    "stopLon2": -73.95
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_station",
+   "notice": {
+    "csvRowNumber": 10,
+    "stopId": "D2",
+    "stopName": "Delta Station"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_station",
+   "notice": {
+    "csvRowNumber": 24,
+    "stopId": "K1",
+    "stopName": "Kilo Station"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_station",
+   "notice": {
+    "csvRowNumber": 26,
+    "stopId": "K3",
+    "stopName": "Kilo Station Two"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_station",
+   "notice": {
+    "csvRowNumber": 8,
+    "stopId": "C1",
+    "stopName": "Charlie Station One"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_station",
+   "notice": {
+    "csvRowNumber": 9,
+    "stopId": "C2",
+    "stopName": "Charlie Station Two"
+   },
+   "severity": "WARNING"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

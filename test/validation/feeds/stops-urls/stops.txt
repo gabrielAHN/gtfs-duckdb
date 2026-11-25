@@ -1,0 +1,5 @@
+stop_id,stop_name,stop_lat,stop_lon,stop_url
+S1,First Stop,40.7500,-73.9800,https://Example.org/R1
+S2,Second Stop,40.7600,-73.9700,https://example.org/none
+S3,Third Stop,40.7700,-73.9600,https://example.org/other
+S4,Fourth Stop,40.7800,-73.9500,
