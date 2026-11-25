@@ -44,14 +44,31 @@ SELECT code, severity, summary FROM gtfs_validation_rules() ORDER BY code;
 ```
 
 `gtfs_validate` does not import the feed and does not change the dataset or pending edits. It keeps its results in
-temporary tables named `gtfs_validation_*` and `gtfs_v_*`, which the next validation replaces. Pass `''` to read the
-files in the working directory.
+temporary tables named `gtfs_validation_*` and `gtfs_v_*`, which the next validation replaces, and works in temporary
+tables named `gtfs_vc_*`, which it empties when it finishes. Do not use these names for your own tables. Pass `''` to
+read the files in the working directory. A directory that does not exist, a file path or NULL is an error.
 
 The rules need DuckDB's `json` extension. Most DuckDB builds include it, and others load it automatically on first
 use. If automatic loading is turned off, run `LOAD json;` first.
 
 From the command line, [GTFS Tools](https://github.com/gabrielAHN/gtfs-tools) runs it on a zip, a folder or a URL:
 `gtfs-tools validate feed.zip`.
+
+## Memory
+
+Each file is read whole, so the memory a validation needs grows with the largest file, usually `stop_times.txt`.
+Measured with DuckDB v2.0.0 on a Mac:
+
+| stop_times.txt | memory_limit | Peak memory | Time |
+|---|---|---|---|
+| 42 MB (New York City Subway) | default | 3.0 GB | 3.5 s |
+| 42 MB | 2 GB | 2.3 GB | 3.6 s |
+| 42 MB | 1 GB | 1.6 GB | 4.4 s |
+| 150 MB (the same feed, 4 times over) | 2 GB | 3.1 GB | 11 s |
+
+`SET memory_limit` lowers the peak by spilling to disk, at some cost in time. With `memory_limit='512MB'` the New
+York feed fails with an out-of-memory error. Feeds whose `stop_times.txt` reaches 1 GB or more, as some national feeds'
+do, need more memory than most computers have.
 
 ## What is validated
 
@@ -82,9 +99,21 @@ The rules follow the official validator's Java code, but a few cases can still c
   different levels (`levels.txt`), and counts a stop used through `location_group_stops.txt` as used. It does not ask
   for `shapes.txt` when demand-responsive trips serve only location groups (`location_groups.txt`). This port
   reports all three.
-- Text compared without case, such as a stop's name and description, a route's short and long names, or a trip's
-  headsign, uses DuckDB's `lower()` and `upper()`. Unicode letter classes come from DuckDB's regular expressions. A few
-  letters, such as the Turkish dotless i, compare differently from Java.
+- Text compared without case, such as a stop's name and description or a trip's headsign, follows Java's
+  `equalsIgnoreCase` one letter at a time through DuckDB's `upper()` and `lower()`. Whether a route's long name starts
+  with its short name lowercases the whole names, where Java applies context rules such as the Greek final sigma, so a
+  name built for it can come out differently. Unicode letter classes come from DuckDB's regular expressions, whose
+  Unicode version can differ from Java 17's for recently added letters.
+- URLs whose host has non-ASCII letters (internationalized domain names such as `https://例え.jp/`) are reported as
+  `invalid_url`. The official validator converts them to punycode first and accepts them.
+- The official validator asks for `shapes.txt` (`missing_recommended_file`) only when every file of the feed parses,
+  `agency.txt` and the other files this port does not read included. This port checks only the files it reads, so a
+  feed with a missing or broken `agency.txt` still gets the notice.
+- File names must be lowercase, such as `stops.txt`, as for `gtfs_import`. The official validator also reads
+  `Stops.txt`. On a case-insensitive file system, such as macOS's default one, DuckDB finds it too.
+- In the message of `csv_parsing_failed`, the CSV parser the official validator uses (univocity) drops NUL characters
+  from some quoted values, and for a row of more than 512 columns it can add a note about line separators left over
+  from an earlier value. This port keeps the NUL characters and leaves that note out.
 - When trips follow the same stops and times, `fast_travel_between_consecutive_stops` reports the first trip in Java's
   hash map order. This port reproduces that order, except when a single hash bucket holds 8 or more trips.
 - Java's check for overlapping trips in a block treats services whose first common date is 1 January 1970 as never
