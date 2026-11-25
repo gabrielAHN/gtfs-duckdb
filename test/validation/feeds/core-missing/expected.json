@@ -4,6 +4,18 @@
   {
    "code": "foreign_key_violation",
    "notice": {
+    "childFieldName": "service_id",
+    "childFilename": "trips.txt",
+    "csvRowNumber": 2,
+    "fieldValue": "SV",
+    "parentFieldName": "service_id",
+    "parentFilename": "calendar.txt or calendar_dates.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "foreign_key_violation",
+   "notice": {
     "childFieldName": "stop_id",
     "childFilename": "stop_times.txt",
     "csvRowNumber": 2,
