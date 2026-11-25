@@ -117,7 +117,9 @@ class PipelineTest(unittest.TestCase):
     def test_directory_text_cannot_run_sql(self):
         with tempfile.TemporaryDirectory() as tmp:
             feed = harness.materialize("base", Path(tmp) / "x\nCREATE TABLE pwned AS SELECT 42 AS x;\n--")
-            out = harness.run(feed, queries={"pwned": "SELECT count(*) AS n FROM duckdb_tables() WHERE table_name = 'pwned'"})
+            out = harness.run(
+                feed, queries={"pwned": "SELECT count(*) AS n FROM duckdb_tables() WHERE table_name = 'pwned'"}
+            )
         self.assertEqual(out["pwned"], [{"n": 0}])
         self.assertTrue(out["notices"] is not None)
 
