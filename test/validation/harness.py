@@ -262,7 +262,9 @@ def in_scope(report, rules, strict=True):
         if group["code"] not in rules:
             continue
         for n in group.get("sampleNotices", []):
-            files = [n[k] for k in FILE_KEYS if isinstance(n.get(k), str)]
+            # A file field can name alternatives ("calendar.txt or calendar_dates.txt" for trips.service_id foreign
+            # keys): in scope when every alternative is a validated file.
+            files = [f for k in FILE_KEYS if isinstance(n.get(k), str) for f in n[k].split(" or ")]
             if all(f in GTFS_FILENAMES for f in files) and not out_of_scope_emitter(group["code"], n):
                 keep.append({"code": group["code"], "severity": group["severity"], "notice": n})
         if group["totalNotices"] > len(group.get("sampleNotices", [])):
