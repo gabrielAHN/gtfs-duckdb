@@ -1,0 +1,14 @@
+stop_id,stop_name,stop_lat,stop_lon,stop_code
+S1,First Stop,40.7500,-73.9800,
+S2,"  Second Stop ",40.7600,-73.9700,c2
+S3,"Third
+Stop",40.7700,-73.9600,c3
+S4Ã©,Fourth,40.7800,-73.9500,c4
+S5,Fiÿth,40.7900,-73.9400,c5
+S6,Sixth,40.8000,-73.9300
+S7,Seventh,40.8000,-73.9300,c7,extra
+,NoId,40.8000,-73.9000,c8
+
+S9,"Ninth",40.8100,-73.9100,""
+SX,Ctrl,40.8200,-73.9200,c10
+   

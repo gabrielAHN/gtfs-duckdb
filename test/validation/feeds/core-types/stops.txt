@@ -1,0 +1,8 @@
+stop_id,stop_name,stop_lat,stop_lon,stop_url,location_type,stop_timezone,wheelchair_boarding
+S1,First Stop,40.7500,-73.9800,https://example.org/s1,0,America/New_York,1
+S2,Second Stop,40.7600,-73.9700,http://example.c0m/x,0,UTC,0
+S3,Third,91,-73.96,ftp://example.org,1,america/new_york,2
+S4,Fourth,40.78,-181.5,example.org,9,Mars/Base,3
+S5,Fifth,4O.78,-73.95,http://example.org/a b,x,+05:30,
+S6,Sixth,-90.0001,1e400,,+1,EST,-1
+S7,Seventh,-0.0,180.0d,http://1.2.3.4:99999/,0,Etc/GMT+5,1

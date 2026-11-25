@@ -1,0 +1,4 @@
+pathway_id,from_stop_id,to_stop_id,pathway_mode,is_bidirectional,length,traversal_time,stair_count,min_width
+P1,S1,S2,1,0,0,0,0,0
+P2,S1,S2,1,1,-0.0,-1,1,-0.0
+P3,S1,S2,8,2,NaN,1,-1,1e-400

@@ -1,0 +1,70 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "empty_file",
+   "notice": {
+    "filename": "calendar_dates.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "empty_file",
+   "notice": {
+    "filename": "shapes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "empty_required_file",
+   "notice": {
+    "filename": "stop_times.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 2,
+    "stopId": "S1",
+    "stopName": "First Stop"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 3,
+    "stopId": "S2",
+    "stopName": "Second Stop"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unusable_trip",
+   "notice": {
+    "csvRowNumber": 2,
+    "tripId": "T1"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_trip",
+   "notice": {
+    "csvRowNumber": 2,
+    "tripId": "T1"
+   },
+   "severity": "WARNING"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}
