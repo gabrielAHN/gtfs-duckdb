@@ -1,0 +1,251 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "duplicate_route_name",
+   "notice": {
+    "agencyId": "A",
+    "csvRowNumber1": 19,
+    "csvRowNumber2": 20,
+    "routeId1": "R18",
+    "routeId2": "R19",
+    "routeLongName": "Dup",
+    "routeShortName": "D",
+    "routeTypeValue": 3
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "duplicate_route_name",
+   "notice": {
+    "agencyId": "A",
+    "csvRowNumber1": 19,
+    "csvRowNumber2": 21,
+    "routeId1": "R18",
+    "routeId2": "R20",
+    "routeLongName": "Dup",
+    "routeShortName": "D",
+    "routeTypeValue": 3
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "duplicate_route_name",
+   "notice": {
+    "agencyId": "A",
+    "csvRowNumber1": 24,
+    "csvRowNumber2": 25,
+    "routeId1": "R23",
+    "routeId2": "R24",
+    "routeLongName": "Unknown Type",
+    "routeShortName": "U",
+    "routeTypeValue": -1
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_file",
+   "notice": {
+    "filename": "shapes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "mixed_case_recommended_field",
+   "notice": {
+    "csvRowNumber": 13,
+    "fieldName": "route_desc",
+    "fieldValue": "only long",
+    "filename": "routes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "mixed_case_recommended_field",
+   "notice": {
+    "csvRowNumber": 29,
+    "fieldName": "route_desc",
+    "fieldValue": "eight line",
+    "filename": "routes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "route_both_short_and_long_name_missing",
+   "notice": {
+    "csvRowNumber": 3,
+    "routeId": "R2"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "route_color_contrast",
+   "notice": {
+    "csvRowNumber": 14,
+    "routeColor": "#FFFFFF",
+    "routeId": "R13",
+    "routeTextColor": "#FFFFFF"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "route_color_contrast",
+   "notice": {
+    "csvRowNumber": 16,
+    "routeColor": "#000000",
+    "routeId": "R15",
+    "routeTextColor": "#474747"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "route_long_name_contains_short_name",
+   "notice": {
+    "csvRowNumber": 12,
+    "routeId": "R11",
+    "routeLongName": "12",
+    "routeShortName": "12"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "route_long_name_contains_short_name",
+   "notice": {
+    "csvRowNumber": 26,
+    "routeId": "R25",
+    "routeLongName": "5(Express)",
+    "routeShortName": "5"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "route_long_name_contains_short_name",
+   "notice": {
+    "csvRowNumber": 27,
+    "routeId": "R26",
+    "routeLongName": "6",
+    "routeShortName": "6"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "route_long_name_contains_short_name",
+   "notice": {
+    "csvRowNumber": 6,
+    "routeId": "R5",
+    "routeLongName": "10 Downtown",
+    "routeShortName": "10"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "route_long_name_contains_short_name",
+   "notice": {
+    "csvRowNumber": 8,
+    "routeId": "R7",
+    "routeLongName": "3X-Uptown",
+    "routeShortName": "3x"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "route_long_name_contains_short_name",
+   "notice": {
+    "csvRowNumber": 9,
+    "routeId": "R8",
+    "routeLongName": "4",
+    "routeShortName": "4"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "route_short_name_too_long",
+   "notice": {
+    "csvRowNumber": 4,
+    "routeId": "R3",
+    "routeShortName": "ABCDEFGHIJKLM"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "same_name_and_description_for_route",
+   "notice": {
+    "csvRowNumber": 10,
+    "routeDesc": "9",
+    "routeId": "R9",
+    "specifiedField": "route_short_name"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "same_name_and_description_for_route",
+   "notice": {
+    "csvRowNumber": 11,
+    "routeDesc": "ELEVEN",
+    "routeId": "R10",
+    "specifiedField": "route_long_name"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "same_name_and_description_for_route",
+   "notice": {
+    "csvRowNumber": 12,
+    "routeDesc": "12",
+    "routeId": "R11",
+    "specifiedField": "route_short_name"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "same_name_and_description_for_route",
+   "notice": {
+    "csvRowNumber": 13,
+    "routeDesc": "only long",
+    "routeId": "R12",
+    "specifiedField": "route_long_name"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "same_name_and_description_for_route",
+   "notice": {
+    "csvRowNumber": 30,
+    "routeDesc": "Thirty",
+    "routeId": "R29",
+    "specifiedField": "route_long_name"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unexpected_enum_value",
+   "notice": {
+    "csvRowNumber": 24,
+    "fieldName": "route_type",
+    "fieldValue": 99,
+    "filename": "routes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unexpected_enum_value",
+   "notice": {
+    "csvRowNumber": 25,
+    "fieldName": "route_type",
+    "fieldValue": 98,
+    "filename": "routes.txt"
+   },
+   "severity": "WARNING"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

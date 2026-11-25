@@ -1,0 +1,30 @@
+route_id,agency_id,route_short_name,route_long_name,route_desc,route_type,route_color,route_text_color
+R1,A,1,Main Street,,3,,
+R2,A,,,,3,,
+R3,A,ABCDEFGHIJKLM,Thirteen Chars,,3,,
+R4,A,ABCDEFGHIJKL,Twelve Chars,,3,,
+R5,A,10,10 Downtown,,3,,
+R6,A,20,20Downtown,,3,,
+R7,A,3x,3X-Uptown,,3,,
+R8,A,4,4,,3,,
+R9,A,9,Nine Line,9,3,,
+R10,A,11,Eleven,ELEVEN,3,,
+R11,A,12,12,12,3,,
+R12,A,,Only Long,only long,3,,
+R13,A,13,Color Same,,3,FFFFFF,FFFFFF
+R14,A,14,Color Limit,,3,000000,484848
+R15,A,15,Color Below,,3,000000,474747
+R16,A,16,Color Float,,3,101010,575757
+R17,A,17,Color One,,3,FFFFFF,
+R18,A,D,Dup,,3,,
+R19,A,D,Dup,,3,,
+R20,A,D,Dup,,3,,
+R21,A,D,Dup,,1,,
+R22,,D,Dup,,3,,
+R23,A,U,Unknown Type,,99,,
+R24,A,U,Unknown Type,,98,,
+R25,A,5,5(Express),,3,,
+R26,A,6,6 ,,3,,
+R27,A,7,7Q,,3,,
+R28,A,8,Eight,eight line,3,,
+R29,A,30,Thirty,Thirty,3,,
