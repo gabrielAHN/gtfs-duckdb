@@ -1,0 +1,6 @@
+stop_id,stop_name,stop_lat,stop_lon
+S1,First Stop,40.7500,-73.9800
+S2,Second Stop,40.7600,-73.9700
+S1,First Stop Again,40.7700,-73.9600
+s1,Lower Case Id,40.7800,-73.9500
+S1,Third Copy,40.7900,-73.9400

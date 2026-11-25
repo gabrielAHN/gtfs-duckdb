@@ -1,0 +1,588 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "length",
+    "filename": "pathways.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "length",
+    "filename": "pathways.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 4,
+    "fieldName": "length",
+    "filename": "pathways.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 6,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_file",
+   "notice": {
+    "filename": "shapes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "mixed_case_recommended_field",
+   "notice": {
+    "csvRowNumber": 14,
+    "fieldName": "stop_name",
+    "fieldValue": "123 abc",
+    "filename": "stops.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "mixed_case_recommended_field",
+   "notice": {
+    "csvRowNumber": 15,
+    "fieldName": "stop_name",
+    "fieldValue": "abc 123",
+    "filename": "stops.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "mixed_case_recommended_field",
+   "notice": {
+    "csvRowNumber": 16,
+    "fieldName": "stop_name",
+    "fieldValue": "\u00e9cole centrale",
+    "filename": "stops.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "mixed_case_recommended_field",
+   "notice": {
+    "csvRowNumber": 19,
+    "fieldName": "stop_name",
+    "fieldValue": "AB cd",
+    "filename": "stops.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "mixed_case_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "signposted_as",
+    "fieldValue": "exit to street",
+    "filename": "pathways.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "mixed_case_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "trip_short_name",
+    "fieldValue": "local",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "mixed_case_recommended_field",
+   "notice": {
+    "csvRowNumber": 22,
+    "fieldName": "stop_name",
+    "fieldValue": "\u4e2d\u6587 \u5317\u4eac",
+    "filename": "stops.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "mixed_case_recommended_field",
+   "notice": {
+    "csvRowNumber": 23,
+    "fieldName": "stop_name",
+    "fieldValue": "-abc",
+    "filename": "stops.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "mixed_case_recommended_field",
+   "notice": {
+    "csvRowNumber": 24,
+    "fieldName": "stop_name",
+    "fieldValue": "abc-",
+    "filename": "stops.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "mixed_case_recommended_field",
+   "notice": {
+    "csvRowNumber": 26,
+    "fieldName": "stop_name",
+    "fieldValue": "\ud835\udc00 abc",
+    "filename": "stops.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "mixed_case_recommended_field",
+   "notice": {
+    "csvRowNumber": 29,
+    "fieldName": "stop_name",
+    "fieldValue": "ab",
+    "filename": "stops.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "mixed_case_recommended_field",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "reversed_signposted_as",
+    "fieldValue": "platform",
+    "filename": "pathways.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "mixed_case_recommended_field",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "route_desc",
+    "fieldValue": "SOME DESCRIPTION",
+    "filename": "routes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "mixed_case_recommended_field",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "route_long_name",
+    "fieldValue": "long island rail road",
+    "filename": "routes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "mixed_case_recommended_field",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "signposted_as",
+    "fieldValue": "TO PLATFORM",
+    "filename": "pathways.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "mixed_case_recommended_field",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "stop_name",
+    "fieldValue": "SECOND STOP",
+    "filename": "stops.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "mixed_case_recommended_field",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "trip_headsign",
+    "fieldValue": "to downtown",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "mixed_case_recommended_field",
+   "notice": {
+    "csvRowNumber": 31,
+    "fieldName": "stop_name",
+    "fieldValue": "MAIN ST",
+    "filename": "stops.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "mixed_case_recommended_field",
+   "notice": {
+    "csvRowNumber": 34,
+    "fieldName": "stop_name",
+    "fieldValue": "3 AV",
+    "filename": "stops.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "mixed_case_recommended_field",
+   "notice": {
+    "csvRowNumber": 4,
+    "fieldName": "route_short_name",
+    "fieldValue": "express",
+    "filename": "routes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "mixed_case_recommended_field",
+   "notice": {
+    "csvRowNumber": 4,
+    "fieldName": "stop_name",
+    "fieldValue": "third stop",
+    "filename": "stops.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "mixed_case_recommended_field",
+   "notice": {
+    "csvRowNumber": 4,
+    "fieldName": "trip_headsign",
+    "fieldValue": "JAMAICA - PENN STATION",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "mixed_case_recommended_field",
+   "notice": {
+    "csvRowNumber": 5,
+    "fieldName": "route_desc",
+    "fieldValue": "description text here",
+    "filename": "routes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "mixed_case_recommended_field",
+   "notice": {
+    "csvRowNumber": 6,
+    "fieldName": "stop_name",
+    "fieldValue": "main",
+    "filename": "stops.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "mixed_case_recommended_field",
+   "notice": {
+    "csvRowNumber": 8,
+    "fieldName": "stop_name",
+    "fieldValue": "5th ave",
+    "filename": "stops.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "route_long_name_contains_short_name",
+   "notice": {
+    "csvRowNumber": 4,
+    "routeId": "R3",
+    "routeLongName": "Express Line",
+    "routeShortName": "express"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 10,
+    "stopId": "S9",
+    "stopName": "A B"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 11,
+    "stopId": "S10",
+    "stopName": "X 42"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 12,
+    "stopId": "S11",
+    "stopName": "42"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 13,
+    "stopId": "S12",
+    "stopName": "Q"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 14,
+    "stopId": "S13",
+    "stopName": "123 abc"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 15,
+    "stopId": "S14",
+    "stopName": "abc 123"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 16,
+    "stopId": "S15",
+    "stopName": "\u00e9cole centrale"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 17,
+    "stopId": "S16",
+    "stopName": "\u00c9cole Centrale"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 18,
+    "stopId": "S17",
+    "stopName": "\u00c9COLE"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 19,
+    "stopId": "S18",
+    "stopName": "AB cd"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 20,
+    "stopId": "S19",
+    "stopName": "St. MARK'S PL"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 21,
+    "stopId": "S20",
+    "stopName": "N/S"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 22,
+    "stopId": "S21",
+    "stopName": "\u4e2d\u6587 \u5317\u4eac"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 23,
+    "stopId": "S22",
+    "stopName": "-abc"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 24,
+    "stopId": "S23",
+    "stopName": "abc-"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 25,
+    "stopId": "S24",
+    "stopName": "(Main)"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 26,
+    "stopId": "S25",
+    "stopName": "\ud835\udc00 abc"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 27,
+    "stopId": "S26",
+    "stopName": "\ud835\udc00"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 28,
+    "stopId": "S27",
+    "stopName": "x \ud835\udc00"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 29,
+    "stopId": "S28",
+    "stopName": "ab"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 30,
+    "stopId": "S29",
+    "stopName": "Ab"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 31,
+    "stopId": "S30",
+    "stopName": "MAIN ST"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 32,
+    "stopId": "S31",
+    "stopName": "main St"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 33,
+    "stopId": "S32",
+    "stopName": "I-95 NORTH"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 34,
+    "stopId": "S33",
+    "stopName": "3 AV"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 4,
+    "stopId": "S3",
+    "stopName": "third stop"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 5,
+    "stopId": "S4",
+    "stopName": "MAIN"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 6,
+    "stopId": "S5",
+    "stopName": "main"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 7,
+    "stopId": "S6",
+    "stopName": "a"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 8,
+    "stopId": "S7",
+    "stopName": "5th ave"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 9,
+    "stopId": "S8",
+    "stopName": "5th Ave"
+   },
+   "severity": "WARNING"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

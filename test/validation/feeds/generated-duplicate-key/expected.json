@@ -1,0 +1,192 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "duplicate_key",
+   "notice": {
+    "fieldName1": "route_id",
+    "fieldValue1": "R1",
+    "filename": "routes.txt",
+    "newCsvRowNumber": 3,
+    "oldCsvRowNumber": 2
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "duplicate_key",
+   "notice": {
+    "fieldName1": "service_id",
+    "fieldValue1": "SV",
+    "filename": "calendar.txt",
+    "newCsvRowNumber": 3,
+    "oldCsvRowNumber": 2
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "duplicate_key",
+   "notice": {
+    "fieldName1": "service_id,date",
+    "fieldValue1": "SV,20260105",
+    "filename": "calendar_dates.txt",
+    "newCsvRowNumber": 4,
+    "oldCsvRowNumber": 2
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "duplicate_key",
+   "notice": {
+    "fieldName1": "shape_id,shape_pt_sequence",
+    "fieldValue1": "SH1,1",
+    "filename": "shapes.txt",
+    "newCsvRowNumber": 4,
+    "oldCsvRowNumber": 2
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "duplicate_key",
+   "notice": {
+    "fieldName1": "stop_id",
+    "fieldValue1": "S1",
+    "filename": "stops.txt",
+    "newCsvRowNumber": 4,
+    "oldCsvRowNumber": 2
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "duplicate_key",
+   "notice": {
+    "fieldName1": "stop_id",
+    "fieldValue1": "S1",
+    "filename": "stops.txt",
+    "newCsvRowNumber": 6,
+    "oldCsvRowNumber": 2
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "duplicate_key",
+   "notice": {
+    "fieldName1": "trip_id",
+    "fieldValue1": "T1",
+    "filename": "trips.txt",
+    "newCsvRowNumber": 4,
+    "oldCsvRowNumber": 2
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "duplicate_key",
+   "notice": {
+    "fieldName1": "trip_id,stop_sequence",
+    "fieldValue1": "T1,1",
+    "filename": "stop_times.txt",
+    "newCsvRowNumber": 4,
+    "oldCsvRowNumber": 2
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "duplicate_key",
+   "notice": {
+    "fieldName1": "trip_id,stop_sequence",
+    "fieldValue1": "T1,1",
+    "filename": "stop_times.txt",
+    "newCsvRowNumber": 8,
+    "oldCsvRowNumber": 2
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "duplicate_key",
+   "notice": {
+    "fieldName1": "trip_id,stop_sequence",
+    "fieldValue1": "T1,2",
+    "filename": "stop_times.txt",
+    "newCsvRowNumber": 5,
+    "oldCsvRowNumber": 3
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "duplicate_trips",
+   "notice": {
+    "csvRowNumberTripId1FirstStopTime": 2,
+    "csvRowNumberTripId2FirstStopTime": 2,
+    "tripId1": "T1",
+    "tripId2": "T1"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "single_shape_point",
+   "notice": {
+    "csvRowNumber": 5,
+    "shapeId": "SH2"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 5,
+    "stopId": "s1",
+    "stopName": "Lower Case Id"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stops_match_shape_out_of_order",
+   "notice": {
+    "match1": [
+     40.75,
+     -73.98
+    ],
+    "match2": [
+     40.76,
+     -73.97
+    ],
+    "shapeId": "SH1",
+    "stopId1": "S1",
+    "stopId2": "S2",
+    "stopName1": "First Stop",
+    "stopName2": "Second Stop",
+    "stopTimeCsvRowNumber1": 9,
+    "stopTimeCsvRowNumber2": 7,
+    "tripCsvRowNumber": 3,
+    "tripId": "T2"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unsorted_stop_times",
+   "notice": {
+    "endCsvRowNumber": 8,
+    "startCsvRowNumber": 2,
+    "tripId": "T1"
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "unsorted_stop_times",
+   "notice": {
+    "endCsvRowNumber": 9,
+    "startCsvRowNumber": 6,
+    "tripId": "T2"
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "unused_shape",
+   "notice": {
+    "csvRowNumber": 5,
+    "shapeId": "SH2"
+   },
+   "severity": "WARNING"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

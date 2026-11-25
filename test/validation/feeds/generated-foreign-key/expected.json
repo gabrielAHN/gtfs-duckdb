@@ -1,0 +1,215 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "foreign_key_violation",
+   "notice": {
+    "childFieldName": "from_stop_id",
+    "childFilename": "pathways.txt",
+    "csvRowNumber": 3,
+    "fieldValue": "EX",
+    "parentFieldName": "stop_id",
+    "parentFilename": "stops.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "foreign_key_violation",
+   "notice": {
+    "childFieldName": "from_stop_id",
+    "childFilename": "pathways.txt",
+    "csvRowNumber": 5,
+    "fieldValue": "s1",
+    "parentFieldName": "stop_id",
+    "parentFilename": "stops.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "foreign_key_violation",
+   "notice": {
+    "childFieldName": "parent_station",
+    "childFilename": "stops.txt",
+    "csvRowNumber": 4,
+    "fieldValue": "STX",
+    "parentFieldName": "stop_id",
+    "parentFilename": "stops.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "foreign_key_violation",
+   "notice": {
+    "childFieldName": "parent_station",
+    "childFilename": "stops.txt",
+    "csvRowNumber": 6,
+    "fieldValue": "st1",
+    "parentFieldName": "stop_id",
+    "parentFilename": "stops.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "foreign_key_violation",
+   "notice": {
+    "childFieldName": "route_id",
+    "childFilename": "trips.txt",
+    "csvRowNumber": 3,
+    "fieldValue": "RX",
+    "parentFieldName": "route_id",
+    "parentFilename": "routes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "foreign_key_violation",
+   "notice": {
+    "childFieldName": "route_id",
+    "childFilename": "trips.txt",
+    "csvRowNumber": 5,
+    "fieldValue": "r1",
+    "parentFieldName": "route_id",
+    "parentFilename": "routes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "foreign_key_violation",
+   "notice": {
+    "childFieldName": "shape_id",
+    "childFilename": "trips.txt",
+    "csvRowNumber": 3,
+    "fieldValue": "SHX",
+    "parentFieldName": "shape_id",
+    "parentFilename": "shapes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "foreign_key_violation",
+   "notice": {
+    "childFieldName": "shape_id",
+    "childFilename": "trips.txt",
+    "csvRowNumber": 5,
+    "fieldValue": "sh1",
+    "parentFieldName": "shape_id",
+    "parentFilename": "shapes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "foreign_key_violation",
+   "notice": {
+    "childFieldName": "stop_id",
+    "childFilename": "stop_times.txt",
+    "csvRowNumber": 10,
+    "fieldValue": "s2",
+    "parentFieldName": "stop_id",
+    "parentFilename": "stops.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "foreign_key_violation",
+   "notice": {
+    "childFieldName": "stop_id",
+    "childFilename": "stop_times.txt",
+    "csvRowNumber": 4,
+    "fieldValue": "SZ",
+    "parentFieldName": "stop_id",
+    "parentFilename": "stops.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "foreign_key_violation",
+   "notice": {
+    "childFieldName": "to_stop_id",
+    "childFilename": "pathways.txt",
+    "csvRowNumber": 4,
+    "fieldValue": "SX",
+    "parentFieldName": "stop_id",
+    "parentFilename": "stops.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "foreign_key_violation",
+   "notice": {
+    "childFieldName": "trip_id",
+    "childFilename": "stop_times.txt",
+    "csvRowNumber": 11,
+    "fieldValue": "TX",
+    "parentFieldName": "trip_id",
+    "parentFilename": "trips.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "foreign_key_violation",
+   "notice": {
+    "childFieldName": "trip_id",
+    "childFilename": "stop_times.txt",
+    "csvRowNumber": 12,
+    "fieldValue": "TX",
+    "parentFieldName": "trip_id",
+    "parentFilename": "trips.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "length",
+    "filename": "pathways.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "length",
+    "filename": "pathways.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 4,
+    "fieldName": "length",
+    "filename": "pathways.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 5,
+    "fieldName": "length",
+    "filename": "pathways.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_too_far_from_shape",
+   "notice": {
+    "geoDistanceToShape": 8664443.860456046,
+    "match": [
+     40.77,
+     -73.96
+    ],
+    "shapeId": "SH1",
+    "stopId": "SZ",
+    "stopName": "",
+    "stopTimeCsvRowNumber": 4,
+    "tripCsvRowNumber": 2,
+    "tripId": "T1"
+   },
+   "severity": "WARNING"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

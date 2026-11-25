@@ -1,0 +1,6 @@
+stop_id,stop_name,stop_lat,stop_lon,location_type,parent_station
+ST1,Central Station,40.7500,-73.9800,1,
+S1,First Stop,40.7501,-73.9801,0,ST1
+S2,Second Stop,40.7600,-73.9700,0,STX
+E1,Main Entrance,40.7502,-73.9802,2,ST1
+S3,Third Stop,40.7700,-73.9600,0,st1

@@ -1,0 +1,4 @@
+pathway_id,from_stop_id,to_stop_id,pathway_mode,is_bidirectional,signposted_as,reversed_signposted_as
+P1,S1,S2,1,1,exit to street,Platform
+P2,S2,S3,1,1,TO PLATFORM,platform
+P3,S3,S4,1,1,,Main Street
