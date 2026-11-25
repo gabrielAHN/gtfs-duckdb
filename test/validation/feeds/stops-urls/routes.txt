@@ -1,0 +1,5 @@
+route_id,agency_id,route_short_name,route_long_name,route_type,route_url
+R1,A,1,Main Street,3,https://example.org/R1
+R2,A,2,Second Avenue,3,HTTPS://EXAMPLE.ORG/r1
+R3,A,3,Third Avenue,3,https://example.org/other
+R4,A,4,Fourth Avenue,3,

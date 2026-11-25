@@ -1,0 +1,254 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "bidirectional_exit_gate",
+   "notice": {
+    "csvRowNumber": 12,
+    "isBidirectional": 1,
+    "pathwayMode": 7
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "foreign_key_violation",
+   "notice": {
+    "childFieldName": "to_stop_id",
+    "childFilename": "pathways.txt",
+    "csvRowNumber": 22,
+    "fieldValue": "NOPE",
+    "parentFieldName": "stop_id",
+    "parentFilename": "stops.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "irrelevant_max_slope_set_for_pathway_mode",
+   "notice": {
+    "csvRowNumber": 5,
+    "maxSlope": 0.1,
+    "pathwayId": "ST2",
+    "pathwayMode": 2
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "irrelevant_max_slope_set_for_pathway_mode",
+   "notice": {
+    "csvRowNumber": 9,
+    "maxSlope": -0.1,
+    "pathwayId": "ES1",
+    "pathwayMode": 4
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 11,
+    "fieldName": "length",
+    "filename": "pathways.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 12,
+    "fieldName": "length",
+    "filename": "pathways.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "length",
+    "filename": "pathways.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 5,
+    "fieldName": "stair_count",
+    "filename": "pathways.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 8,
+    "fieldName": "traversal_time",
+    "filename": "pathways.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 9,
+    "fieldName": "traversal_time",
+    "filename": "pathways.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_file",
+   "notice": {
+    "filename": "shapes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "pathway_dangling_generic_node",
+   "notice": {
+    "csvRowNumber": 10,
+    "parentStation": "STA",
+    "stopId": "GN2",
+    "stopName": ""
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "pathway_loop",
+   "notice": {
+    "csvRowNumber": 15,
+    "pathwayId": "LP1",
+    "stopId": "GN1"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "pathway_loop",
+   "notice": {
+    "csvRowNumber": 21,
+    "pathwayId": "PW4",
+    "stopId": "ACC"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "pathway_to_platform_with_boarding_areas",
+   "notice": {
+    "csvRowNumber": 18,
+    "fieldName": "to_stop_id",
+    "pathwayId": "PW1",
+    "stopId": "PL2"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "pathway_to_stop_with_access_outside_of_station_pathways",
+   "notice": {
+    "csvRowNumber": 20,
+    "pathwayId": "PW3",
+    "platformCode": "3",
+    "stopId": "ACC"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "pathway_to_stop_with_access_outside_of_station_pathways",
+   "notice": {
+    "csvRowNumber": 21,
+    "pathwayId": "PW4",
+    "platformCode": "3",
+    "stopId": "ACC"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "pathway_to_stop_with_access_outside_of_station_pathways",
+   "notice": {
+    "csvRowNumber": 23,
+    "pathwayId": "PW6",
+    "platformCode": "4",
+    "stopId": "ACD"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "pathway_to_wrong_location_type",
+   "notice": {
+    "csvRowNumber": 19,
+    "fieldName": "from_stop_id",
+    "pathwayId": "PW2",
+    "stopId": "STA"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "pathway_unreachable_location",
+   "notice": {
+    "csvRowNumber": 11,
+    "hasEntrance": false,
+    "hasExit": false,
+    "locationType": 3,
+    "parentStation": "STA",
+    "stopId": "GN3",
+    "stopName": ""
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 12,
+    "stopId": "ACC",
+    "stopName": "Street Access"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 13,
+    "stopId": "ACD",
+    "stopName": "Street Access Dup"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 6,
+    "stopId": "PL1",
+    "stopName": "Platform One"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 7,
+    "stopId": "PL2",
+    "stopName": "Platform Two"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unexpected_enum_value",
+   "notice": {
+    "csvRowNumber": 14,
+    "fieldName": "pathway_mode",
+    "fieldValue": 9,
+    "filename": "pathways.txt"
+   },
+   "severity": "WARNING"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

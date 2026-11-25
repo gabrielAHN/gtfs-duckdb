@@ -1,0 +1,189 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "child_stop_too_far_from_parent_station",
+   "notice": {
+    "childStopId": "S2",
+    "childStopLat": 40.76,
+    "childStopLon": -73.97,
+    "distance": 15590.03390887266,
+    "parentStationId": "Z",
+    "parentStationLat": 40.9,
+    "parentStationLon": -73.98
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "duplicate_key",
+   "notice": {
+    "fieldName1": "stop_id",
+    "fieldValue1": "A",
+    "filename": "stops.txt",
+    "newCsvRowNumber": 12,
+    "oldCsvRowNumber": 11
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "duplicate_key",
+   "notice": {
+    "fieldName1": "stop_id",
+    "fieldValue1": "X",
+    "filename": "stops.txt",
+    "newCsvRowNumber": 5,
+    "oldCsvRowNumber": 4
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "duplicate_key",
+   "notice": {
+    "fieldName1": "stop_id",
+    "fieldValue1": "Y",
+    "filename": "stops.txt",
+    "newCsvRowNumber": 7,
+    "oldCsvRowNumber": 6
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "duplicate_key",
+   "notice": {
+    "fieldName1": "stop_id",
+    "fieldValue1": "Z",
+    "filename": "stops.txt",
+    "newCsvRowNumber": 9,
+    "oldCsvRowNumber": 8
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_file",
+   "notice": {
+    "filename": "shapes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "parent_station_missing_timezone",
+   "notice": {
+    "csvRowNumber": 2,
+    "parentCsvRowNumber": 4,
+    "parentStation": "X",
+    "stopId": "S1",
+    "stopTimezone": "America/New_York"
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "pathway_to_stop_with_access_outside_of_station_pathways",
+   "notice": {
+    "csvRowNumber": 2,
+    "pathwayId": "PA1",
+    "platformCode": "P2",
+    "stopId": "A"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "pathway_to_stop_with_access_outside_of_station_pathways",
+   "notice": {
+    "csvRowNumber": 3,
+    "pathwayId": "PA2",
+    "platformCode": "P2",
+    "stopId": "A"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "pathway_unreachable_location",
+   "notice": {
+    "csvRowNumber": 2,
+    "hasEntrance": false,
+    "hasExit": false,
+    "locationType": 0,
+    "parentStation": "X",
+    "stopId": "S1",
+    "stopName": "First Stop"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_access_specified_for_incorrect_location",
+   "notice": {
+    "csvRowNumber": 13,
+    "locationType": "UNRECOGNIZED",
+    "stopAccess": "ACCESSIBLE_VIA_PATHWAYS",
+    "stopId": "UA",
+    "stopName": "Unrec Access"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 11,
+    "stopId": "A",
+    "stopName": "Access One"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 12,
+    "stopId": "A",
+    "stopName": "Access Two"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 5,
+    "stopId": "X",
+    "stopName": "Stop X"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 6,
+    "stopId": "Y",
+    "stopName": "Stop Y"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unexpected_enum_value",
+   "notice": {
+    "csvRowNumber": 13,
+    "fieldName": "location_type",
+    "fieldValue": 6,
+    "filename": "stops.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_station",
+   "notice": {
+    "csvRowNumber": 6,
+    "stopId": "Y",
+    "stopName": "Stop Y"
+   },
+   "severity": "WARNING"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

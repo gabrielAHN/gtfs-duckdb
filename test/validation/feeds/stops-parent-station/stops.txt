@@ -1,0 +1,28 @@
+stop_id,stop_name,stop_lat,stop_lon,location_type,parent_station,stop_timezone
+S1,First Stop,40.7500,-73.9800,0,STA,
+S2,Second Stop,40.7600,-73.9700,0,STB,America/New_York
+STA,Station A,40.7500,-73.9790,1,,
+STB,Station B,40.7600,-73.9710,1,,
+STC,Station C,40.7400,-73.9800,1,,America/New_York
+EC,Entrance C,40.7401,-73.9800,2,STC,
+EW,Entrance Wrong,40.7402,-73.9800,2,S1,
+BA,Boarding Ok,40.7500,-73.9800,4,S1,America/Chicago
+BW,Boarding Wrong,,,4,STA,
+GW,Generic Wrong,,,3,EC,
+SX,Stop Bad Parent,40.7300,-73.9800,0,NOPE,America/New_York
+SU,Stop Unrec Parent,40.7310,-73.9800,0,U9,
+U9,Unrec Location,40.7320,-73.9800,9,STA,America/New_York
+STF,Station F,41.0000,-74.0000,1,,
+FAR1,Far One,41.0089842,-74.0000,0,STF,
+FAR2,Far Two,41.0090022,-74.0000,0,STF,
+FAR3,Far Three,41.0899230,-74.0000,0,STF,
+FAR4,Far Four,41.0899410,-74.0000,0,STF,
+FAR5,Far Entrance,41.0899410,-74.0000,2,STF,
+FAR6,Far From Stop,41.5000,-74.0000,0,S1,
+FAR7,Far Unrec,41.5000,-74.0000,8,STF,
+STN,Station No Coords,,,1,,
+FAR8,Far From No Coords,42.0000,-74.0000,0,STN,
+FAR9,Far No Coords,,,0,STF,
+STO,Station Origin,0.5000,0.5000,1,,
+FAR10,Far From Origin,42.0000,-74.0000,0,STO,
+FAR11,Near Origin Child,0.2000,0.2000,0,STF,
