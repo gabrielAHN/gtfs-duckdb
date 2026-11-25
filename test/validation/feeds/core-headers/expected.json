@@ -1,0 +1,67 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "duplicated_column",
+   "notice": {
+    "fieldName": "route_type",
+    "filename": "routes.txt",
+    "firstIndex": 5,
+    "secondIndex": 6
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "empty_column_name",
+   "notice": {
+    "filename": "routes.txt",
+    "index": 7
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "empty_column_name",
+   "notice": {
+    "filename": "routes.txt",
+    "index": 8
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_required_column",
+   "notice": {
+    "fieldName": "service_id",
+    "filename": "trips.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "unknown_column",
+   "notice": {
+    "fieldName": "Stop_Code",
+    "filename": "stops.txt",
+    "index": 5
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "unknown_column",
+   "notice": {
+    "fieldName": "extra",
+    "filename": "stops.txt",
+    "index": 6
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "unknown_column",
+   "notice": {
+    "fieldName": "foo",
+    "filename": "trips.txt",
+    "index": 3
+   },
+   "severity": "INFO"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

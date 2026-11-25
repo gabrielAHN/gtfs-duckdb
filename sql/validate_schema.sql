@@ -121,3 +121,24 @@ CREATE OR REPLACE TEMP TABLE gtfs_v_calendar_dates (
   exception_type INTEGER);
 -- GENERATED-END
 -- CORE-TABLES (core workstream tables below this line)
+-- Loader working tables, refilled for each loaded file by validate_load.sql (see validate_core.sql).
+-- The file being loaded: decoded text (Java's UTF-8 decoding, U+FFFD for malformed bytes, BOMs stripped) and the
+-- line of the first invalid line ending (LineEndingCheckingInputStream), NULL when every line ends in LF or CRLF.
+CREATE OR REPLACE TEMP TABLE gtfs_vc_text (filename VARCHAR, text VARCHAR, invalid_line_ending_row BIGINT);
+-- Its CSV records as univocity returns them: kind comment / empty / ws (only whitespace) / row, the line number the
+-- record ends on (CsvRow.getRowNumber) and the values (NULL for an empty value).
+CREATE OR REPLACE TEMP TABLE gtfs_vc_records (
+  rec_no BIGINT, csv_row_number BIGINT, kind VARCHAR, fields VARCHAR[], max_len BIGINT);
+-- Its header (CsvHeader) and parse state: header_n columns, header_ok when DefaultTableHeaderValidator found no
+-- error, fail_row the row of a TextParsingException (csv_parsing_failed), 0 when it hit the header.
+CREATE OR REPLACE TEMP TABLE gtfs_vc_header (column_name VARCHAR, column_index INTEGER);
+CREATE OR REPLACE TEMP TABLE gtfs_vc_state (has_header BOOLEAN, header_n INTEGER, header_ok BOOLEAN, fail_row BIGINT);
+-- Its data rows (RowParser.checkRowLength: length_ok; entity: no ERROR notice of its own).
+CREATE OR REPLACE TEMP TABLE gtfs_vc_rows (
+  csv_row_number BIGINT, fields VARCHAR[], length_ok BOOLEAN, entity BOOLEAN);
+-- One cell per row and loaded schema column: raw value, trimmed value and the typed value Java parses.
+CREATE OR REPLACE TEMP TABLE gtfs_vc_cells (
+  csv_row_number BIGINT, col_ord INTEGER, column_name VARCHAR, kind VARCHAR, java_type VARCHAR, level VARCHAR,
+  bounds VARCHAR, raw VARCHAR, v VARCHAR, vi BIGINT, vd DOUBLE, vdt DATE);
+-- Its row notices (RowParser, DefaultFieldValidator); err when the notice is an ERROR.
+CREATE OR REPLACE TEMP TABLE gtfs_vc_notices (csv_row_number BIGINT, code VARCHAR, notice JSON, err BOOLEAN);
