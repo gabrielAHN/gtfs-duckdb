@@ -1,0 +1,130 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "decreasing_shape_distance",
+   "notice": {
+    "csvRowNumber": 6,
+    "prevCsvRowNumber": 5,
+    "prevShapeDistTraveled": 5.0,
+    "prevShapePtSequence": 2,
+    "shapeDistTraveled": 10.0,
+    "shapeId": "SHD",
+    "shapePtSequence": 1
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "equal_shape_distance_diff_coordinates",
+   "notice": {
+    "actualDistanceBetweenShapePoints": 1.111951011220228,
+    "csvRowNumber": 16,
+    "prevCsvRowNumber": 15,
+    "prevShapeDistTraveled": 3.0,
+    "prevShapePtSequence": 1,
+    "shapeDistTraveled": 3.0,
+    "shapeId": "SHH",
+    "shapePtSequence": 2
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "equal_shape_distance_diff_coordinates",
+   "notice": {
+    "actualDistanceBetweenShapePoints": 11.119510117153549,
+    "csvRowNumber": 12,
+    "prevCsvRowNumber": 11,
+    "prevShapeDistTraveled": 3.0,
+    "prevShapePtSequence": 1,
+    "shapeDistTraveled": 3.0,
+    "shapeId": "SHF",
+    "shapePtSequence": 2
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "equal_shape_distance_diff_coordinates_distance_below_threshold",
+   "notice": {
+    "actualDistanceBetweenShapePoints": 1.1097271089615413,
+    "csvRowNumber": 14,
+    "prevCsvRowNumber": 13,
+    "prevShapeDistTraveled": 3.0,
+    "prevShapePtSequence": 1,
+    "shapeDistTraveled": 3.0,
+    "shapeId": "SHG",
+    "shapePtSequence": 2
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "equal_shape_distance_same_coordinates",
+   "notice": {
+    "csvRowNumber": 10,
+    "prevCsvRowNumber": 9,
+    "prevShapeDistTraveled": 5.0,
+    "prevShapePtSequence": 1,
+    "shapeDistTraveled": 5.0,
+    "shapeId": "SHE",
+    "shapePtSequence": 2
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "single_shape_point",
+   "notice": {
+    "csvRowNumber": 17,
+    "shapeId": "SHS"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_shape",
+   "notice": {
+    "csvRowNumber": 11,
+    "shapeId": "SHF"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_shape",
+   "notice": {
+    "csvRowNumber": 13,
+    "shapeId": "SHG"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_shape",
+   "notice": {
+    "csvRowNumber": 15,
+    "shapeId": "SHH"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_shape",
+   "notice": {
+    "csvRowNumber": 17,
+    "shapeId": "SHS"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_shape",
+   "notice": {
+    "csvRowNumber": 5,
+    "shapeId": "SHD"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_shape",
+   "notice": {
+    "csvRowNumber": 9,
+    "shapeId": "SHE"
+   },
+   "severity": "WARNING"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}
