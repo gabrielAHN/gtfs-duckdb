@@ -4,10 +4,10 @@ This repository is based on https://github.com/duckdb/extension-template, check 
 
 ---
 
-`gtfs` adds GTFS transit functions to DuckDB: stop/pathway/route normalization, station and route analysis, pathway shortest paths, trip editing and route-shape lane geometry. It is used by [GTFS Viz](https://github.com/gabrielAHN/gtfs-viz) in the browser (DuckDB-WASM) and in its CLI.
+`gtfs` adds GTFS transit functions to DuckDB: stop/pathway/route normalization, station and route analysis, pathway shortest paths, trip editing and route-shape lane geometry. It is used by [GTFS Viz](https://github.com/gabrielAHN/gtfs-viz) in the browser (DuckDB-WASM) and by the [GTFS Tools](https://github.com/gabrielAHN/gtfs-tools) CLI.
 
 ```sql
-INSTALL gtfs FROM '<repository>';
+INSTALL gtfs FROM community;
 LOAD gtfs;
 SELECT route_type_to_name(3);  -- Bus
 ```
@@ -21,7 +21,7 @@ PRAGMA gtfs_refresh;                 -- rebuild after edits, keeping pending edi
 
 `gtfs_import` requires `stops.txt`, turns missing optional files into empty tables and keeps pending edits when a feed is imported again. Pass `''` to read files from the working directory or, in DuckDB-WASM, files registered by name. The lower-level steps it runs are also available: `gtfs_prepare` (edit tables), `gtfs_normalize_<table>` for raw `<table>_raw` staging tables, `gtfs_empty_<table>` and `gtfs_init` (views, materialized tables and indexes). Route-shape caches use `gtfs_prepare_route_cache`, `gtfs_reset_route_cache` and `gtfs_route_cache_version`. Spatial geometry functions need the `spatial` extension loaded. See the [docs](https://gtfs-viz-production-f1a4.up.railway.app/docs/gtfs-duckdb/usage/) and the [function reference](https://gtfs-viz-production-f1a4.up.railway.app/docs/gtfs-duckdb/functions/), where every example runs on a real feed, or [docs/functions.md](docs/functions.md).
 
-The extension is not yet in the DuckDB community repository, so `INSTALL gtfs FROM community` does not work yet. See [Releasing](#releasing).
+The extension is in the [DuckDB community repository](https://duckdb.org/community_extensions/extensions/gtfs) (added in [duckdb/community-extensions#3494](https://github.com/duckdb/community-extensions/pull/3494)), so `INSTALL gtfs FROM community` works on DuckDB 2.0 with default signature checks. See [Releasing](#releasing).
 
 ## Layout
 
@@ -81,7 +81,7 @@ To serve locally built artifacts as an extension repository for GTFS Viz develop
 
 ## Releasing
 
-The current release is **1.0.1**. Each version is listed in [CHANGELOG.md](CHANGELOG.md).
+The current release is **1.0.2**. Each version is listed in [CHANGELOG.md](CHANGELOG.md).
 
 GitHub Actions (`.github/workflows/MainDistributionPipeline.yml`) runs on pull requests, pushes to `main` and manual dispatch. It builds native binaries against DuckDB v2.0.0 and `wasm_eh`/`wasm_mvp` against DuckDB-WASM v1.4.3, runs the format checks and test suites, and uploads an unsigned development repository artifact. These artifacts are for testing only.
 
@@ -89,11 +89,11 @@ Each push to `main` also republishes the unsigned development repository as `gtf
 
 Signed distribution goes through the [DuckDB community extensions](https://duckdb.org/community_extensions/documentation) repository, whose CI builds and signs every platform:
 
-1. Merge to `main` and tag the merge commit `v1.0.1`, so built binaries report `v1.0.1` instead of a commit hash.
-2. Copy the merged commit SHA into `community/description.yml` (`repo.ref`); `extension.version` is `1.0.1`.
-3. Open a pull request to `duckdb/community-extensions` adding `extensions/gtfs/description.yml`.
+1. Merge to `main` and tag the merge commit `v1.0.2`, so built binaries report `v1.0.2` instead of a commit hash.
+2. Copy the merged commit SHA into `community/description.yml` (`repo.ref`); `extension.version` is `1.0.2`.
+3. Open a pull request to `duckdb/community-extensions` that sets the same `ref` and `version` in `extensions/gtfs/description.yml` (1.0.2 added that file in [#3494](https://github.com/duckdb/community-extensions/pull/3494)).
 
-After it is merged, `INSTALL gtfs FROM community; LOAD gtfs;` works with default signature checks.
+Once it is merged and the community deploy has run, `INSTALL gtfs FROM community` installs the new version.
 
 ## Updating DuckDB
 
