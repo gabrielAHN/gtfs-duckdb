@@ -1,0 +1,9 @@
+stop_id,stop_name,stop_lat,stop_lon,location_type,parent_station
+S1,First Stop,40.7500,-73.9800,,
+S2,Second Stop,40.7600,-73.9700,,
+SA,Alpha,40.7000,-74.0000,,
+SB,Bravo,40.7540,-74.0000,,
+SC,Charlie,40.8080,-74.0000,,
+SD,Delta,40.7890,-74.0000,,
+P1,Parent Station,40.9000,-74.0000,1,
+SP,,,,0,P1

@@ -1,0 +1,8 @@
+route_id,service_id,trip_id
+R1,SV,TA
+R1,SV,TB
+R1,SV,TC
+R1,SV,TD
+R1,SV,TE
+R1,SV,TF
+R1,SV,TG

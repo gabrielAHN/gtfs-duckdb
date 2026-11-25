@@ -1,0 +1,37 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "missing_recommended_file",
+   "notice": {
+    "filename": "shapes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unusable_trip",
+   "notice": {
+    "csvRowNumber": 3,
+    "tripId": "T2"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unusable_trip",
+   "notice": {
+    "csvRowNumber": 4,
+    "tripId": "T3"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_trip",
+   "notice": {
+    "csvRowNumber": 3,
+    "tripId": "T2"
+   },
+   "severity": "WARNING"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

@@ -1,0 +1,431 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "inconsistent_route_type_for_block_id",
+   "notice": {
+    "blockId": "B1",
+    "routeIds": "R1, F1",
+    "routeTypes": "BUS, FERRY"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "inconsistent_route_type_for_block_id",
+   "notice": {
+    "blockId": "B5",
+    "routeIds": "R1, R9, F1",
+    "routeTypes": "BUS, UNRECOGNIZED, FERRY"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_bike_allowance",
+   "notice": {
+    "csvRowNumber": 14,
+    "routeId": "F1",
+    "tripId": "T13"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_bike_allowance",
+   "notice": {
+    "csvRowNumber": 3,
+    "routeId": "F1",
+    "tripId": "T2"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_bike_allowance",
+   "notice": {
+    "csvRowNumber": 5,
+    "routeId": "F2",
+    "tripId": "T4"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_bike_allowance",
+   "notice": {
+    "csvRowNumber": 7,
+    "routeId": "F2",
+    "tripId": "T10"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 10,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 11,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 12,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 13,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 14,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 15,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 4,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 5,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 6,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 7,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 8,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 9,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_file",
+   "notice": {
+    "filename": "shapes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unexpected_enum_value",
+   "notice": {
+    "csvRowNumber": 5,
+    "fieldName": "route_type",
+    "fieldValue": 99,
+    "filename": "routes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unexpected_enum_value",
+   "notice": {
+    "csvRowNumber": 6,
+    "fieldName": "route_type",
+    "fieldValue": 98,
+    "filename": "routes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unexpected_enum_value",
+   "notice": {
+    "csvRowNumber": 7,
+    "fieldName": "bikes_allowed",
+    "fieldValue": 5,
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unusable_trip",
+   "notice": {
+    "csvRowNumber": 10,
+    "tripId": "T8"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unusable_trip",
+   "notice": {
+    "csvRowNumber": 11,
+    "tripId": "T9"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unusable_trip",
+   "notice": {
+    "csvRowNumber": 12,
+    "tripId": "T11"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unusable_trip",
+   "notice": {
+    "csvRowNumber": 13,
+    "tripId": "T12"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unusable_trip",
+   "notice": {
+    "csvRowNumber": 14,
+    "tripId": "T13"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unusable_trip",
+   "notice": {
+    "csvRowNumber": 15,
+    "tripId": "T14"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unusable_trip",
+   "notice": {
+    "csvRowNumber": 3,
+    "tripId": "T2"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unusable_trip",
+   "notice": {
+    "csvRowNumber": 4,
+    "tripId": "T3"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unusable_trip",
+   "notice": {
+    "csvRowNumber": 5,
+    "tripId": "T4"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unusable_trip",
+   "notice": {
+    "csvRowNumber": 6,
+    "tripId": "T5"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unusable_trip",
+   "notice": {
+    "csvRowNumber": 7,
+    "tripId": "T10"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unusable_trip",
+   "notice": {
+    "csvRowNumber": 8,
+    "tripId": "T6"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unusable_trip",
+   "notice": {
+    "csvRowNumber": 9,
+    "tripId": "T7"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_trip",
+   "notice": {
+    "csvRowNumber": 10,
+    "tripId": "T8"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_trip",
+   "notice": {
+    "csvRowNumber": 11,
+    "tripId": "T9"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_trip",
+   "notice": {
+    "csvRowNumber": 12,
+    "tripId": "T11"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_trip",
+   "notice": {
+    "csvRowNumber": 13,
+    "tripId": "T12"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_trip",
+   "notice": {
+    "csvRowNumber": 14,
+    "tripId": "T13"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_trip",
+   "notice": {
+    "csvRowNumber": 15,
+    "tripId": "T14"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_trip",
+   "notice": {
+    "csvRowNumber": 3,
+    "tripId": "T2"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_trip",
+   "notice": {
+    "csvRowNumber": 4,
+    "tripId": "T3"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_trip",
+   "notice": {
+    "csvRowNumber": 5,
+    "tripId": "T4"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_trip",
+   "notice": {
+    "csvRowNumber": 6,
+    "tripId": "T5"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_trip",
+   "notice": {
+    "csvRowNumber": 7,
+    "tripId": "T10"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_trip",
+   "notice": {
+    "csvRowNumber": 8,
+    "tripId": "T6"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_trip",
+   "notice": {
+    "csvRowNumber": 9,
+    "tripId": "T7"
+   },
+   "severity": "WARNING"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

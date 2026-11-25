@@ -1,0 +1,5 @@
+stop_id,stop_name,stop_lat,stop_lon
+S1,First Stop,40.7500,-73.9800
+S2,Second Stop,40.7600,-73.9700
+S3,Third Stop,40.7700,-73.9600
+S4,,40.7800,-73.9500

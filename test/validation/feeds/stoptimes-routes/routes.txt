@@ -1,0 +1,6 @@
+route_id,agency_id,route_short_name,route_long_name,route_type
+R1,A,1,Main Street,3
+F1,A,F1,Harbor Ferry,4
+F2,A,F2,Bay Ferry,4
+R9,A,9,Odd Line,99
+R8,A,8,Even Line,98

@@ -1,0 +1,530 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "duplicate_trips",
+   "notice": {
+    "csvRowNumberTripId1FirstStopTime": 10,
+    "csvRowNumberTripId2FirstStopTime": 4,
+    "tripId1": "FAST1",
+    "tripId2": "FAST2"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "duplicate_trips",
+   "notice": {
+    "csvRowNumberTripId1FirstStopTime": 10,
+    "csvRowNumberTripId2FirstStopTime": 7,
+    "tripId1": "FAST1",
+    "tripId2": "FAST3"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "duplicate_trips",
+   "notice": {
+    "csvRowNumberTripId1FirstStopTime": 17,
+    "csvRowNumberTripId2FirstStopTime": 19,
+    "tripId1": "TRAM",
+    "tripId2": "RAIL"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "fast_travel_between_consecutive_stops",
+   "notice": {
+    "arrivalTime2": "08:00:00",
+    "csvRowNumber1": 25,
+    "csvRowNumber2": 26,
+    "departureTime1": "08:00:00",
+    "distanceKm": 6.004535463583335,
+    "routeId": "R1",
+    "speedKph": 360.2721278150001,
+    "stopId1": "SA",
+    "stopId2": "SB",
+    "stopName1": "Alpha",
+    "stopName2": "Bravo",
+    "stopSequence1": 1,
+    "stopSequence2": 2,
+    "tripCsvRowNumber": 12,
+    "tripId": "EQ"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "fast_travel_between_consecutive_stops",
+   "notice": {
+    "arrivalTime2": "08:01:00",
+    "csvRowNumber1": 23,
+    "csvRowNumber2": 24,
+    "departureTime1": "08:00:00",
+    "distanceKm": 22.23902023549611,
+    "routeId": "R1",
+    "speedKph": 667.1706070648833,
+    "stopId1": "SA",
+    "stopId2": "SP",
+    "stopName1": "Alpha",
+    "stopName2": "",
+    "stopSequence1": 1,
+    "stopSequence2": 2,
+    "tripCsvRowNumber": 11,
+    "tripId": "PAR"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "fast_travel_between_consecutive_stops",
+   "notice": {
+    "arrivalTime2": "08:03:00",
+    "csvRowNumber1": 10,
+    "csvRowNumber2": 12,
+    "departureTime1": "08:00:00",
+    "distanceKm": 12.009070927167377,
+    "routeId": "R1",
+    "speedKph": 180.13606390751065,
+    "stopId1": "SA",
+    "stopId2": "SC",
+    "stopName1": "Alpha",
+    "stopName2": "Charlie",
+    "stopSequence1": 1,
+    "stopSequence2": 3,
+    "tripCsvRowNumber": 3,
+    "tripId": "FAST1"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "fast_travel_between_consecutive_stops",
+   "notice": {
+    "arrivalTime2": "08:03:00",
+    "csvRowNumber1": 10,
+    "csvRowNumber2": 12,
+    "departureTime1": "08:00:00",
+    "distanceKm": 12.009070927167377,
+    "routeId": "R1",
+    "speedKph": 180.13606390751065,
+    "stopId1": "SA",
+    "stopId2": "SC",
+    "stopName1": "Alpha",
+    "stopName2": "Charlie",
+    "stopSequence1": 1,
+    "stopSequence2": 3,
+    "tripCsvRowNumber": 4,
+    "tripId": "FAST2"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "fast_travel_between_consecutive_stops",
+   "notice": {
+    "arrivalTime2": "08:03:00",
+    "csvRowNumber1": 10,
+    "csvRowNumber2": 12,
+    "departureTime1": "08:00:00",
+    "distanceKm": 12.009070927167377,
+    "routeId": "R1",
+    "speedKph": 180.13606390751065,
+    "stopId1": "SA",
+    "stopId2": "SC",
+    "stopName1": "Alpha",
+    "stopName2": "Charlie",
+    "stopSequence1": 1,
+    "stopSequence2": 3,
+    "tripCsvRowNumber": 5,
+    "tripId": "FAST3"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "fast_travel_between_consecutive_stops",
+   "notice": {
+    "arrivalTime2": "08:03:15",
+    "csvRowNumber1": 17,
+    "csvRowNumber2": 18,
+    "departureTime1": "08:00:00",
+    "distanceKm": 6.004535463583335,
+    "routeId": "RT",
+    "speedKph": 110.85296240461541,
+    "stopId1": "SA",
+    "stopId2": "SB",
+    "stopName1": "Alpha",
+    "stopName2": "Bravo",
+    "stopSequence1": 1,
+    "stopSequence2": 2,
+    "tripCsvRowNumber": 8,
+    "tripId": "TRAM"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "fast_travel_between_consecutive_stops",
+   "notice": {
+    "arrivalTime2": "08:03:15",
+    "csvRowNumber1": 21,
+    "csvRowNumber2": 22,
+    "departureTime1": "08:00:00",
+    "distanceKm": 12.009070927167377,
+    "routeId": "RX",
+    "speedKph": 221.70592480924387,
+    "stopId1": "SA",
+    "stopId2": "SC",
+    "stopName1": "Alpha",
+    "stopName2": "Charlie",
+    "stopSequence1": 1,
+    "stopSequence2": 2,
+    "tripCsvRowNumber": 10,
+    "tripId": "ODD"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "fast_travel_between_consecutive_stops",
+   "notice": {
+    "arrivalTime2": "08:03:30",
+    "csvRowNumber1": 13,
+    "csvRowNumber2": 14,
+    "departureTime1": "08:00:00",
+    "distanceKm": 9.896364004795737,
+    "routeId": "R1",
+    "speedKph": 169.65195436792692,
+    "stopId1": "SA",
+    "stopId2": "SD",
+    "stopName1": "Alpha",
+    "stopName2": "Delta",
+    "stopSequence1": 1,
+    "stopSequence2": 2,
+    "tripCsvRowNumber": 6,
+    "tripId": "SLOW"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "fast_travel_between_far_stops",
+   "notice": {
+    "arrivalTime2": "08:01:00",
+    "csvRowNumber1": 23,
+    "csvRowNumber2": 24,
+    "departureTime1": "08:00:00",
+    "distanceKm": 22.23902023549611,
+    "routeId": "R1",
+    "speedKph": 667.1706070648833,
+    "stopId1": "SA",
+    "stopId2": "SP",
+    "stopName1": "Alpha",
+    "stopName2": "",
+    "stopSequence1": 1,
+    "stopSequence2": 2,
+    "tripCsvRowNumber": 11,
+    "tripId": "PAR"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "fast_travel_between_far_stops",
+   "notice": {
+    "arrivalTime2": "08:02:10",
+    "csvRowNumber1": 29,
+    "csvRowNumber2": 31,
+    "departureTime1": "08:00:00",
+    "distanceKm": 12.009070927167377,
+    "routeId": "R1",
+    "speedKph": 332.55888721386583,
+    "stopId1": "SA",
+    "stopId2": "SC",
+    "stopName1": "Alpha",
+    "stopName2": "Charlie",
+    "stopSequence1": 1,
+    "stopSequence2": 3,
+    "tripCsvRowNumber": 14,
+    "tripId": "STUCK"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "fast_travel_between_far_stops",
+   "notice": {
+    "arrivalTime2": "08:03:00",
+    "csvRowNumber1": 10,
+    "csvRowNumber2": 12,
+    "departureTime1": "08:00:00",
+    "distanceKm": 12.009070927167377,
+    "routeId": "R1",
+    "speedKph": 180.13606390751065,
+    "stopId1": "SA",
+    "stopId2": "SC",
+    "stopName1": "Alpha",
+    "stopName2": "Charlie",
+    "stopSequence1": 1,
+    "stopSequence2": 3,
+    "tripCsvRowNumber": 3,
+    "tripId": "FAST1"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "fast_travel_between_far_stops",
+   "notice": {
+    "arrivalTime2": "08:03:00",
+    "csvRowNumber1": 4,
+    "csvRowNumber2": 6,
+    "departureTime1": "08:00:00",
+    "distanceKm": 12.009070927167377,
+    "routeId": "R1",
+    "speedKph": 180.13606390751065,
+    "stopId1": "SA",
+    "stopId2": "SC",
+    "stopName1": "Alpha",
+    "stopName2": "Charlie",
+    "stopSequence1": 1,
+    "stopSequence2": 3,
+    "tripCsvRowNumber": 4,
+    "tripId": "FAST2"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "fast_travel_between_far_stops",
+   "notice": {
+    "arrivalTime2": "08:03:00",
+    "csvRowNumber1": 7,
+    "csvRowNumber2": 9,
+    "departureTime1": "08:00:00",
+    "distanceKm": 12.009070927167377,
+    "routeId": "R1",
+    "speedKph": 180.13606390751065,
+    "stopId1": "SA",
+    "stopId2": "SC",
+    "stopName1": "Alpha",
+    "stopName2": "Charlie",
+    "stopSequence1": 1,
+    "stopSequence2": 3,
+    "tripCsvRowNumber": 5,
+    "tripId": "FAST3"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "fast_travel_between_far_stops",
+   "notice": {
+    "arrivalTime2": "08:03:15",
+    "csvRowNumber1": 21,
+    "csvRowNumber2": 22,
+    "departureTime1": "08:00:00",
+    "distanceKm": 12.009070927167377,
+    "routeId": "RX",
+    "speedKph": 221.70592480924387,
+    "stopId1": "SA",
+    "stopId2": "SC",
+    "stopName1": "Alpha",
+    "stopName2": "Charlie",
+    "stopSequence1": 1,
+    "stopSequence2": 2,
+    "tripCsvRowNumber": 10,
+    "tripId": "ODD"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_bike_allowance",
+   "notice": {
+    "csvRowNumber": 15,
+    "routeId": "RF",
+    "tripId": "FERRY"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 10,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 11,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 12,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 13,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 14,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 15,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 4,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 5,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 6,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 7,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 8,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 9,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_file",
+   "notice": {
+    "filename": "shapes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_stop_name",
+   "notice": {
+    "csvRowNumber": 9,
+    "locationType": "STOP",
+    "stopId": "SP"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_trip_edge",
+   "notice": {
+    "csvRowNumber": 27,
+    "specifiedField": "departure_time",
+    "stopSequence": 1,
+    "tripId": "NODEP"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_time_with_only_arrival_or_departure_time",
+   "notice": {
+    "csvRowNumber": 27,
+    "specifiedField": "arrival_time",
+    "stopSequence": 1,
+    "tripId": "NODEP"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_time_with_only_arrival_or_departure_time",
+   "notice": {
+    "csvRowNumber": 30,
+    "specifiedField": "arrival_time",
+    "stopSequence": 2,
+    "tripId": "STUCK"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_without_location",
+   "notice": {
+    "csvRowNumber": 9,
+    "locationType": "STOP",
+    "stopId": "SP"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "unexpected_enum_value",
+   "notice": {
+    "csvRowNumber": 5,
+    "fieldName": "route_type",
+    "fieldValue": 99,
+    "filename": "routes.txt"
+   },
+   "severity": "WARNING"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}
