@@ -13,6 +13,7 @@ Run: python3 -m unittest test.test_validation -v     (from the repository root)
 
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -125,11 +126,32 @@ class PipelineTest(unittest.TestCase):
 
     def test_working_tables_are_emptied(self):
         tables = ["gtfs_vc_text", "gtfs_vc_records", "gtfs_vc_header", "gtfs_vc_state", "gtfs_vc_rows", "gtfs_vc_cells"]
-        sql = " UNION ALL ".join(f"SELECT '{t}' AS t, count(*) AS n FROM {t}" for t in tables + ["gtfs_vc_notices"])
+        tables += ["gtfs_vc_notices", "gtfs_vc_rule_notices"]
+        sql = " UNION ALL ".join(f"SELECT '{t}' AS t, count(*) AS n FROM {t}" for t in tables)
         with tempfile.TemporaryDirectory() as tmp:
-            feed = harness.materialize("base", Path(tmp) / "feed")
+            feed = harness.materialize("stops-distance", Path(tmp) / "feed")
             out = harness.run(feed, queries={"left": sql})
-        self.assertEqual({r["t"]: r["n"] for r in out["left"]}, {t: 0 for t in tables + ["gtfs_vc_notices"]})
+        self.assertTrue(out["notices"])
+        self.assertEqual({r["t"]: r["n"] for r in out["left"]}, {t: 0 for t in tables})
+
+    def test_finish_runs_every_rule_macro_of_every_group(self):
+        # validate_finish.sql runs the rule macros one statement at a time (see its header), listed under a comment
+        # naming their group: the lists must be the group macros' own.
+        sql = Path(harness.__file__).resolve().parents[2] / "sql"
+        groups = {}
+        for path in sql.glob("validate_rules_*.sql"):
+            match = re.search(r"MACRO (gtfs_validate_rules_\w+)\(\) AS TABLE(.*?);", path.read_text(), re.S)
+            groups[match.group(1)] = re.findall(r"\bFROM (gtfs_vr_\w+)\(\)", match.group(2))
+        finish, group = {}, None
+        for line in (sql / "validate_finish.sql").read_text().splitlines():
+            header = re.fullmatch(r"-- (gtfs_validate_rules_\w+)\(\)", line)
+            if header:
+                group = finish.setdefault(header.group(1), [])
+            for macro in re.findall(r"\bFROM (gtfs_vr_\w+)\(\)", line):
+                self.assertIsNotNone(group, line)
+                group.append(macro)
+        self.assertEqual(len(groups), 5)
+        self.assertEqual(finish, groups)
 
     def test_missing_directory_is_an_error(self):
         with tempfile.TemporaryDirectory() as tmp:

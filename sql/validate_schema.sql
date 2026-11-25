@@ -143,3 +143,5 @@ CREATE OR REPLACE TEMP TABLE gtfs_vc_cells (
   bounds VARCHAR, raw VARCHAR, v VARCHAR, vi BIGINT, vd DOUBLE, vdt DATE);
 -- Its row notices (RowParser, DefaultFieldValidator); err when the notice is an ERROR.
 CREATE OR REPLACE TEMP TABLE gtfs_vc_notices (csv_row_number BIGINT, code VARCHAR, notice JSON, err BOOLEAN);
+-- Every rule's notices before validate_finish.sql adds their severity, filename and row (one statement per rule).
+CREATE OR REPLACE TEMP TABLE gtfs_vc_rule_notices (code VARCHAR, notice JSON);
