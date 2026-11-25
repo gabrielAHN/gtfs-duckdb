@@ -1,0 +1,98 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "expired_calendar",
+   "notice": {
+    "csvRowNumber": 4,
+    "serviceId": "SV3"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "expired_calendar",
+   "notice": {
+    "csvRowNumber": 5,
+    "serviceId": "SV4"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_file",
+   "notice": {
+    "filename": "shapes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "start_and_end_range_out_of_order",
+   "notice": {
+    "csvRowNumber": 3,
+    "endFieldName": "departure_time",
+    "endValue": "08:09:59",
+    "filename": "stop_times.txt",
+    "startFieldName": "arrival_time",
+    "startValue": "08:10:00"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "start_and_end_range_out_of_order",
+   "notice": {
+    "csvRowNumber": 3,
+    "endFieldName": "end_date",
+    "endValue": "20260101",
+    "entityId": "SV2",
+    "filename": "calendar.txt",
+    "startFieldName": "start_date",
+    "startValue": "20270101"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "start_and_end_range_out_of_order",
+   "notice": {
+    "csvRowNumber": 5,
+    "endFieldName": "departure_time",
+    "endValue": "25:00:00",
+    "filename": "stop_times.txt",
+    "startFieldName": "arrival_time",
+    "startValue": "25:00:01"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "start_and_end_range_out_of_order",
+   "notice": {
+    "csvRowNumber": 5,
+    "endFieldName": "end_date",
+    "endValue": "20260601",
+    "entityId": "SV4",
+    "filename": "calendar.txt",
+    "startFieldName": "start_date",
+    "startValue": "20260602"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_time_with_only_arrival_or_departure_time",
+   "notice": {
+    "csvRowNumber": 6,
+    "specifiedField": "arrival_time",
+    "stopSequence": 5,
+    "tripId": "T1"
+   },
+   "severity": "ERROR"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

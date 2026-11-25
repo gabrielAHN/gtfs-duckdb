@@ -1,0 +1,235 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "point_near_origin",
+   "notice": {
+    "csvRowNumber": 3,
+    "filename": "shapes.txt",
+    "latFieldName": "shape_pt_lat",
+    "latFieldValue": 0.1,
+    "lonFieldName": "shape_pt_lon",
+    "lonFieldValue": 0.2
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "point_near_origin",
+   "notice": {
+    "csvRowNumber": 4,
+    "entityId": "O1",
+    "filename": "stops.txt",
+    "latFieldName": "stop_lat",
+    "latFieldValue": 0.5,
+    "lonFieldName": "stop_lon",
+    "lonFieldValue": -0.5
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "point_near_origin",
+   "notice": {
+    "csvRowNumber": 4,
+    "filename": "shapes.txt",
+    "latFieldName": "shape_pt_lat",
+    "latFieldValue": -1.0,
+    "lonFieldName": "shape_pt_lon",
+    "lonFieldValue": 1.0
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "point_near_origin",
+   "notice": {
+    "csvRowNumber": 5,
+    "entityId": "O2",
+    "filename": "stops.txt",
+    "latFieldName": "stop_lat",
+    "latFieldValue": 1.0,
+    "lonFieldName": "stop_lon",
+    "lonFieldValue": -1.0
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "point_near_origin",
+   "notice": {
+    "csvRowNumber": 8,
+    "entityId": "O5",
+    "filename": "stops.txt",
+    "latFieldName": "stop_lat",
+    "latFieldValue": 0.0,
+    "lonFieldName": "stop_lon",
+    "lonFieldValue": 0.0
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "point_near_pole",
+   "notice": {
+    "csvRowNumber": 10,
+    "entityId": "P2",
+    "filename": "stops.txt",
+    "latFieldName": "stop_lat",
+    "latFieldValue": -89.5,
+    "lonFieldName": "stop_lon",
+    "lonFieldValue": 10.0
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "point_near_pole",
+   "notice": {
+    "csvRowNumber": 6,
+    "filename": "shapes.txt",
+    "latFieldName": "shape_pt_lat",
+    "latFieldValue": 89.0,
+    "lonFieldName": "shape_pt_lon",
+    "lonFieldValue": 0.0
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "point_near_pole",
+   "notice": {
+    "csvRowNumber": 7,
+    "filename": "shapes.txt",
+    "latFieldName": "shape_pt_lat",
+    "latFieldValue": -90.0,
+    "lonFieldName": "shape_pt_lon",
+    "lonFieldValue": 0.0
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "point_near_pole",
+   "notice": {
+    "csvRowNumber": 9,
+    "entityId": "P1",
+    "filename": "stops.txt",
+    "latFieldName": "stop_lat",
+    "latFieldValue": 89.0,
+    "lonFieldName": "stop_lon",
+    "lonFieldValue": 10.0
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_without_location",
+   "notice": {
+    "csvRowNumber": 13,
+    "locationType": "STOP",
+    "stopId": "N1"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 10,
+    "stopId": "P2",
+    "stopName": "South Pole"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 11,
+    "stopId": "P3",
+    "stopName": "Pole Miss"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 12,
+    "stopId": "P4",
+    "stopName": "South Pole Miss"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 13,
+    "stopId": "N1",
+    "stopName": "No Longitude"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 4,
+    "stopId": "O1",
+    "stopName": "Origin Stop"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 5,
+    "stopId": "O2",
+    "stopName": "Origin Edge"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 6,
+    "stopId": "O3",
+    "stopName": "Origin Miss Lat"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 7,
+    "stopId": "O4",
+    "stopName": "Origin Miss Lon"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 8,
+    "stopId": "O5",
+    "stopName": "Zero Point"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 9,
+    "stopId": "P1",
+    "stopName": "North Pole Edge"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_shape",
+   "notice": {
+    "csvRowNumber": 2,
+    "shapeId": "SH1"
+   },
+   "severity": "WARNING"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

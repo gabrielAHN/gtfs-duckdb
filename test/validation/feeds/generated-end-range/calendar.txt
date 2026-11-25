@@ -1,0 +1,5 @@
+service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date
+SV,1,1,1,1,1,1,1,20260101,20271231
+SV2,1,1,1,1,1,1,1,20270101,20260101
+SV3,1,1,1,1,1,1,1,20260601,20260601
+SV4,1,1,1,1,1,1,1,20260602,20260601

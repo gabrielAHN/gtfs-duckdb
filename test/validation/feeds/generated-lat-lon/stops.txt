@@ -1,0 +1,13 @@
+stop_id,stop_name,stop_lat,stop_lon
+S1,First Stop,40.7500,-73.9800
+S2,Second Stop,40.7600,-73.9700
+O1,Origin Stop,0.5,-0.5
+O2,Origin Edge,1.0,-1.0
+O3,Origin Miss Lat,1.000001,0.0
+O4,Origin Miss Lon,0.0,-1.000001
+O5,Zero Point,0,0
+P1,North Pole Edge,89.0,10.0
+P2,South Pole,-89.5,10.0
+P3,Pole Miss,88.999999,10.0
+P4,South Pole Miss,-88.999999,10.0
+N1,No Longitude,0.5,

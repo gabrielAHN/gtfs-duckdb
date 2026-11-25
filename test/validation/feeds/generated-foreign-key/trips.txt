@@ -1,0 +1,5 @@
+route_id,service_id,trip_id,trip_headsign,shape_id
+R1,SV,T1,Downtown,SH1
+RX,SV,T2,Uptown,SHX
+R1,SV,T3,Crosstown,
+r1,SV,T4,Midtown,sh1
