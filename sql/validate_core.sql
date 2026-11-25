@@ -1580,13 +1580,16 @@ CREATE OR REPLACE MACRO gtfs_vc_host_ok(h) AS (
    AND list_contains(gtfs_vc_tlds(), lower(regexp_extract(h, gtfs_vc_domain_re(), 1))))
   OR gtfs_vc_ipv4_ok(h)
 );
+-- A port past the int range is false, never NULL: Integer.parseInt throws and isValidAuthority returns false (a NULL
+-- would make the rule's WHERE NOT drop the row). An IPv6 authority's port is not checked, as in commons-validator 1.6.
 CREATE OR REPLACE MACRO gtfs_vc_authority_ok(a) AS (
   CASE WHEN NOT regexp_full_match(a, gtfs_vc_authority_re()) THEN false
        ELSE (CASE WHEN regexp_extract(a, gtfs_vc_authority_re(), 1) <> ''
                   THEN gtfs_vc_ipv6_ok(regexp_extract(a, gtfs_vc_authority_re(), 1))
                   ELSE gtfs_vc_host_ok(regexp_extract(a, gtfs_vc_authority_re(), 2))
                        AND (regexp_extract(a, gtfs_vc_authority_re(), 3) = ''
-                            OR TRY_CAST(regexp_extract(a, gtfs_vc_authority_re(), 3) AS INTEGER) BETWEEN 0 AND 65535) END)
+                            OR coalesce(TRY_CAST(regexp_extract(a, gtfs_vc_authority_re(), 3) AS INTEGER)
+                                        BETWEEN 0 AND 65535, false)) END)
             AND trim(regexp_extract(a, gtfs_vc_authority_re(), 4), gtfs_vc_ws()) = '' END
 );
 -- isValidPath: PATH_REGEX, no '//', and URI.normalize() does not start with '/..': no '..' segment while no segment
