@@ -1,0 +1,99 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 7,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_file",
+   "notice": {
+    "filename": "shapes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_stop_name",
+   "notice": {
+    "csvRowNumber": 5,
+    "locationType": "STOP",
+    "stopId": "S4"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "mixed_case_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "trip_headsign",
+    "fieldValue": "second stop",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "mixed_case_recommended_field",
+   "notice": {
+    "csvRowNumber": 4,
+    "fieldName": "trip_headsign",
+    "fieldValue": "FIRST STOP",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "trip_headsign_matches_intermediate_stop",
+   "notice": {
+    "csvRowNumber": 2,
+    "stopId1": "S2",
+    "stopId2": "S3",
+    "stopSequence": 2,
+    "tripHeadsign": "second stop",
+    "tripId": "T1"
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "trip_headsign_matches_intermediate_stop",
+   "notice": {
+    "csvRowNumber": 4,
+    "stopId1": "S1",
+    "stopId2": "S2",
+    "stopSequence": 1,
+    "tripHeadsign": "FIRST STOP",
+    "tripId": "T3"
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "trip_headsign_matches_intermediate_stop",
+   "notice": {
+    "csvRowNumber": 6,
+    "stopId1": "S2",
+    "stopId2": "S3",
+    "stopSequence": 1,
+    "tripHeadsign": "Second Stop",
+    "tripId": "T5"
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "trip_headsign_matches_intermediate_stop",
+   "notice": {
+    "csvRowNumber": 6,
+    "stopId1": "S2",
+    "stopId2": "S3",
+    "stopSequence": 2,
+    "tripHeadsign": "Second Stop",
+    "tripId": "T5"
+   },
+   "severity": "INFO"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

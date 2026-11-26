@@ -1,0 +1,40 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "stop_has_too_many_matches_for_shape",
+   "notice": {
+    "match": [
+     40.749190006058235,
+     -73.95000017413516
+    ],
+    "matchCount": 21,
+    "shapeId": "SZ21",
+    "stopId": "Z1",
+    "stopName": "Stop Z1",
+    "stopTimeCsvRowNumber": 2,
+    "tripCsvRowNumber": 2,
+    "tripId": "TZ1"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_has_too_many_matches_for_shape",
+   "notice": {
+    "match": [
+     40.749190006058235,
+     -73.95000017413516
+    ],
+    "matchCount": 21,
+    "shapeId": "SZ21",
+    "stopId": "Z1",
+    "stopName": "Stop Z1",
+    "stopTimeCsvRowNumber": 2,
+    "tripCsvRowNumber": 2,
+    "tripId": "TZ1"
+   },
+   "severity": "WARNING"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

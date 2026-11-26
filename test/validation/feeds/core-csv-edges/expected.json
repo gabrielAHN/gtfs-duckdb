@@ -1,0 +1,278 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "duplicated_column",
+   "notice": {
+    "fieldName": "1",
+    "filename": "calendar.txt",
+    "firstIndex": 11,
+    "secondIndex": 12
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "duplicated_column",
+   "notice": {
+    "fieldName": "1",
+    "filename": "calendar.txt",
+    "firstIndex": 11,
+    "secondIndex": 13
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "duplicated_column",
+   "notice": {
+    "fieldName": "1",
+    "filename": "calendar.txt",
+    "firstIndex": 11,
+    "secondIndex": 14
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "duplicated_column",
+   "notice": {
+    "fieldName": "1",
+    "filename": "calendar.txt",
+    "firstIndex": 11,
+    "secondIndex": 15
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "duplicated_column",
+   "notice": {
+    "fieldName": "1",
+    "filename": "calendar.txt",
+    "firstIndex": 11,
+    "secondIndex": 16
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "duplicated_column",
+   "notice": {
+    "fieldName": "1",
+    "filename": "calendar.txt",
+    "firstIndex": 11,
+    "secondIndex": 17
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "empty_column_name",
+   "notice": {
+    "filename": "shapes.txt",
+    "index": 1
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_float",
+   "notice": {
+    "csvRowNumber": 10,
+    "fieldName": "stop_lat",
+    "fieldValue": "40.7.9",
+    "filename": "stops.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_line_ending",
+   "notice": {
+    "filename": "calendar.txt",
+    "rowNumber": 1
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_line_ending",
+   "notice": {
+    "filename": "calendar_dates.txt",
+    "rowNumber": 2
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "leading_or_trailing_whitespaces",
+   "notice": {
+    "csvRowNumber": 4,
+    "fieldName": "trip_id",
+    "fieldValue": "T2\n",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 4,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_required_column",
+   "notice": {
+    "fieldName": "end_date",
+    "filename": "calendar.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_required_column",
+   "notice": {
+    "fieldName": "shape_id",
+    "filename": "shapes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_required_column",
+   "notice": {
+    "fieldName": "shape_pt_lat",
+    "filename": "shapes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_required_column",
+   "notice": {
+    "fieldName": "shape_pt_lon",
+    "filename": "shapes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_required_column",
+   "notice": {
+    "fieldName": "shape_pt_sequence",
+    "filename": "shapes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "new_line_in_value",
+   "notice": {
+    "csvRowNumber": 4,
+    "fieldName": "trip_id",
+    "fieldValue": "T2\n",
+    "filename": "trips.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "new_line_in_value",
+   "notice": {
+    "csvRowNumber": 6,
+    "fieldName": "stop_name",
+    "fieldValue": "Second\nStop",
+    "filename": "stops.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "unknown_column",
+   "notice": {
+    "fieldName": "1",
+    "filename": "calendar.txt",
+    "index": 11
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "unknown_column",
+   "notice": {
+    "fieldName": "1",
+    "filename": "calendar.txt",
+    "index": 12
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "unknown_column",
+   "notice": {
+    "fieldName": "1",
+    "filename": "calendar.txt",
+    "index": 13
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "unknown_column",
+   "notice": {
+    "fieldName": "1",
+    "filename": "calendar.txt",
+    "index": 14
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "unknown_column",
+   "notice": {
+    "fieldName": "1",
+    "filename": "calendar.txt",
+    "index": 15
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "unknown_column",
+   "notice": {
+    "fieldName": "1",
+    "filename": "calendar.txt",
+    "index": 16
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "unknown_column",
+   "notice": {
+    "fieldName": "1",
+    "filename": "calendar.txt",
+    "index": 17
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "unknown_column",
+   "notice": {
+    "fieldName": "20260101",
+    "filename": "calendar.txt",
+    "index": 18
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "unknown_column",
+   "notice": {
+    "fieldName": "20271231",
+    "filename": "calendar.txt",
+    "index": 19
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "unknown_column",
+   "notice": {
+    "fieldName": "end_date\rSV",
+    "filename": "calendar.txt",
+    "index": 10
+   },
+   "severity": "INFO"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

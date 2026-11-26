@@ -1,0 +1,9 @@
+trip_id,arrival_time,departure_time,stop_id,location_id,stop_sequence,shape_dist_traveled
+T1,08:00:00,08:00:00,S1,,1,0.0
+T1,,,S2,,2,0.0
+T1,,,S1,,3,
+T1,,,S2,,4,1.0
+T1,,,S1,,5,0.5
+T1,,,,L1,6,0.9
+T1,,,S2,,7,0.6
+T1,08:30:00,08:30:00,S1,,8,0.6000001

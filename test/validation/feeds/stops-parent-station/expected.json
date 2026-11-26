@@ -1,0 +1,367 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "child_stop_far_from_parent_station",
+   "notice": {
+    "childStopId": "FAR2",
+    "childStopLat": 41.0090022,
+    "childStopLon": -74.0,
+    "distance": 1001.0005398198606,
+    "parentStationId": "STF",
+    "parentStationLat": 41.0,
+    "parentStationLon": -74.0
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "child_stop_far_from_parent_station",
+   "notice": {
+    "childStopId": "FAR3",
+    "childStopLat": 41.089923,
+    "childStopLon": -74.0,
+    "distance": 9998.99708318307,
+    "parentStationId": "STF",
+    "parentStationLat": 41.0,
+    "parentStationLon": -74.0
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "child_stop_too_far_from_parent_station",
+   "notice": {
+    "childStopId": "FAR4",
+    "childStopLat": 41.089941,
+    "childStopLon": -74.0,
+    "distance": 10000.998595004397,
+    "parentStationId": "STF",
+    "parentStationLat": 41.0,
+    "parentStationLon": -74.0
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "foreign_key_violation",
+   "notice": {
+    "childFieldName": "parent_station",
+    "childFilename": "stops.txt",
+    "csvRowNumber": 12,
+    "fieldValue": "NOPE",
+    "parentFieldName": "stop_id",
+    "parentFilename": "stops.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_file",
+   "notice": {
+    "filename": "shapes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "parent_station_missing_timezone",
+   "notice": {
+    "csvRowNumber": 14,
+    "parentCsvRowNumber": 4,
+    "parentStation": "STA",
+    "stopId": "U9",
+    "stopTimezone": "America/New_York"
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "parent_station_missing_timezone",
+   "notice": {
+    "csvRowNumber": 3,
+    "parentCsvRowNumber": 5,
+    "parentStation": "STB",
+    "stopId": "S2",
+    "stopTimezone": "America/New_York"
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "parent_station_missing_timezone",
+   "notice": {
+    "csvRowNumber": 9,
+    "parentCsvRowNumber": 2,
+    "parentStation": "S1",
+    "stopId": "BA",
+    "stopTimezone": "America/Chicago"
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "point_near_origin",
+   "notice": {
+    "csvRowNumber": 26,
+    "entityId": "STO",
+    "filename": "stops.txt",
+    "latFieldName": "stop_lat",
+    "latFieldValue": 0.5,
+    "lonFieldName": "stop_lon",
+    "lonFieldValue": 0.5
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "point_near_origin",
+   "notice": {
+    "csvRowNumber": 28,
+    "entityId": "FAR11",
+    "filename": "stops.txt",
+    "latFieldName": "stop_lat",
+    "latFieldValue": 0.2,
+    "lonFieldName": "stop_lon",
+    "lonFieldValue": 0.2
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_without_location",
+   "notice": {
+    "csvRowNumber": 23,
+    "locationType": "STATION",
+    "stopId": "STN"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_without_location",
+   "notice": {
+    "csvRowNumber": 25,
+    "locationType": "STOP",
+    "stopId": "FAR9"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 12,
+    "stopId": "SX",
+    "stopName": "Stop Bad Parent"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 13,
+    "stopId": "SU",
+    "stopName": "Stop Unrec Parent"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 16,
+    "stopId": "FAR1",
+    "stopName": "Far One"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 17,
+    "stopId": "FAR2",
+    "stopName": "Far Two"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 18,
+    "stopId": "FAR3",
+    "stopName": "Far Three"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 19,
+    "stopId": "FAR4",
+    "stopName": "Far Four"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 21,
+    "stopId": "FAR6",
+    "stopName": "Far From Stop"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 24,
+    "stopId": "FAR8",
+    "stopName": "Far From No Coords"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 25,
+    "stopId": "FAR9",
+    "stopName": "Far No Coords"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 27,
+    "stopId": "FAR10",
+    "stopName": "Far From Origin"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 28,
+    "stopId": "FAR11",
+    "stopName": "Near Origin Child"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stops_too_close",
+   "notice": {
+    "csvRowNumber1": 24,
+    "csvRowNumber2": 27,
+    "stopId1": "FAR8",
+    "stopId2": "FAR10",
+    "stopLat1": 42.0,
+    "stopLat2": 42.0,
+    "stopLon1": -74.0,
+    "stopLon2": -74.0
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unexpected_enum_value",
+   "notice": {
+    "csvRowNumber": 14,
+    "fieldName": "location_type",
+    "fieldValue": 9,
+    "filename": "stops.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unexpected_enum_value",
+   "notice": {
+    "csvRowNumber": 22,
+    "fieldName": "location_type",
+    "fieldValue": 8,
+    "filename": "stops.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_station",
+   "notice": {
+    "csvRowNumber": 6,
+    "stopId": "STC",
+    "stopName": "Station C"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "wrong_parent_location_type",
+   "notice": {
+    "csvRowNumber": 10,
+    "expectedLocationType": 0,
+    "locationType": 4,
+    "parentCsvRowNumber": 4,
+    "parentLocationType": 1,
+    "parentStation": "STA",
+    "parentStopName": "Station A",
+    "stopId": "BW",
+    "stopName": "Boarding Wrong"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "wrong_parent_location_type",
+   "notice": {
+    "csvRowNumber": 11,
+    "expectedLocationType": 1,
+    "locationType": 3,
+    "parentCsvRowNumber": 7,
+    "parentLocationType": 2,
+    "parentStation": "EC",
+    "parentStopName": "Entrance C",
+    "stopId": "GW",
+    "stopName": "Generic Wrong"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "wrong_parent_location_type",
+   "notice": {
+    "csvRowNumber": 13,
+    "expectedLocationType": 1,
+    "locationType": 0,
+    "parentCsvRowNumber": 14,
+    "parentLocationType": -1,
+    "parentStation": "U9",
+    "parentStopName": "Unrec Location",
+    "stopId": "SU",
+    "stopName": "Stop Unrec Parent"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "wrong_parent_location_type",
+   "notice": {
+    "csvRowNumber": 21,
+    "expectedLocationType": 1,
+    "locationType": 0,
+    "parentCsvRowNumber": 2,
+    "parentLocationType": 0,
+    "parentStation": "S1",
+    "parentStopName": "First Stop",
+    "stopId": "FAR6",
+    "stopName": "Far From Stop"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "wrong_parent_location_type",
+   "notice": {
+    "csvRowNumber": 8,
+    "expectedLocationType": 1,
+    "locationType": 2,
+    "parentCsvRowNumber": 2,
+    "parentLocationType": 0,
+    "parentStation": "S1",
+    "parentStopName": "First Stop",
+    "stopId": "EW",
+    "stopName": "Entrance Wrong"
+   },
+   "severity": "ERROR"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

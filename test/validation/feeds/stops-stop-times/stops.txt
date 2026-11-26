@@ -1,0 +1,8 @@
+stop_id,stop_name,stop_lat,stop_lon,location_type,parent_station
+S1,First Stop,40.7500,-73.9800,0,ST
+S2,Second Stop,40.7600,-73.9700,,
+ST,Station,40.7510,-73.9800,1,
+EN,Entrance,40.7520,-73.9800,2,ST
+U7,Unrecognized,40.7530,-73.9800,7,
+SN,Unused Stop,40.7540,-73.9800,0,
+SM,Unused Stop Two,40.7550,-73.9800,,

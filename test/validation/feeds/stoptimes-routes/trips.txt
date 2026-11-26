@@ -1,0 +1,15 @@
+route_id,service_id,trip_id,block_id,bikes_allowed
+R1,SV,T1,B1,
+F1,SV,T2,B1,
+F1,SV,T3,,1
+F2,SV,T4,B2,0
+F2,SV,T5,B2,2
+F2,SV,T10,,5
+R1,SV,T6,B3,
+R1,SV,T7,B3,
+R9,SV,T8,B4,
+R8,SV,T9,B4,
+R1,SV,T11,B5,
+R9,SV,T12,B5,
+F1,SV,T13,B5,
+R1,SV,T14,B5,

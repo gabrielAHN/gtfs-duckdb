@@ -4,7 +4,7 @@ This repository is based on https://github.com/duckdb/extension-template, check 
 
 ---
 
-`gtfs` adds GTFS transit functions to DuckDB: stop/pathway/route normalization, station and route analysis, pathway shortest paths, trip editing and route-shape lane geometry. It is used by [GTFS Viz](https://github.com/gabrielAHN/gtfs-viz) in the browser (DuckDB-WASM) and by the [GTFS Tools](https://github.com/gabrielAHN/gtfs-tools) CLI.
+`gtfs` adds GTFS transit functions to DuckDB: stop/pathway/route normalization, station and route analysis, pathway shortest paths, trip editing, route-shape lane geometry and feed validation. It is used by [GTFS Viz](https://github.com/gabrielAHN/gtfs-viz) in the browser (DuckDB-WASM) and by the [GTFS Tools](https://github.com/gabrielAHN/gtfs-tools) CLI.
 
 ```sql
 INSTALL gtfs FROM community;
@@ -21,14 +21,17 @@ PRAGMA gtfs_refresh;                 -- rebuild after edits, keeping pending edi
 
 `gtfs_import` requires `stops.txt`, turns missing optional files into empty tables and keeps pending edits when a feed is imported again. Pass `''` to read files from the working directory or, in DuckDB-WASM, files registered by name. The lower-level steps it runs are also available: `gtfs_prepare` (edit tables), `gtfs_normalize_<table>` for raw `<table>_raw` staging tables, `gtfs_empty_<table>` and `gtfs_init` (views, materialized tables and indexes). Route-shape caches use `gtfs_prepare_route_cache`, `gtfs_reset_route_cache` and `gtfs_route_cache_version`. Spatial geometry functions need the `spatial` extension loaded. See the [docs](https://gtfs-viz-production-f1a4.up.railway.app/docs/gtfs-duckdb/usage/) and the [function reference](https://gtfs-viz-production-f1a4.up.railway.app/docs/gtfs-duckdb/functions/), where every example runs on a real feed, or [docs/functions.md](docs/functions.md).
 
+`PRAGMA gtfs_validate('feed')` checks the files `gtfs_import` reads with the rules of the [MobilityData GTFS validator](https://github.com/MobilityData/gtfs-validator), ported to SQL, without importing the feed. See [docs/validation.md](docs/validation.md).
+
 The extension is in the [DuckDB community repository](https://duckdb.org/community_extensions/extensions/gtfs) (added in [duckdb/community-extensions#3494](https://github.com/duckdb/community-extensions/pull/3494)), so `INSTALL gtfs FROM community` works on DuckDB 2.0 with default signature checks. See [Releasing](#releasing).
 
 ## Layout
 
-- `sql/*.sql`: function and lifecycle SQL, embedded at build time through `src/include/gtfs_sql.hpp.in`.
+- `sql/*.sql`: function and lifecycle SQL, embedded at build time through `src/include/gtfs_sql.hpp.in`. `sql/validate_*.sql` holds the validation rules ([docs/validation-internals.md](docs/validation-internals.md)).
 - `src/gtfs_extension.cpp`: registers macros in the system catalog and the lifecycle pragmas.
 - `test/sql/gtfs.test`: SQLLogicTests run by `make test`.
 - `test/test_*.py`, `test/*.mjs`: native, parity, lifecycle, staging and browser tests against built artifacts.
+- `test/validation/`: small feeds for each validation rule with the official validator's notices, and the harness that compares them.
 - `community/description.yml`: descriptor for the DuckDB community-extensions repository.
 
 ## Building
@@ -72,6 +75,8 @@ npm run test:js
 npm run test:wasm:unsigned
 npm run test:wasm
 ```
+
+`test/test_validation.py` compares the validation notices for every feed in `test/validation/feeds` with the official validator's. Without `GTFS_EXTENSION` it runs the SQL directly on stock DuckDB CLIs (v2.0.0 and v1.4.3, see `test/validation/harness.py`), so rules can be tested without building the extension.
 
 `GTFS_DEPENDENCY_CACHE` must contain the `spatial` extension for the native engine. Parity tests compare against the test-only reference `test/fixtures/legacy-gtfs_sql.hpp.txt` (provenance in `test/fixtures/legacy-reference.md`).
 

@@ -1,0 +1,124 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "duplicate_trips",
+   "notice": {
+    "csvRowNumberTripId1FirstStopTime": 12,
+    "csvRowNumberTripId2FirstStopTime": 15,
+    "tripId1": "T6",
+    "tripId2": "T7"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "duplicate_trips",
+   "notice": {
+    "csvRowNumberTripId1FirstStopTime": 4,
+    "csvRowNumberTripId2FirstStopTime": 11,
+    "tripId1": "T2",
+    "tripId2": "T5"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "duplicate_trips",
+   "notice": {
+    "csvRowNumberTripId1FirstStopTime": 4,
+    "csvRowNumberTripId2FirstStopTime": 2,
+    "tripId1": "T2",
+    "tripId2": "T1"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 4,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 5,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 6,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 7,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 8,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 9,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_file",
+   "notice": {
+    "filename": "shapes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unsorted_stop_times",
+   "notice": {
+    "endCsvRowNumber": 11,
+    "startCsvRowNumber": 10,
+    "tripId": "T5"
+   },
+   "severity": "INFO"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

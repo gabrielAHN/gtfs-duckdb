@@ -1,0 +1,41 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "foreign_key_violation",
+   "notice": {
+    "childFieldName": "stop_id",
+    "childFilename": "stop_times.txt",
+    "csvRowNumber": 3,
+    "fieldValue": "SZ",
+    "parentFieldName": "stop_id",
+    "parentFilename": "stops.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_required_file",
+   "notice": {
+    "filename": "routes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_required_file",
+   "notice": {
+    "filename": "trips.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 3,
+    "stopId": "S2",
+    "stopName": "Second Stop"
+   },
+   "severity": "WARNING"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

@@ -1,0 +1,319 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "child_stop_far_from_parent_station",
+   "notice": {
+    "childStopId": "A1",
+    "childStopLat": 40.712,
+    "childStopLon": -73.9,
+    "distance": 1223.1461129526715,
+    "parentStationId": "ST1",
+    "parentStationLat": 40.701,
+    "parentStationLon": -73.9
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "location_without_parent_station",
+   "notice": {
+    "csvRowNumber": 7,
+    "locationType": 2,
+    "stopId": "E1",
+    "stopName": "Entrance One"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "location_without_parent_station",
+   "notice": {
+    "csvRowNumber": 8,
+    "locationType": 3,
+    "stopId": "G1",
+    "stopName": ""
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "location_without_parent_station",
+   "notice": {
+    "csvRowNumber": 9,
+    "locationType": 4,
+    "stopId": "B1",
+    "stopName": ""
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_file",
+   "notice": {
+    "filename": "shapes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_stop_name",
+   "notice": {
+    "csvRowNumber": 10,
+    "locationType": "STOP",
+    "stopId": "N0"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_stop_name",
+   "notice": {
+    "csvRowNumber": 11,
+    "locationType": "STATION",
+    "stopId": "N1"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_stop_name",
+   "notice": {
+    "csvRowNumber": 12,
+    "locationType": "ENTRANCE",
+    "stopId": "N2"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "platform_without_parent_station",
+   "notice": {
+    "csvRowNumber": 6,
+    "stopId": "P1",
+    "stopName": "Platform One"
+   },
+   "severity": "INFO"
+  },
+  {
+   "code": "same_name_and_description_for_stop",
+   "notice": {
+    "csvRowNumber": 14,
+    "stopDesc": "SAME desc",
+    "stopId": "D1"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "station_with_parent_station",
+   "notice": {
+    "csvRowNumber": 5,
+    "parentStation": "ST1",
+    "stopId": "ST2",
+    "stopName": "Station Two"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_access_specified_for_incorrect_location",
+   "notice": {
+    "csvRowNumber": 21,
+    "locationType": "STATION",
+    "stopAccess": "ACCESSIBLE_VIA_PATHWAYS",
+    "stopId": "A2",
+    "stopName": "Access Station"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_access_specified_for_incorrect_location",
+   "notice": {
+    "csvRowNumber": 23,
+    "locationType": "GENERIC_NODE",
+    "stopAccess": "NOT_ACCESSIBLE_VIA_PATHWAYS",
+    "stopId": "A4",
+    "stopName": "Access Node"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_access_specified_for_stop_with_no_parent_station",
+   "notice": {
+    "csvRowNumber": 19,
+    "locationType": "STOP",
+    "stopAccess": "NOT_ACCESSIBLE_VIA_PATHWAYS",
+    "stopId": "A0",
+    "stopName": "Access No Parent"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_access_specified_for_stop_with_no_parent_station",
+   "notice": {
+    "csvRowNumber": 22,
+    "locationType": "STOP",
+    "stopAccess": "UNRECOGNIZED",
+    "stopId": "A3",
+    "stopName": "Access Unknown"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_without_location",
+   "notice": {
+    "csvRowNumber": 16,
+    "locationType": "STOP",
+    "stopId": "L0"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_without_location",
+   "notice": {
+    "csvRowNumber": 17,
+    "locationType": "STATION",
+    "stopId": "L1"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_without_location",
+   "notice": {
+    "csvRowNumber": 18,
+    "locationType": "ENTRANCE",
+    "stopId": "L2"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 10,
+    "stopId": "N0",
+    "stopName": ""
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 14,
+    "stopId": "D1",
+    "stopName": "Same Desc"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 15,
+    "stopId": "D2",
+    "stopName": "Other Name"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 16,
+    "stopId": "L0",
+    "stopName": "No Lat"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 19,
+    "stopId": "A0",
+    "stopName": "Access No Parent"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 20,
+    "stopId": "A1",
+    "stopName": "Access With Parent"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 22,
+    "stopId": "A3",
+    "stopName": "Access Unknown"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 6,
+    "stopId": "P1",
+    "stopName": "Platform One"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unexpected_enum_value",
+   "notice": {
+    "csvRowNumber": 13,
+    "fieldName": "location_type",
+    "fieldValue": 7,
+    "filename": "stops.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unexpected_enum_value",
+   "notice": {
+    "csvRowNumber": 22,
+    "fieldName": "stop_access",
+    "fieldValue": 5,
+    "filename": "stops.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_station",
+   "notice": {
+    "csvRowNumber": 11,
+    "stopId": "N1",
+    "stopName": ""
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_station",
+   "notice": {
+    "csvRowNumber": 17,
+    "stopId": "L1",
+    "stopName": "No Lon Station"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_station",
+   "notice": {
+    "csvRowNumber": 21,
+    "stopId": "A2",
+    "stopName": "Access Station"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_station",
+   "notice": {
+    "csvRowNumber": 5,
+    "stopId": "ST2",
+    "stopName": "Station Two"
+   },
+   "severity": "WARNING"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

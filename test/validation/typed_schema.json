@@ -1,0 +1,991 @@
+{
+ "stops": [
+  {
+   "name": "csv_row_number",
+   "type": "BIGINT"
+  },
+  {
+   "name": "stop_id",
+   "type": "VARCHAR",
+   "kind": "id",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "FieldType",
+    "PrimaryKey",
+    "Required"
+   ]
+  },
+  {
+   "name": "stop_code",
+   "type": "VARCHAR",
+   "kind": "text",
+   "java_type": "String",
+   "default": null,
+   "annotations": []
+  },
+  {
+   "name": "stop_name",
+   "type": "VARCHAR",
+   "kind": "text",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "ConditionallyRequired",
+    "MixedCase"
+   ]
+  },
+  {
+   "name": "tts_stop_name",
+   "type": "VARCHAR",
+   "kind": "text",
+   "java_type": "String",
+   "default": null,
+   "annotations": []
+  },
+  {
+   "name": "stop_desc",
+   "type": "VARCHAR",
+   "kind": "text",
+   "java_type": "String",
+   "default": null,
+   "annotations": []
+  },
+  {
+   "name": "stop_lat",
+   "type": "DOUBLE",
+   "kind": "latitude",
+   "java_type": "double",
+   "default": null,
+   "annotations": [
+    "ConditionallyRequired",
+    "FieldType"
+   ]
+  },
+  {
+   "name": "stop_lon",
+   "type": "DOUBLE",
+   "kind": "longitude",
+   "java_type": "double",
+   "default": null,
+   "annotations": [
+    "ConditionallyRequired",
+    "FieldType"
+   ]
+  },
+  {
+   "name": "zone_id",
+   "type": "VARCHAR",
+   "kind": "id",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "ConditionallyRequired",
+    "FieldType",
+    "Index"
+   ]
+  },
+  {
+   "name": "stop_url",
+   "type": "VARCHAR",
+   "kind": "url",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "FieldType"
+   ]
+  },
+  {
+   "name": "location_type",
+   "type": "INTEGER",
+   "kind": "enum",
+   "java_type": "GtfsLocationType",
+   "default": null,
+   "annotations": []
+  },
+  {
+   "name": "parent_station",
+   "type": "VARCHAR",
+   "kind": "id",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "ConditionallyRequired",
+    "FieldType",
+    "ForeignKey",
+    "Index"
+   ]
+  },
+  {
+   "name": "stop_timezone",
+   "type": "VARCHAR",
+   "kind": "timezone",
+   "java_type": "ZoneId",
+   "default": null,
+   "annotations": [
+    "FieldType"
+   ]
+  },
+  {
+   "name": "wheelchair_boarding",
+   "type": "INTEGER",
+   "kind": "enum",
+   "java_type": "GtfsWheelchairBoarding",
+   "default": null,
+   "annotations": []
+  },
+  {
+   "name": "level_id",
+   "type": "VARCHAR",
+   "kind": "id",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "FieldType",
+    "ForeignKey"
+   ]
+  },
+  {
+   "name": "platform_code",
+   "type": "VARCHAR",
+   "kind": "text",
+   "java_type": "String",
+   "default": null,
+   "annotations": []
+  },
+  {
+   "name": "stop_access",
+   "type": "INTEGER",
+   "kind": "enum",
+   "java_type": "GtfsStopAccess",
+   "default": null,
+   "annotations": []
+  }
+ ],
+ "pathways": [
+  {
+   "name": "csv_row_number",
+   "type": "BIGINT"
+  },
+  {
+   "name": "pathway_id",
+   "type": "VARCHAR",
+   "kind": "id",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "FieldType",
+    "PrimaryKey",
+    "Required"
+   ]
+  },
+  {
+   "name": "from_stop_id",
+   "type": "VARCHAR",
+   "kind": "id",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "FieldType",
+    "ForeignKey",
+    "Index",
+    "Required"
+   ]
+  },
+  {
+   "name": "to_stop_id",
+   "type": "VARCHAR",
+   "kind": "id",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "FieldType",
+    "ForeignKey",
+    "Index",
+    "Required"
+   ]
+  },
+  {
+   "name": "pathway_mode",
+   "type": "INTEGER",
+   "kind": "enum",
+   "java_type": "GtfsPathwayMode",
+   "default": null,
+   "annotations": [
+    "Required"
+   ]
+  },
+  {
+   "name": "is_bidirectional",
+   "type": "INTEGER",
+   "kind": "enum",
+   "java_type": "GtfsPathwayIsBidirectional",
+   "default": null,
+   "annotations": [
+    "Required"
+   ]
+  },
+  {
+   "name": "length",
+   "type": "DOUBLE",
+   "kind": "float",
+   "java_type": "double",
+   "default": null,
+   "annotations": [
+    "NonNegative"
+   ]
+  },
+  {
+   "name": "traversal_time",
+   "type": "INTEGER",
+   "kind": "integer",
+   "java_type": "int",
+   "default": null,
+   "annotations": [
+    "Positive"
+   ]
+  },
+  {
+   "name": "stair_count",
+   "type": "INTEGER",
+   "kind": "integer",
+   "java_type": "int",
+   "default": null,
+   "annotations": [
+    "NonZero"
+   ]
+  },
+  {
+   "name": "max_slope",
+   "type": "DOUBLE",
+   "kind": "float",
+   "java_type": "double",
+   "default": null,
+   "annotations": []
+  },
+  {
+   "name": "min_width",
+   "type": "DOUBLE",
+   "kind": "float",
+   "java_type": "double",
+   "default": null,
+   "annotations": [
+    "Positive"
+   ]
+  },
+  {
+   "name": "signposted_as",
+   "type": "VARCHAR",
+   "kind": "text",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "MixedCase"
+   ]
+  },
+  {
+   "name": "reversed_signposted_as",
+   "type": "VARCHAR",
+   "kind": "text",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "MixedCase"
+   ]
+  }
+ ],
+ "routes": [
+  {
+   "name": "csv_row_number",
+   "type": "BIGINT"
+  },
+  {
+   "name": "route_id",
+   "type": "VARCHAR",
+   "kind": "id",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "FieldType",
+    "PrimaryKey",
+    "Required"
+   ]
+  },
+  {
+   "name": "agency_id",
+   "type": "VARCHAR",
+   "kind": "id",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "ConditionallyRequired",
+    "FieldType",
+    "ForeignKey"
+   ]
+  },
+  {
+   "name": "route_short_name",
+   "type": "VARCHAR",
+   "kind": "text",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "ConditionallyRequired",
+    "MixedCase"
+   ]
+  },
+  {
+   "name": "route_long_name",
+   "type": "VARCHAR",
+   "kind": "text",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "ConditionallyRequired",
+    "MixedCase"
+   ]
+  },
+  {
+   "name": "route_desc",
+   "type": "VARCHAR",
+   "kind": "text",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "MixedCase"
+   ]
+  },
+  {
+   "name": "route_type",
+   "type": "INTEGER",
+   "kind": "enum",
+   "java_type": "GtfsRouteType",
+   "default": null,
+   "annotations": [
+    "Index",
+    "Required"
+   ]
+  },
+  {
+   "name": "route_url",
+   "type": "VARCHAR",
+   "kind": "url",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "FieldType"
+   ]
+  },
+  {
+   "name": "route_color",
+   "type": "INTEGER",
+   "kind": "color",
+   "java_type": "GtfsColor",
+   "default": "FFFFFF",
+   "annotations": [
+    "DefaultValue"
+   ]
+  },
+  {
+   "name": "route_text_color",
+   "type": "INTEGER",
+   "kind": "color",
+   "java_type": "GtfsColor",
+   "default": "000000",
+   "annotations": [
+    "DefaultValue"
+   ]
+  },
+  {
+   "name": "route_sort_order",
+   "type": "INTEGER",
+   "kind": "integer",
+   "java_type": "int",
+   "default": null,
+   "annotations": [
+    "NonNegative"
+   ]
+  },
+  {
+   "name": "continuous_pickup",
+   "type": "INTEGER",
+   "kind": "enum",
+   "java_type": "GtfsContinuousPickupDropOff",
+   "default": "1",
+   "annotations": [
+    "DefaultValue"
+   ]
+  },
+  {
+   "name": "continuous_drop_off",
+   "type": "INTEGER",
+   "kind": "enum",
+   "java_type": "GtfsContinuousPickupDropOff",
+   "default": "1",
+   "annotations": [
+    "DefaultValue"
+   ]
+  },
+  {
+   "name": "network_id",
+   "type": "VARCHAR",
+   "kind": "id",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "ConditionallyRequired",
+    "FieldType",
+    "Index"
+   ]
+  },
+  {
+   "name": "cemv_support",
+   "type": "INTEGER",
+   "kind": "enum",
+   "java_type": "GtfsContactlessEmvSupport",
+   "default": null,
+   "annotations": []
+  }
+ ],
+ "trips": [
+  {
+   "name": "csv_row_number",
+   "type": "BIGINT"
+  },
+  {
+   "name": "trip_id",
+   "type": "VARCHAR",
+   "kind": "id",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "FieldType",
+    "PrimaryKey",
+    "Required"
+   ]
+  },
+  {
+   "name": "route_id",
+   "type": "VARCHAR",
+   "kind": "id",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "FieldType",
+    "ForeignKey",
+    "Index",
+    "Required"
+   ]
+  },
+  {
+   "name": "service_id",
+   "type": "VARCHAR",
+   "kind": "id",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "FieldType",
+    "Index",
+    "Required"
+   ]
+  },
+  {
+   "name": "trip_headsign",
+   "type": "VARCHAR",
+   "kind": "text",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "MixedCase",
+    "Recommended"
+   ]
+  },
+  {
+   "name": "trip_short_name",
+   "type": "VARCHAR",
+   "kind": "text",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "MixedCase"
+   ]
+  },
+  {
+   "name": "direction_id",
+   "type": "INTEGER",
+   "kind": "enum",
+   "java_type": "GtfsTripDirectionId",
+   "default": null,
+   "annotations": []
+  },
+  {
+   "name": "block_id",
+   "type": "VARCHAR",
+   "kind": "id",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "FieldType",
+    "Index"
+   ]
+  },
+  {
+   "name": "shape_id",
+   "type": "VARCHAR",
+   "kind": "id",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "ConditionallyRequired",
+    "FieldType",
+    "ForeignKey",
+    "Index"
+   ]
+  },
+  {
+   "name": "wheelchair_accessible",
+   "type": "INTEGER",
+   "kind": "enum",
+   "java_type": "GtfsWheelchairBoarding",
+   "default": null,
+   "annotations": []
+  },
+  {
+   "name": "bikes_allowed",
+   "type": "INTEGER",
+   "kind": "enum",
+   "java_type": "GtfsBikesAllowed",
+   "default": null,
+   "annotations": []
+  },
+  {
+   "name": "cars_allowed",
+   "type": "INTEGER",
+   "kind": "enum",
+   "java_type": "GtfsCarsAllowed",
+   "default": null,
+   "annotations": []
+  },
+  {
+   "name": "safe_duration_factor",
+   "type": "DOUBLE",
+   "kind": "float",
+   "java_type": "double",
+   "default": null,
+   "annotations": []
+  },
+  {
+   "name": "safe_duration_offset",
+   "type": "DOUBLE",
+   "kind": "float",
+   "java_type": "double",
+   "default": null,
+   "annotations": []
+  }
+ ],
+ "stop_times": [
+  {
+   "name": "csv_row_number",
+   "type": "BIGINT"
+  },
+  {
+   "name": "trip_id",
+   "type": "VARCHAR",
+   "kind": "id",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "FieldType",
+    "ForeignKey",
+    "Index",
+    "PrimaryKey",
+    "Required"
+   ]
+  },
+  {
+   "name": "arrival_time",
+   "type": "INTEGER",
+   "kind": "time",
+   "java_type": "GtfsTime",
+   "default": null,
+   "annotations": [
+    "ConditionallyRequired",
+    "EndRange"
+   ]
+  },
+  {
+   "name": "departure_time",
+   "type": "INTEGER",
+   "kind": "time",
+   "java_type": "GtfsTime",
+   "default": null,
+   "annotations": [
+    "ConditionallyRequired"
+   ]
+  },
+  {
+   "name": "stop_id",
+   "type": "VARCHAR",
+   "kind": "id",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "ConditionallyRequired",
+    "FieldType",
+    "ForeignKey",
+    "Index"
+   ]
+  },
+  {
+   "name": "location_group_id",
+   "type": "VARCHAR",
+   "kind": "id",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "ConditionallyRequired",
+    "FieldType",
+    "ForeignKey"
+   ]
+  },
+  {
+   "name": "location_id",
+   "type": "VARCHAR",
+   "kind": "id",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "ConditionallyRequired",
+    "FieldType"
+   ]
+  },
+  {
+   "name": "stop_sequence",
+   "type": "INTEGER",
+   "kind": "integer",
+   "java_type": "int",
+   "default": null,
+   "annotations": [
+    "NonNegative",
+    "PrimaryKey",
+    "Required"
+   ]
+  },
+  {
+   "name": "stop_headsign",
+   "type": "VARCHAR",
+   "kind": "text",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "CachedField"
+   ]
+  },
+  {
+   "name": "start_pickup_drop_off_window",
+   "type": "INTEGER",
+   "kind": "time",
+   "java_type": "GtfsTime",
+   "default": null,
+   "annotations": []
+  },
+  {
+   "name": "end_pickup_drop_off_window",
+   "type": "INTEGER",
+   "kind": "time",
+   "java_type": "GtfsTime",
+   "default": null,
+   "annotations": []
+  },
+  {
+   "name": "pickup_type",
+   "type": "INTEGER",
+   "kind": "enum",
+   "java_type": "GtfsPickupDropOff",
+   "default": null,
+   "annotations": []
+  },
+  {
+   "name": "drop_off_type",
+   "type": "INTEGER",
+   "kind": "enum",
+   "java_type": "GtfsPickupDropOff",
+   "default": null,
+   "annotations": []
+  },
+  {
+   "name": "continuous_pickup",
+   "type": "INTEGER",
+   "kind": "enum",
+   "java_type": "GtfsContinuousPickupDropOff",
+   "default": "1",
+   "annotations": [
+    "DefaultValue"
+   ]
+  },
+  {
+   "name": "continuous_drop_off",
+   "type": "INTEGER",
+   "kind": "enum",
+   "java_type": "GtfsContinuousPickupDropOff",
+   "default": "1",
+   "annotations": [
+    "DefaultValue"
+   ]
+  },
+  {
+   "name": "shape_dist_traveled",
+   "type": "DOUBLE",
+   "kind": "float",
+   "java_type": "double",
+   "default": null,
+   "annotations": [
+    "NonNegative"
+   ]
+  },
+  {
+   "name": "timepoint",
+   "type": "INTEGER",
+   "kind": "enum",
+   "java_type": "GtfsStopTimeTimepoint",
+   "default": "1",
+   "annotations": [
+    "DefaultValue"
+   ]
+  },
+  {
+   "name": "pickup_booking_rule_id",
+   "type": "VARCHAR",
+   "kind": "id",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "FieldType",
+    "ForeignKey"
+   ]
+  },
+  {
+   "name": "drop_off_booking_rule_id",
+   "type": "VARCHAR",
+   "kind": "id",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "FieldType",
+    "ForeignKey"
+   ]
+  }
+ ],
+ "shapes": [
+  {
+   "name": "csv_row_number",
+   "type": "BIGINT"
+  },
+  {
+   "name": "shape_id",
+   "type": "VARCHAR",
+   "kind": "id",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "FieldType",
+    "Index",
+    "PrimaryKey",
+    "Required"
+   ]
+  },
+  {
+   "name": "shape_pt_lat",
+   "type": "DOUBLE",
+   "kind": "latitude",
+   "java_type": "double",
+   "default": null,
+   "annotations": [
+    "FieldType",
+    "Required"
+   ]
+  },
+  {
+   "name": "shape_pt_lon",
+   "type": "DOUBLE",
+   "kind": "longitude",
+   "java_type": "double",
+   "default": null,
+   "annotations": [
+    "FieldType",
+    "Required"
+   ]
+  },
+  {
+   "name": "shape_pt_sequence",
+   "type": "INTEGER",
+   "kind": "integer",
+   "java_type": "int",
+   "default": null,
+   "annotations": [
+    "NonNegative",
+    "PrimaryKey",
+    "Required"
+   ]
+  },
+  {
+   "name": "shape_dist_traveled",
+   "type": "DOUBLE",
+   "kind": "float",
+   "java_type": "double",
+   "default": null,
+   "annotations": [
+    "NonNegative"
+   ]
+  }
+ ],
+ "calendar": [
+  {
+   "name": "csv_row_number",
+   "type": "BIGINT"
+  },
+  {
+   "name": "service_id",
+   "type": "VARCHAR",
+   "kind": "id",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "FieldType",
+    "PrimaryKey",
+    "Required"
+   ]
+  },
+  {
+   "name": "monday",
+   "type": "INTEGER",
+   "kind": "enum",
+   "java_type": "GtfsCalendarService",
+   "default": null,
+   "annotations": [
+    "Required"
+   ]
+  },
+  {
+   "name": "tuesday",
+   "type": "INTEGER",
+   "kind": "enum",
+   "java_type": "GtfsCalendarService",
+   "default": null,
+   "annotations": [
+    "Required"
+   ]
+  },
+  {
+   "name": "wednesday",
+   "type": "INTEGER",
+   "kind": "enum",
+   "java_type": "GtfsCalendarService",
+   "default": null,
+   "annotations": [
+    "Required"
+   ]
+  },
+  {
+   "name": "thursday",
+   "type": "INTEGER",
+   "kind": "enum",
+   "java_type": "GtfsCalendarService",
+   "default": null,
+   "annotations": [
+    "Required"
+   ]
+  },
+  {
+   "name": "friday",
+   "type": "INTEGER",
+   "kind": "enum",
+   "java_type": "GtfsCalendarService",
+   "default": null,
+   "annotations": [
+    "Required"
+   ]
+  },
+  {
+   "name": "saturday",
+   "type": "INTEGER",
+   "kind": "enum",
+   "java_type": "GtfsCalendarService",
+   "default": null,
+   "annotations": [
+    "Required"
+   ]
+  },
+  {
+   "name": "sunday",
+   "type": "INTEGER",
+   "kind": "enum",
+   "java_type": "GtfsCalendarService",
+   "default": null,
+   "annotations": [
+    "Required"
+   ]
+  },
+  {
+   "name": "start_date",
+   "type": "DATE",
+   "kind": "date",
+   "java_type": "GtfsDate",
+   "default": null,
+   "annotations": [
+    "EndRange",
+    "Required"
+   ]
+  },
+  {
+   "name": "end_date",
+   "type": "DATE",
+   "kind": "date",
+   "java_type": "GtfsDate",
+   "default": null,
+   "annotations": [
+    "Required"
+   ]
+  }
+ ],
+ "calendar_dates": [
+  {
+   "name": "csv_row_number",
+   "type": "BIGINT"
+  },
+  {
+   "name": "service_id",
+   "type": "VARCHAR",
+   "kind": "id",
+   "java_type": "String",
+   "default": null,
+   "annotations": [
+    "FieldType",
+    "Index",
+    "PrimaryKey",
+    "Required"
+   ]
+  },
+  {
+   "name": "date",
+   "type": "DATE",
+   "kind": "date",
+   "java_type": "GtfsDate",
+   "default": null,
+   "annotations": [
+    "PrimaryKey",
+    "Required"
+   ]
+  },
+  {
+   "name": "exception_type",
+   "type": "INTEGER",
+   "kind": "enum",
+   "java_type": "GtfsCalendarDateExceptionType",
+   "default": null,
+   "annotations": [
+    "Required"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,123 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "invalid_line_ending",
+   "notice": {
+    "filename": "routes.txt",
+    "rowNumber": 7
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_url",
+   "notice": {
+    "csvRowNumber": 7,
+    "fieldName": "route_url",
+    "fieldValue": "http://example.com\r/path",
+    "filename": "routes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_url",
+   "notice": {
+    "csvRowNumber": 8,
+    "fieldName": "route_url",
+    "fieldValue": "http://example.com/#frag\rment",
+    "filename": "routes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "invalid_url",
+   "notice": {
+    "csvRowNumber": 9,
+    "fieldName": "route_url",
+    "fieldValue": "http://example.com/#frag\u2028ment",
+    "filename": "routes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "mixed_case_recommended_field",
+   "notice": {
+    "csvRowNumber": 6,
+    "fieldName": "route_desc",
+    "fieldValue": "\u017ftreet",
+    "filename": "routes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "mixed_case_recommended_field",
+   "notice": {
+    "csvRowNumber": 6,
+    "fieldName": "route_long_name",
+    "fieldValue": "street",
+    "filename": "routes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "new_line_in_value",
+   "notice": {
+    "csvRowNumber": 7,
+    "fieldName": "route_url",
+    "fieldValue": "http://example.com\r/path",
+    "filename": "routes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "new_line_in_value",
+   "notice": {
+    "csvRowNumber": 8,
+    "fieldName": "route_url",
+    "fieldValue": "http://example.com/#frag\rment",
+    "filename": "routes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "route_long_name_contains_short_name",
+   "notice": {
+    "csvRowNumber": 2,
+    "routeId": "R1",
+    "routeLongName": "10\u000bExpress",
+    "routeShortName": "10"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "same_name_and_description_for_route",
+   "notice": {
+    "csvRowNumber": 5,
+    "routeDesc": "\u03a3\u03a4\u0391\u0398\u039c\u039f\u03a3",
+    "routeId": "R4",
+    "specifiedField": "route_long_name"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "same_name_and_description_for_route",
+   "notice": {
+    "csvRowNumber": 6,
+    "routeDesc": "\u017ftreet",
+    "routeId": "R5",
+    "specifiedField": "route_long_name"
+   },
+   "severity": "WARNING"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

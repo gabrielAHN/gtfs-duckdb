@@ -1,0 +1,13 @@
+stop_id,stop_name,stop_lat,stop_lon,location_type,parent_station,platform_code,stop_access,stop_timezone
+S1,First Stop,40.7500,-73.9800,0,X,,,America/New_York
+S2,Second Stop,40.7600,-73.9700,0,Z,,,
+X,Station X,40.7510,-73.9800,1,,,,
+X,Stop X,40.7520,-73.9800,0,,,,
+Y,Stop Y,40.7530,-73.9800,0,,,,
+Y,Station Y,40.7540,-73.9800,1,,,,
+Z,Station Z Far,40.9000,-73.9800,1,,,,America/New_York
+Z,Station Z Near,40.7600,-73.9710,1,,,,
+EN,Entrance,40.7550,-73.9800,2,X,,,
+A,Access One,40.7560,-73.9800,0,X,P1,1,
+A,Access Two,40.7570,-73.9800,0,X,P2,1,
+UA,Unrec Access,40.7580,-73.9800,6,X,,0,

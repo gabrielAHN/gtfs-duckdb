@@ -1,0 +1,243 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "duplicate_trips",
+   "notice": {
+    "csvRowNumberTripId1FirstStopTime": 13,
+    "csvRowNumberTripId2FirstStopTime": 15,
+    "tripId1": "TA5",
+    "tripId2": "TA6"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "duplicate_trips",
+   "notice": {
+    "csvRowNumberTripId1FirstStopTime": 9,
+    "csvRowNumberTripId2FirstStopTime": 11,
+    "tripId1": "TA3",
+    "tripId2": "TA4"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "foreign_key_violation",
+   "notice": {
+    "childFieldName": "route_id",
+    "childFilename": "trips.txt",
+    "csvRowNumber": 6,
+    "fieldValue": "RX",
+    "parentFieldName": "route_id",
+    "parentFilename": "routes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "location_with_unexpected_stop_time",
+   "notice": {
+    "csvRowNumber": 10,
+    "stopId": "BA2",
+    "stopName": "Stop BA2",
+    "stopTimeCsvRowNumber": 19
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "location_with_unexpected_stop_time",
+   "notice": {
+    "csvRowNumber": 9,
+    "stopId": "BA1",
+    "stopName": "Stop BA1",
+    "stopTimeCsvRowNumber": 18
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "single_shape_point",
+   "notice": {
+    "csvRowNumber": 14,
+    "shapeId": "SC"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_too_far_from_shape",
+   "notice": {
+    "geoDistanceToShape": 100.49703382026664,
+    "match": [
+     40.7210000061358,
+     -73.98
+    ],
+    "shapeId": "SA",
+    "stopId": "G3",
+    "stopName": "Stop G3",
+    "stopTimeCsvRowNumber": 4,
+    "tripCsvRowNumber": 2,
+    "tripId": "TA1"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_too_far_from_shape",
+   "notice": {
+    "geoDistanceToShape": 100.49703382026664,
+    "match": [
+     40.7210000061358,
+     -73.98
+    ],
+    "shapeId": "SB",
+    "stopId": "G3",
+    "stopName": "Stop G3",
+    "stopTimeCsvRowNumber": 21,
+    "tripCsvRowNumber": 9,
+    "tripId": "TB1"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_too_far_from_shape",
+   "notice": {
+    "geoDistanceToShape": 121.91880446718196,
+    "match": [
+     40.70000000000001,
+     -73.98
+    ],
+    "shapeId": "SC",
+    "stopId": "G1",
+    "stopName": "Stop G1",
+    "stopTimeCsvRowNumber": 23,
+    "tripCsvRowNumber": 10,
+    "tripId": "TC1"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_too_far_from_shape",
+   "notice": {
+    "geoDistanceToShape": 130.00193944086365,
+    "match": [
+     40.738000010273666,
+     -73.98
+    ],
+    "shapeId": "SA",
+    "stopId": "BA2",
+    "stopName": "Stop BA2",
+    "stopTimeCsvRowNumber": 19,
+    "tripCsvRowNumber": 8,
+    "tripId": "TA7"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_too_far_from_shape",
+   "notice": {
+    "geoDistanceToShape": 149.99922292213287,
+    "match": [
+     40.71000001366388,
+     -73.9
+    ],
+    "shapeId": "SR",
+    "stopId": "L2",
+    "stopName": "Stop L2",
+    "stopTimeCsvRowNumber": 25,
+    "tripCsvRowNumber": 11,
+    "tripId": "TR1"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_too_far_from_shape",
+   "notice": {
+    "geoDistanceToShape": 398.9958008382225,
+    "match": [
+     40.70000009664507,
+     -73.9
+    ],
+    "shapeId": "SR2",
+    "stopId": "L1",
+    "stopName": "Stop L1",
+    "stopTimeCsvRowNumber": 28,
+    "tripCsvRowNumber": 12,
+    "tripId": "TR2"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_too_far_from_shape",
+   "notice": {
+    "geoDistanceToShape": 400.9971664228393,
+    "match": [
+     40.739999999999995,
+     -73.9
+    ],
+    "shapeId": "SR",
+    "stopId": "L4",
+    "stopName": "Stop L4",
+    "stopTimeCsvRowNumber": 27,
+    "tripCsvRowNumber": 11,
+    "tripId": "TR1"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_too_far_from_shape",
+   "notice": {
+    "geoDistanceToShape": 455.77340912985903,
+    "match": [
+     40.71500000000001,
+     -73.98
+    ],
+    "shapeId": "SB",
+    "stopId": "G2",
+    "stopName": "Stop G2",
+    "stopTimeCsvRowNumber": 20,
+    "tripCsvRowNumber": 9,
+    "tripId": "TB1"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 7,
+    "stopId": "P1",
+    "stopName": "Stop P1"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 8,
+    "stopId": "P2",
+    "stopName": "Stop P2"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stops_match_shape_out_of_order",
+   "notice": {
+    "match1": [
+     40.70100000151763,
+     -73.98
+    ],
+    "match2": [
+     40.73100000006081,
+     -73.98
+    ],
+    "shapeId": "SA",
+    "stopId1": "G1",
+    "stopId2": "G4",
+    "stopName1": "Stop G1",
+    "stopName2": "Stop G4",
+    "stopTimeCsvRowNumber1": 10,
+    "stopTimeCsvRowNumber2": 9,
+    "tripCsvRowNumber": 4,
+    "tripId": "TA3"
+   },
+   "severity": "WARNING"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

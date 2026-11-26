@@ -1,0 +1,6 @@
+route_id,agency_id,route_short_name,route_long_name,route_type
+R1,A,1,Main Street,3
+RT,A,T,Tram Line,0
+RR,A,RR,Rail Line,2
+RX,A,X,Odd Line,99
+RF,A,F,Ferry Line,4

@@ -1,0 +1,4 @@
+stop_id,stop_name,stop_lat,stop_lon,location_type,parent_station
+Z1,Stop Z1,40.7492000,-73.9500000,,
+Z2,Stop Z2,40.7550000,-73.9400000,,
+Z3,Stop Z3,40.7550000,-73.9600000,,

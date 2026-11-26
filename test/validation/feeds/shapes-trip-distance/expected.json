@@ -1,0 +1,52 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "equal_shape_distance_diff_coordinates",
+   "notice": {
+    "actualDistanceBetweenShapePoints": 1111.9510117740629,
+    "csvRowNumber": 11,
+    "prevCsvRowNumber": 10,
+    "prevShapeDistTraveled": 0.0,
+    "prevShapePtSequence": 1,
+    "shapeDistTraveled": 0.0,
+    "shapeId": "SHZ",
+    "shapePtSequence": 2
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "trip_distance_exceeds_shape_distance",
+   "notice": {
+    "geoDistanceToShape": 11.119510117153549,
+    "maxShapeDistanceTraveled": 1000.0,
+    "maxTripDistanceTraveled": 1100.0,
+    "shapeId": "SHE",
+    "tripId": "TE"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "trip_distance_exceeds_shape_distance_below_threshold",
+   "notice": {
+    "geoDistanceToShape": 11.097271097395979,
+    "maxShapeDistanceTraveled": 1000.0,
+    "maxTripDistanceTraveled": 1100.0,
+    "shapeId": "SHW",
+    "tripId": "TW"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "trip_with_shape_dist_traveled_but_no_shape_distances",
+   "notice": {
+    "shapeId": "SHX",
+    "stopTimeCsvRowNumber": 7,
+    "tripCsvRowNumber": 4,
+    "tripId": "TX"
+   },
+   "severity": "INFO"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

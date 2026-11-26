@@ -1,0 +1,71 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_file",
+   "notice": {
+    "filename": "shapes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_timepoint_value",
+   "notice": {
+    "csvRowNumber": 4,
+    "stopSequence": 3,
+    "tripId": "T1"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_time_timepoint_without_times",
+   "notice": {
+    "csvRowNumber": 3,
+    "specifiedField": "arrival_time",
+    "stopSequence": 2,
+    "tripId": "T1"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_time_timepoint_without_times",
+   "notice": {
+    "csvRowNumber": 3,
+    "specifiedField": "departure_time",
+    "stopSequence": 2,
+    "tripId": "T1"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_time_timepoint_without_times",
+   "notice": {
+    "csvRowNumber": 7,
+    "specifiedField": "departure_time",
+    "stopSequence": 6,
+    "tripId": "T1"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "stop_time_with_only_arrival_or_departure_time",
+   "notice": {
+    "csvRowNumber": 7,
+    "specifiedField": "arrival_time",
+    "stopSequence": 6,
+    "tripId": "T1"
+   },
+   "severity": "ERROR"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

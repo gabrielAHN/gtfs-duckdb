@@ -1,0 +1,217 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "duplicate_trips",
+   "notice": {
+    "csvRowNumberTripId1FirstStopTime": 5,
+    "csvRowNumberTripId2FirstStopTime": 11,
+    "tripId1": "T2",
+    "tripId2": "T6"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "duplicate_trips",
+   "notice": {
+    "csvRowNumberTripId1FirstStopTime": 5,
+    "csvRowNumberTripId2FirstStopTime": 13,
+    "tripId1": "T2",
+    "tripId2": "T7"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "duplicate_trips",
+   "notice": {
+    "csvRowNumberTripId1FirstStopTime": 5,
+    "csvRowNumberTripId2FirstStopTime": 7,
+    "tripId1": "T2",
+    "tripId2": "T3"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "duplicate_trips",
+   "notice": {
+    "csvRowNumberTripId1FirstStopTime": 5,
+    "csvRowNumberTripId2FirstStopTime": 9,
+    "tripId1": "T2",
+    "tripId2": "T4"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "forbidden_arrival_or_departure_time",
+   "notice": {
+    "arrivalTime": "08:00:00",
+    "csvRowNumber": 13,
+    "departureTime": "08:00:00",
+    "endPickupDropOffWindow": "09:00:00"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "forbidden_continuous_pickup_drop_off",
+   "notice": {
+    "endPickupDropOffWindow": "00:00:00",
+    "routeCsvRowNumber": 2,
+    "startPickupDropOffWindow": "08:00:00",
+    "stopTimeCsvRowNumber": 3,
+    "tripId": "T1"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "forbidden_continuous_pickup_drop_off",
+   "notice": {
+    "endPickupDropOffWindow": "09:00:00",
+    "routeCsvRowNumber": 4,
+    "startPickupDropOffWindow": "00:00:00",
+    "stopTimeCsvRowNumber": 13,
+    "tripId": "T7"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_pickup_or_drop_off_window",
+   "notice": {
+    "csvRowNumber": 13,
+    "endPickupDropOffWindow": "09:00:00"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_pickup_or_drop_off_window",
+   "notice": {
+    "csvRowNumber": 3,
+    "startPickupDropOffWindow": "08:00:00"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 4,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 5,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 6,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 7,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 8,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_file",
+   "notice": {
+    "filename": "shapes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_required_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "shape_id",
+    "filename": "trips.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_required_field",
+   "notice": {
+    "csvRowNumber": 3,
+    "fieldName": "shape_id",
+    "filename": "trips.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_required_field",
+   "notice": {
+    "csvRowNumber": 6,
+    "fieldName": "shape_id",
+    "filename": "trips.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "unexpected_enum_value",
+   "notice": {
+    "csvRowNumber": 5,
+    "fieldName": "continuous_pickup",
+    "fieldValue": 7,
+    "filename": "routes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unusable_trip",
+   "notice": {
+    "csvRowNumber": 6,
+    "tripId": "T5"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "unused_trip",
+   "notice": {
+    "csvRowNumber": 6,
+    "tripId": "T5"
+   },
+   "severity": "WARNING"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

@@ -1,0 +1,13 @@
+stop_id,stop_name,stop_lat,stop_lon,location_type,parent_station,platform_code,stop_access
+S1,First Stop,40.7500,-73.9800,0,,,
+S2,Second Stop,40.7600,-73.9700,0,,,
+STA,Station A,40.7000,-73.9000,1,,,
+EN,Entrance A,40.7010,-73.9000,2,STA,,
+PL1,Platform One,40.7020,-73.9000,0,STA,1,
+PL2,Platform Two,40.7030,-73.9000,0,STA,2,
+BA1,,,,4,PL2,,
+GN1,,,,3,STA,,
+GN2,,,,3,STA,,
+GN3,,,,3,STA,,
+ACC,Street Access,40.7040,-73.9000,0,STA,3,1
+ACD,Street Access Dup,40.7050,-73.9000,0,STA,4,1

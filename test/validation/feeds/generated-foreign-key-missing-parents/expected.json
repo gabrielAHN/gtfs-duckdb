@@ -1,0 +1,56 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "foreign_key_violation",
+   "notice": {
+    "childFieldName": "shape_id",
+    "childFilename": "trips.txt",
+    "csvRowNumber": 2,
+    "fieldValue": "SH1",
+    "parentFieldName": "shape_id",
+    "parentFilename": "shapes.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "foreign_key_violation",
+   "notice": {
+    "childFieldName": "stop_id",
+    "childFilename": "stop_times.txt",
+    "csvRowNumber": 2,
+    "fieldValue": "S1",
+    "parentFieldName": "stop_id",
+    "parentFilename": "stops.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "foreign_key_violation",
+   "notice": {
+    "childFieldName": "stop_id",
+    "childFilename": "stop_times.txt",
+    "csvRowNumber": 3,
+    "fieldValue": "S2",
+    "parentFieldName": "stop_id",
+    "parentFilename": "stops.txt"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_recommended_file",
+   "notice": {
+    "filename": "shapes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_required_file",
+   "notice": {
+    "filename": "stops.txt"
+   },
+   "severity": "ERROR"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

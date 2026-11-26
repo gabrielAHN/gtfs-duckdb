@@ -1,0 +1,73 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "missing_recommended_field",
+   "notice": {
+    "csvRowNumber": 2,
+    "fieldName": "trip_headsign",
+    "filename": "trips.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "missing_recommended_file",
+   "notice": {
+    "filename": "shapes.txt"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "same_stop_and_route_url",
+   "notice": {
+    "routeCsvRowNumber": 2,
+    "routeId": "R1",
+    "stopCsvRowNumber": 2,
+    "stopId": "S1",
+    "stopUrl": "https://Example.org/R1"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "same_stop_and_route_url",
+   "notice": {
+    "routeCsvRowNumber": 3,
+    "routeId": "R2",
+    "stopCsvRowNumber": 2,
+    "stopId": "S1",
+    "stopUrl": "https://Example.org/R1"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "same_stop_and_route_url",
+   "notice": {
+    "routeCsvRowNumber": 4,
+    "routeId": "R3",
+    "stopCsvRowNumber": 4,
+    "stopId": "S3",
+    "stopUrl": "https://example.org/other"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 4,
+    "stopId": "S3",
+    "stopName": "Third Stop"
+   },
+   "severity": "WARNING"
+  },
+  {
+   "code": "stop_without_stop_time",
+   "notice": {
+    "csvRowNumber": 5,
+    "stopId": "S4",
+    "stopName": "Fourth Stop"
+   },
+   "severity": "WARNING"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

@@ -1,0 +1,5 @@
+route_id,agency_id,route_short_name,route_long_name,route_type,route_color,route_text_color,route_sort_order
+R1,A,1,Main Street,3,FF0000,FFFFFF,0
+R2,A,2,Second,3,FF00,#FFFFFF,-1
+R3,A,3,Third,17,GGGGGG,ffffff,2147483648
+R4,A,4,Fourth,+3,-00001,000000,1_000

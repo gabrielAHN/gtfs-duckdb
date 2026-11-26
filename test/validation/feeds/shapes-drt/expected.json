@@ -1,0 +1,46 @@
+{
+ "date": "2026-11-24",
+ "notices": [
+  {
+   "code": "missing_trip_edge",
+   "notice": {
+    "csvRowNumber": 4,
+    "specifiedField": "arrival_time",
+    "stopSequence": 1,
+    "tripId": "T2"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_trip_edge",
+   "notice": {
+    "csvRowNumber": 4,
+    "specifiedField": "departure_time",
+    "stopSequence": 1,
+    "tripId": "T2"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_trip_edge",
+   "notice": {
+    "csvRowNumber": 5,
+    "specifiedField": "arrival_time",
+    "stopSequence": 2,
+    "tripId": "T2"
+   },
+   "severity": "ERROR"
+  },
+  {
+   "code": "missing_trip_edge",
+   "notice": {
+    "csvRowNumber": 5,
+    "specifiedField": "departure_time",
+    "stopSequence": 2,
+    "tripId": "T2"
+   },
+   "severity": "ERROR"
+  }
+ ],
+ "oracle": "gtfs-validator-8.0.2-SNAPSHOT (f9f4b9e)"
+}

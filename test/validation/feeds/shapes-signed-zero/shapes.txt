@@ -1,0 +1,7 @@
+shape_id,shape_pt_lat,shape_pt_lon,shape_pt_sequence
+SHQ,-0.0,30.0,1
+SHQ,-0.0,30.01,2
+SHQ,0.0,30.02,3
+SHM,10.0,-0.0,1
+SHM,10.01,-0.0,2
+SHM,10.02,0.0,3

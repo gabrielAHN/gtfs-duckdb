@@ -1,0 +1,10 @@
+route_id,agency_id,route_short_name,route_long_name,route_desc,route_type,route_url
+R1,A,10,10Express,,3,
+R2,A,20,20-Express Line,,3,
+R3,A,30,30 (Nord),,3,
+R4,A,40,Σταθμος,ΣΤΑΘΜΟΣ,3,
+R5,A,50,street,ſtreet,3,
+R6,A,60,Sixty,,3,"http://example.com/path"
+R7,A,70,Seventy,,3,"http://example.com/#fragment"
+R8,A,80,Eighty,,3,"http://example.com/#frag ment"
+R9,A,90,Ninety,,3,http://example.com/#fine
