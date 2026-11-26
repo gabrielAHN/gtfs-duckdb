@@ -73,10 +73,10 @@ LEFT JOIN gtfs_validation_rules() r USING (code);
 -- Empty the working tables: the rules' notices, and the loader's tables, which still hold the last loaded file.
 DELETE FROM gtfs_vc_rule_notices;
 DELETE FROM gtfs_vc_text;
+DELETE FROM gtfs_vc_lines;
 DELETE FROM gtfs_vc_records;
 DELETE FROM gtfs_vc_header;
 DELETE FROM gtfs_vc_state;
-DELETE FROM gtfs_vc_rows;
-DELETE FROM gtfs_vc_cells;
+DELETE FROM gtfs_vc_pos;
 DELETE FROM gtfs_vc_notices;
 SELECT * FROM gtfs_validation_summary();

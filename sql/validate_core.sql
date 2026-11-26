@@ -3,13 +3,18 @@
 --
 -- The loader is a port of MobilityData's CsvFileLoader, CsvFile (univocity CsvParser), RowParser,
 -- DefaultTableHeaderValidator and DefaultFieldValidator. validate_load.sql runs it per file:
---   gtfs_vc_text     decoded text (gtfs_vc_decode) and the invalid_line_ending row
---   gtfs_vc_records  CSV records (gtfs_vc_parse_records), univocity semantics as the oracle's settings give them:
+--   gtfs_vc_text     decoded text, the invalid_line_ending row and whether a quoted value spans lines
+--   gtfs_vc_lines    its lines: one split of the text; everything after runs per line, in parallel
+--   gtfs_vc_records  CSV records (gtfs_vc_line_records, or gtfs_vc_parse_records over the whole text when a quoted
+--                    value spans lines), univocity semantics as the oracle's settings give them:
 --                    ',' delimiter, '"' quote and escape, LF line separator, '#' comments, empty and whitespace-only
 --                    lines skipped, values trimmed of chars <= ' ' outside quotes
---   gtfs_vc_header / gtfs_vc_state   header and header notices
---   gtfs_vc_rows / gtfs_vc_cells     row length checks, then one cell per row and loaded column with its typed value
---   gtfs_vc_notices  row notices, a row with an ERROR notice is not an entity
+--   gtfs_vc_header / gtfs_vc_state   header and header notices; gtfs_vc_pos   each schema column's header position
+--   gtfs_vc_wide_<table>  one row per data row of the header's length: raw and typed value of each schema column
+--                    (generated per table by test/validation/gen_loader.py, like gtfs_vc_cell_notices_<table> and
+--                    gtfs_vc_entities_<table>)
+--   gtfs_vc_notices  row notices (gtfs_vc_row_length_notices, gtfs_vc_cell_notices_<table>), a row with an ERROR
+--                    notice is not an entity
 --   gtfs_v_<table>   entities (gtfs_vc_entities_<table>)
 
 -- One row per notice code: severity, code and how many notices the last PRAGMA gtfs_validate produced.
@@ -352,145 +357,6 @@ SELECT * FROM (VALUES
   ('calendar_dates.txt', 2, 'date', 'date', 'GtfsDate', 'REQUIRED', NULL),
   ('calendar_dates.txt', 3, 'exception_type', 'enum', 'GtfsCalendarDateExceptionType', 'REQUIRED', NULL)
 ) s(filename, col_ord, column_name, kind, java_type, level, bounds);
--- Entities of stops.txt: rows of the right length whose own parse produced no ERROR (CsvFileLoader).
-CREATE OR REPLACE MACRO gtfs_vc_entities_stops() AS TABLE
-SELECT r.csv_row_number,
-  max(c.v) FILTER (WHERE c.col_ord = 1)::VARCHAR AS stop_id,
-  max(c.v) FILTER (WHERE c.col_ord = 2)::VARCHAR AS stop_code,
-  max(c.v) FILTER (WHERE c.col_ord = 3)::VARCHAR AS stop_name,
-  max(c.v) FILTER (WHERE c.col_ord = 4)::VARCHAR AS tts_stop_name,
-  max(c.v) FILTER (WHERE c.col_ord = 5)::VARCHAR AS stop_desc,
-  max(c.vd) FILTER (WHERE c.col_ord = 6)::DOUBLE AS stop_lat,
-  max(c.vd) FILTER (WHERE c.col_ord = 7)::DOUBLE AS stop_lon,
-  max(c.v) FILTER (WHERE c.col_ord = 8)::VARCHAR AS zone_id,
-  max(c.v) FILTER (WHERE c.col_ord = 9)::VARCHAR AS stop_url,
-  max(c.vi) FILTER (WHERE c.col_ord = 10)::INTEGER AS location_type,
-  max(c.v) FILTER (WHERE c.col_ord = 11)::VARCHAR AS parent_station,
-  max(c.v) FILTER (WHERE c.col_ord = 12)::VARCHAR AS stop_timezone,
-  max(c.vi) FILTER (WHERE c.col_ord = 13)::INTEGER AS wheelchair_boarding,
-  max(c.v) FILTER (WHERE c.col_ord = 14)::VARCHAR AS level_id,
-  max(c.v) FILTER (WHERE c.col_ord = 15)::VARCHAR AS platform_code,
-  max(c.vi) FILTER (WHERE c.col_ord = 16)::INTEGER AS stop_access
-FROM gtfs_vc_rows r LEFT JOIN gtfs_vc_cells c USING (csv_row_number)
-WHERE r.entity
-GROUP BY r.csv_row_number;
--- Entities of pathways.txt: rows of the right length whose own parse produced no ERROR (CsvFileLoader).
-CREATE OR REPLACE MACRO gtfs_vc_entities_pathways() AS TABLE
-SELECT r.csv_row_number,
-  max(c.v) FILTER (WHERE c.col_ord = 1)::VARCHAR AS pathway_id,
-  max(c.v) FILTER (WHERE c.col_ord = 2)::VARCHAR AS from_stop_id,
-  max(c.v) FILTER (WHERE c.col_ord = 3)::VARCHAR AS to_stop_id,
-  max(c.vi) FILTER (WHERE c.col_ord = 4)::INTEGER AS pathway_mode,
-  max(c.vi) FILTER (WHERE c.col_ord = 5)::INTEGER AS is_bidirectional,
-  max(c.vd) FILTER (WHERE c.col_ord = 6)::DOUBLE AS length,
-  max(c.vi) FILTER (WHERE c.col_ord = 7)::INTEGER AS traversal_time,
-  max(c.vi) FILTER (WHERE c.col_ord = 8)::INTEGER AS stair_count,
-  max(c.vd) FILTER (WHERE c.col_ord = 9)::DOUBLE AS max_slope,
-  max(c.vd) FILTER (WHERE c.col_ord = 10)::DOUBLE AS min_width,
-  max(c.v) FILTER (WHERE c.col_ord = 11)::VARCHAR AS signposted_as,
-  max(c.v) FILTER (WHERE c.col_ord = 12)::VARCHAR AS reversed_signposted_as
-FROM gtfs_vc_rows r LEFT JOIN gtfs_vc_cells c USING (csv_row_number)
-WHERE r.entity
-GROUP BY r.csv_row_number;
--- Entities of routes.txt: rows of the right length whose own parse produced no ERROR (CsvFileLoader).
-CREATE OR REPLACE MACRO gtfs_vc_entities_routes() AS TABLE
-SELECT r.csv_row_number,
-  max(c.v) FILTER (WHERE c.col_ord = 1)::VARCHAR AS route_id,
-  max(c.v) FILTER (WHERE c.col_ord = 2)::VARCHAR AS agency_id,
-  max(c.v) FILTER (WHERE c.col_ord = 3)::VARCHAR AS route_short_name,
-  max(c.v) FILTER (WHERE c.col_ord = 4)::VARCHAR AS route_long_name,
-  max(c.v) FILTER (WHERE c.col_ord = 5)::VARCHAR AS route_desc,
-  max(c.vi) FILTER (WHERE c.col_ord = 6)::INTEGER AS route_type,
-  max(c.v) FILTER (WHERE c.col_ord = 7)::VARCHAR AS route_url,
-  max(c.vi) FILTER (WHERE c.col_ord = 8)::INTEGER AS route_color,
-  max(c.vi) FILTER (WHERE c.col_ord = 9)::INTEGER AS route_text_color,
-  max(c.vi) FILTER (WHERE c.col_ord = 10)::INTEGER AS route_sort_order,
-  max(c.vi) FILTER (WHERE c.col_ord = 11)::INTEGER AS continuous_pickup,
-  max(c.vi) FILTER (WHERE c.col_ord = 12)::INTEGER AS continuous_drop_off,
-  max(c.v) FILTER (WHERE c.col_ord = 13)::VARCHAR AS network_id,
-  max(c.vi) FILTER (WHERE c.col_ord = 14)::INTEGER AS cemv_support
-FROM gtfs_vc_rows r LEFT JOIN gtfs_vc_cells c USING (csv_row_number)
-WHERE r.entity
-GROUP BY r.csv_row_number;
--- Entities of trips.txt: rows of the right length whose own parse produced no ERROR (CsvFileLoader).
-CREATE OR REPLACE MACRO gtfs_vc_entities_trips() AS TABLE
-SELECT r.csv_row_number,
-  max(c.v) FILTER (WHERE c.col_ord = 1)::VARCHAR AS trip_id,
-  max(c.v) FILTER (WHERE c.col_ord = 2)::VARCHAR AS route_id,
-  max(c.v) FILTER (WHERE c.col_ord = 3)::VARCHAR AS service_id,
-  max(c.v) FILTER (WHERE c.col_ord = 4)::VARCHAR AS trip_headsign,
-  max(c.v) FILTER (WHERE c.col_ord = 5)::VARCHAR AS trip_short_name,
-  max(c.vi) FILTER (WHERE c.col_ord = 6)::INTEGER AS direction_id,
-  max(c.v) FILTER (WHERE c.col_ord = 7)::VARCHAR AS block_id,
-  max(c.v) FILTER (WHERE c.col_ord = 8)::VARCHAR AS shape_id,
-  max(c.vi) FILTER (WHERE c.col_ord = 9)::INTEGER AS wheelchair_accessible,
-  max(c.vi) FILTER (WHERE c.col_ord = 10)::INTEGER AS bikes_allowed,
-  max(c.vi) FILTER (WHERE c.col_ord = 11)::INTEGER AS cars_allowed,
-  max(c.vd) FILTER (WHERE c.col_ord = 12)::DOUBLE AS safe_duration_factor,
-  max(c.vd) FILTER (WHERE c.col_ord = 13)::DOUBLE AS safe_duration_offset
-FROM gtfs_vc_rows r LEFT JOIN gtfs_vc_cells c USING (csv_row_number)
-WHERE r.entity
-GROUP BY r.csv_row_number;
--- Entities of stop_times.txt: rows of the right length whose own parse produced no ERROR (CsvFileLoader).
-CREATE OR REPLACE MACRO gtfs_vc_entities_stop_times() AS TABLE
-SELECT r.csv_row_number,
-  max(c.v) FILTER (WHERE c.col_ord = 1)::VARCHAR AS trip_id,
-  max(c.vi) FILTER (WHERE c.col_ord = 2)::INTEGER AS arrival_time,
-  max(c.vi) FILTER (WHERE c.col_ord = 3)::INTEGER AS departure_time,
-  max(c.v) FILTER (WHERE c.col_ord = 4)::VARCHAR AS stop_id,
-  max(c.v) FILTER (WHERE c.col_ord = 5)::VARCHAR AS location_group_id,
-  max(c.v) FILTER (WHERE c.col_ord = 6)::VARCHAR AS location_id,
-  max(c.vi) FILTER (WHERE c.col_ord = 7)::INTEGER AS stop_sequence,
-  max(c.v) FILTER (WHERE c.col_ord = 8)::VARCHAR AS stop_headsign,
-  max(c.vi) FILTER (WHERE c.col_ord = 9)::INTEGER AS start_pickup_drop_off_window,
-  max(c.vi) FILTER (WHERE c.col_ord = 10)::INTEGER AS end_pickup_drop_off_window,
-  max(c.vi) FILTER (WHERE c.col_ord = 11)::INTEGER AS pickup_type,
-  max(c.vi) FILTER (WHERE c.col_ord = 12)::INTEGER AS drop_off_type,
-  max(c.vi) FILTER (WHERE c.col_ord = 13)::INTEGER AS continuous_pickup,
-  max(c.vi) FILTER (WHERE c.col_ord = 14)::INTEGER AS continuous_drop_off,
-  max(c.vd) FILTER (WHERE c.col_ord = 15)::DOUBLE AS shape_dist_traveled,
-  max(c.vi) FILTER (WHERE c.col_ord = 16)::INTEGER AS timepoint,
-  max(c.v) FILTER (WHERE c.col_ord = 17)::VARCHAR AS pickup_booking_rule_id,
-  max(c.v) FILTER (WHERE c.col_ord = 18)::VARCHAR AS drop_off_booking_rule_id
-FROM gtfs_vc_rows r LEFT JOIN gtfs_vc_cells c USING (csv_row_number)
-WHERE r.entity
-GROUP BY r.csv_row_number;
--- Entities of shapes.txt: rows of the right length whose own parse produced no ERROR (CsvFileLoader).
-CREATE OR REPLACE MACRO gtfs_vc_entities_shapes() AS TABLE
-SELECT r.csv_row_number,
-  max(c.v) FILTER (WHERE c.col_ord = 1)::VARCHAR AS shape_id,
-  max(c.vd) FILTER (WHERE c.col_ord = 2)::DOUBLE AS shape_pt_lat,
-  max(c.vd) FILTER (WHERE c.col_ord = 3)::DOUBLE AS shape_pt_lon,
-  max(c.vi) FILTER (WHERE c.col_ord = 4)::INTEGER AS shape_pt_sequence,
-  max(c.vd) FILTER (WHERE c.col_ord = 5)::DOUBLE AS shape_dist_traveled
-FROM gtfs_vc_rows r LEFT JOIN gtfs_vc_cells c USING (csv_row_number)
-WHERE r.entity
-GROUP BY r.csv_row_number;
--- Entities of calendar.txt: rows of the right length whose own parse produced no ERROR (CsvFileLoader).
-CREATE OR REPLACE MACRO gtfs_vc_entities_calendar() AS TABLE
-SELECT r.csv_row_number,
-  max(c.v) FILTER (WHERE c.col_ord = 1)::VARCHAR AS service_id,
-  max(c.vi) FILTER (WHERE c.col_ord = 2)::INTEGER AS monday,
-  max(c.vi) FILTER (WHERE c.col_ord = 3)::INTEGER AS tuesday,
-  max(c.vi) FILTER (WHERE c.col_ord = 4)::INTEGER AS wednesday,
-  max(c.vi) FILTER (WHERE c.col_ord = 5)::INTEGER AS thursday,
-  max(c.vi) FILTER (WHERE c.col_ord = 6)::INTEGER AS friday,
-  max(c.vi) FILTER (WHERE c.col_ord = 7)::INTEGER AS saturday,
-  max(c.vi) FILTER (WHERE c.col_ord = 8)::INTEGER AS sunday,
-  max(c.vdt) FILTER (WHERE c.col_ord = 9)::DATE AS start_date,
-  max(c.vdt) FILTER (WHERE c.col_ord = 10)::DATE AS end_date
-FROM gtfs_vc_rows r LEFT JOIN gtfs_vc_cells c USING (csv_row_number)
-WHERE r.entity
-GROUP BY r.csv_row_number;
--- Entities of calendar_dates.txt: rows of the right length whose own parse produced no ERROR (CsvFileLoader).
-CREATE OR REPLACE MACRO gtfs_vc_entities_calendar_dates() AS TABLE
-SELECT r.csv_row_number,
-  max(c.v) FILTER (WHERE c.col_ord = 1)::VARCHAR AS service_id,
-  max(c.vdt) FILTER (WHERE c.col_ord = 2)::DATE AS date,
-  max(c.vi) FILTER (WHERE c.col_ord = 3)::INTEGER AS exception_type
-FROM gtfs_vc_rows r LEFT JOIN gtfs_vc_cells c USING (csv_row_number)
-WHERE r.entity
-GROUP BY r.csv_row_number;
 -- The univocity CsvParserSettings dump the oracle's TextParsingException messages carry (CsvFile settings).
 CREATE OR REPLACE MACRO gtfs_vc_parser_settings() AS (
   'Parser Configuration: CsvParserSettings:'
@@ -668,14 +534,13 @@ CREATE OR REPLACE MACRO gtfs_vc_decode_invalid(content) AS (
                           lambda t: CASE WHEN regexp_full_match(t, gtfs_vc_utf8_valid_re()) THEN t ELSE 'EFBFBD' END),
                           ''))) END), '')
 );
--- LineEndingCheckingInputStream: line (1 + LFs before it) of the first CR not followed by LF, NULL if none.
-CREATE OR REPLACE MACRO gtfs_vc_invalid_line_ending_row(content_text) AS (
-  CASE WHEN contains(content_text, chr(13))
-        AND regexp_matches(content_text, '^[^\r]*(?:\r\n[^\r]*)*\r(?:[^\n]|$)')
-       THEN 1 + length(regexp_extract(content_text, '^([^\r]*(?:\r\n[^\r]*)*)\r(?:[^\n]|$)', 1))
-              - length(replace(regexp_extract(content_text, '^([^\r]*(?:\r\n[^\r]*)*)\r(?:[^\n]|$)', 1), chr(10), ''))
-  END
-);
+-- LineEndingCheckingInputStream: line (1 + LFs before it) of the first CR not followed by LF, NULL if none. Per line
+-- of gtfs_vc_lines: a CR before its last char, or any CR on the last line (no LF follows it).
+CREATE OR REPLACE MACRO gtfs_vc_invalid_line_ending_row() AS ((
+  SELECT min(line_no) FROM gtfs_vc_lines
+  WHERE contains(line, chr(13))
+    AND (strpos(line, chr(13)) < length(line) OR line_no = (SELECT max(line_no) FROM gtfs_vc_lines))
+));
 
 -- ---------------------------------------------------------------- CSV records
 
@@ -686,25 +551,57 @@ CREATE OR REPLACE MACRO gtfs_vc_token_re() AS (
   '\n#[^\n]*|[,\n][\x00-\x09\x0B-\x20]*"(?:[^"]|"")*$|[,\n][\x00-\x09\x0B-\x20]*"(?:[^"]|"")*"[^,\n]*|[,\n][^,\n]*'
 );
 
--- Records of gtfs_vc_text. Files without a quote take the fast path (one record per line).
-CREATE OR REPLACE MACRO gtfs_vc_parse_records() AS TABLE
-WITH fast_lines AS (
-  SELECT unnest(l) AS line, unnest(range(1, len(l) + 1)) AS line_no
-  FROM (SELECT string_split(t.text, chr(10)) AS l FROM gtfs_vc_text t WHERE NOT contains(t.text, '"'))
+-- The value of one token: body is the token without its separator, lb the body without leading chars <= ' '.
+CREATE OR REPLACE MACRO gtfs_vc_token_value(body, lb, is_comment) AS (
+  CASE WHEN is_comment THEN NULL
+       WHEN NOT starts_with(lb, '"') THEN nullif(gtfs_vc_trim(body), '')
+       -- unclosed quote: the rest of the file
+       WHEN NOT regexp_matches(lb, '^"(?:[^"]|"")*"[^,\n]*$') THEN nullif(replace(lb[2:], '""', '"'), '')
+       WHEN gtfs_vc_trim(regexp_extract(lb, '^"((?:[^"]|"")*)"([^,\n]*)$', 2)) = ''
+         THEN nullif(replace(regexp_extract(lb, '^"((?:[^"]|"")*)"([^,\n]*)$', 1), '""', '"'), '')
+       -- text after the closing quote: univocity keeps the quotes and that text
+       ELSE '"' || replace(regexp_extract(lb, '^"((?:[^"]|"")*)"([^,\n]*)$', 1), '""', '"') || '"'
+            || gtfs_vc_rtrim(regexp_extract(lb, '^"((?:[^"]|"")*)"([^,\n]*)$', 2))
+  END
+);
+
+-- Records of gtfs_vc_lines, one per line, run in parallel over the lines. A line without a quote splits on commas; a
+-- line with one is tokenized with gtfs_vc_token_re as the whole text would be. Both give gtfs_vc_parse_records'
+-- records unless a quoted value runs past the end of its line: kind 'open' marks such a line, and validate_load.sql
+-- then parses the whole text instead. plain: the line has only chars from '!' to '~' (and CRs at its end), so no
+-- value needs trimming or can have a character notice.
+CREATE OR REPLACE MACRO gtfs_vc_line_records() AS TABLE
+WITH l AS (
+  SELECT line_no, line, NOT regexp_matches(line, '[^\x21-\x7E\r]|\r[^\r]') AS plain,
+    CASE WHEN contains(line, '"') THEN regexp_extract_all(chr(10) || line, gtfs_vc_token_re()) END AS tk
+  FROM gtfs_vc_lines
 ),
-fast AS (
-  SELECT line_no AS rec_no, line_no AS csv_row_number,
+r AS (
+  SELECT line_no, line, plain,
     CASE WHEN line = '' THEN 'empty' WHEN starts_with(line, '#') THEN 'comment'
-         WHEN gtfs_vc_trim(line) = '' THEN 'ws' ELSE 'row' END AS kind,
-    CASE WHEN regexp_matches(line, '[\x00-\x20]')
-         THEN list_transform(string_split(line, ','), lambda f: nullif(gtfs_vc_trim(f), ''))
-         ELSE list_transform(string_split(line, ','), lambda f: nullif(f, '')) END AS fields
-  FROM fast_lines
-),
-tokens AS (
+         WHEN NOT regexp_matches(line, '[^\x00-\x20]') THEN 'ws'
+         WHEN regexp_full_match(gtfs_vc_ltrim(tk[-1][2:]), '"(?:[^"]|"")*') THEN 'open'
+         ELSE 'row' END AS kind,
+    CASE WHEN tk IS NOT NULL
+         THEN list_transform(
+                list_transform(tk, lambda t: {'b': t[2:], 'lb': gtfs_vc_ltrim(t[2:]), 'c': starts_with(t, chr(10) || '#')}),
+                lambda x: gtfs_vc_token_value(x.b, x.lb, x.c))
+         WHEN plain THEN list_transform(string_split(rtrim(line, chr(13)), ','), lambda f: nullif(f, ''))
+         ELSE list_transform(string_split(line, ','), lambda f: nullif(gtfs_vc_trim(f), '')) END AS fields
+  FROM l
+)
+SELECT line_no AS rec_no, line_no AS csv_row_number, kind, fields,
+  -- only a line longer than 4096 bytes can hold a value longer than 4096 chars (gtfs_vc_failure)
+  CASE WHEN strlen(line) > 4096 THEN list_max(list_transform(fields, lambda f: length(f))) END AS max_len,
+  plain
+FROM r;
+
+-- Records of the whole text (gtfs_vc_text.text), for a file where a quoted value runs past the end of its line
+-- (gtfs_vc_text.multiline): one token stream over the whole text, values grouped by record.
+CREATE OR REPLACE MACRO gtfs_vc_parse_records() AS TABLE
+WITH tokens AS (
   SELECT unnest(tk) AS tok, unnest(range(1, len(tk) + 1)) AS tok_no
-  FROM (SELECT regexp_extract_all(chr(10) || t.text, gtfs_vc_token_re()) AS tk FROM gtfs_vc_text t
-        WHERE contains(t.text, '"'))
+  FROM (SELECT regexp_extract_all(chr(10) || t.text, gtfs_vc_token_re()) AS tk FROM gtfs_vc_text t WHERE t.multiline)
 ),
 tok1 AS (
   SELECT tok_no, left(tok, 1) = chr(10) AS starts_record, tok[2:] AS body,
@@ -718,22 +615,9 @@ tok2 AS (
   FROM tok1 WINDOW w AS (ORDER BY tok_no ROWS UNBOUNDED PRECEDING)
 ),
 tok3 AS (
-  SELECT *, starts_with(lb, '"') AND NOT is_comment AS quoted,
-    CASE WHEN starts_with(lb, '"') AND NOT is_comment
-         THEN regexp_extract(lb, '^"((?:[^"]|"")*)"([^,\n]*)$', ['c', 'r']) END AS q
+  SELECT rec_no, tok_no, line_end, is_comment, body, starts_with(lb, '"') AND NOT is_comment AS quoted,
+    gtfs_vc_token_value(body, lb, is_comment) AS value
   FROM tok2
-),
-tok4 AS (
-  SELECT rec_no, tok_no, line_end, is_comment, quoted, body,
-    CASE WHEN is_comment THEN NULL
-         WHEN NOT quoted THEN nullif(gtfs_vc_trim(body), '')
-         -- unclosed quote: the rest of the file
-         WHEN NOT regexp_matches(lb, '^"(?:[^"]|"")*"[^,\n]*$') THEN nullif(replace(lb[2:], '""', '"'), '')
-         WHEN gtfs_vc_trim(q.r) = '' THEN nullif(replace(q.c, '""', '"'), '')
-         -- text after the closing quote: univocity keeps the quotes and that text
-         ELSE '"' || replace(q.c, '""', '"') || '"' || gtfs_vc_rtrim(q.r)
-    END AS value
-  FROM tok3
 ),
 slow AS (
   SELECT rec_no, max(line_end) AS csv_row_number,
@@ -742,11 +626,11 @@ slow AS (
          WHEN count(*) = 1 AND NOT bool_or(quoted) AND gtfs_vc_trim(max(body)) = '' THEN 'ws'
          ELSE 'row' END AS kind,
     list(value ORDER BY tok_no) AS fields
-  FROM tok4 GROUP BY rec_no
+  FROM tok3 GROUP BY rec_no
 )
-SELECT rec_no, csv_row_number, kind, fields, list_max(list_transform(fields, lambda f: length(f))) AS max_len FROM fast
-UNION ALL
-SELECT rec_no, csv_row_number, kind, fields, list_max(list_transform(fields, lambda f: length(f))) FROM slow;
+SELECT rec_no, csv_row_number, kind, fields, list_max(list_transform(fields, lambda f: length(f))) AS max_len,
+  false AS plain
+FROM slow;
 
 -- The header record: the first record that is not empty or a comment (a whitespace-only one gives one empty name).
 CREATE OR REPLACE MACRO gtfs_vc_header_record() AS TABLE
@@ -863,7 +747,7 @@ CREATE OR REPLACE MACRO gtfs_vc_data_rows() AS TABLE
 SELECT r.csv_row_number, CASE WHEN r.kind = 'ws' THEN [NULL]::VARCHAR[] ELSE r.fields END AS fields,
   CASE WHEN r.kind = 'ws' OR (len(r.fields) = 1 AND r.fields[1] IS NULL) THEN false
        ELSE len(r.fields) = s.header_n END AS length_ok,
-  false AS entity
+  r.plain
 FROM gtfs_vc_records r, gtfs_vc_state s
 WHERE s.header_ok AND r.rec_no > (SELECT min(rec_no) FROM gtfs_vc_records WHERE kind IN ('ws', 'row'))
   AND (r.kind = 'row' OR (r.kind = 'ws' AND r.rec_no = (SELECT max(rec_no) FROM gtfs_vc_records)))
@@ -1610,106 +1494,18 @@ CREATE OR REPLACE MACRO gtfs_vc_url_ok(s) AS (
             AND NOT regexp_matches(regexp_extract(s, gtfs_vc_url_re(), 7), '[ \t\n\x0B\f\r]') END
 );
 
--- ---------------------------------------------------------------- cells and row notices
-
--- One cell per data row of the right length and per schema column the loader reads: columns of the header, and the
--- required or recommended ones (asString(-1) is null: missing_*_field on every row).
-CREATE OR REPLACE MACRO gtfs_vc_build_cells(p_file) AS TABLE
-WITH cols AS (
-  SELECT s.col_ord, s.column_name, s.kind, s.java_type, s.level, s.bounds, h.column_index
-  FROM gtfs_vc_schema() s
-  LEFT JOIN (SELECT column_name, min(column_index) AS column_index FROM gtfs_vc_header GROUP BY column_name) h
-    USING (column_name)
-  WHERE s.filename = p_file AND (h.column_index IS NOT NULL OR s.level <> 'OPTIONAL')
-),
-raw AS (
-  SELECT r.csv_row_number, c.col_ord, c.column_name, c.kind, c.java_type, c.level, c.bounds,
-    CASE WHEN c.column_index IS NOT NULL THEN r.fields[c.column_index + 1] END AS raw
-  FROM gtfs_vc_rows r CROSS JOIN cols c WHERE r.length_ok
-),
-trimmed AS (SELECT *, gtfs_vc_trim(raw) AS v FROM raw)
-SELECT csv_row_number, col_ord, column_name, kind, java_type, level, bounds, raw, v,
-  CASE WHEN kind IN ('integer', 'enum') THEN gtfs_vc_int(v)
-       WHEN kind = 'time' THEN gtfs_vc_time(v)
-       WHEN kind = 'color' THEN gtfs_vc_color(v) END AS vi,
-  CASE WHEN kind IN ('float', 'latitude', 'longitude') THEN gtfs_vc_double(v) END AS vd,
-  CASE WHEN kind = 'date' THEN gtfs_vc_date(v) END AS vdt
-FROM trimmed;
+-- ---------------------------------------------------------------- values and row notices
+-- Per loaded table (macros generated by test/validation/gen_loader.py, at the end of this file):
+--   gtfs_vc_wide_build_<table>()    the data rows of the header's length, one column per schema column: raw value
+--                                   r_<column> (NULL when the header lacks the column) and parsed value p_<column>
+--   gtfs_vc_cell_notices_<table>()  RowParser / DefaultFieldValidator notices of those values
+--   gtfs_vc_entities_<table>()      the rows without an ERROR notice of their own, as gtfs_v_<table> stores them
 
 -- Integer/Double.compareTo(0) as a sign: -0.0 is below 0.0 and NaN above everything.
 CREATE OR REPLACE MACRO gtfs_vc_cmp0(p_kind, p_vi, p_vd) AS (
   CASE WHEN p_kind = 'integer' THEN sign(p_vi)
        WHEN isnan(p_vd) THEN 1 WHEN p_vd = 0 AND signbit(p_vd) THEN -1 ELSE sign(p_vd) END
 );
-
--- RowParser / DefaultFieldValidator notices of the cells (fieldValue: raw for the value checks, trimmed after).
--- Each branch scans gtfs_vc_cells with its own cheap filter first: a shared CTE lets DuckDB OR every branch's
--- condition into one filter and run the URL and timezone checks on every cell.
-CREATE OR REPLACE MACRO gtfs_vc_cell_notices(p_file) AS TABLE
-WITH n AS (
-  SELECT csv_row_number,
-    CASE level WHEN 'REQUIRED' THEN 'missing_required_field' ELSE 'missing_recommended_field' END AS code,
-    json_object('filename', p_file, 'csvRowNumber', csv_row_number, 'fieldName', column_name) AS notice
-  FROM gtfs_vc_cells WHERE raw IS NULL AND level IN ('REQUIRED', 'RECOMMENDED')
-  UNION ALL
-  SELECT csv_row_number, 'invalid_character', json_object('filename', p_file, 'csvRowNumber', csv_row_number,
-    'fieldName', column_name, 'fieldValue', raw)
-  FROM gtfs_vc_cells WHERE contains(raw, chr(65533))
-  UNION ALL
-  SELECT csv_row_number, 'new_line_in_value', json_object('filename', p_file, 'csvRowNumber', csv_row_number,
-    'fieldName', column_name, 'fieldValue', raw)
-  FROM gtfs_vc_cells WHERE contains(raw, chr(10)) OR contains(raw, chr(13))
-  UNION ALL
-  SELECT csv_row_number, 'leading_or_trailing_whitespaces', json_object('filename', p_file,
-    'csvRowNumber', csv_row_number, 'fieldName', column_name, 'fieldValue', raw)
-  FROM gtfs_vc_cells WHERE v <> raw
-  UNION ALL
-  SELECT csv_row_number, 'non_ascii_or_non_printable_char', json_object('filename', p_file,
-    'csvRowNumber', csv_row_number, 'fieldName', column_name, 'fieldValue', v)
-  FROM gtfs_vc_cells WHERE kind = 'id' AND regexp_matches(v, '[^\x20-\x7E]')
-  UNION ALL
-  SELECT csv_row_number, 'invalid_url', json_object('filename', p_file, 'csvRowNumber', csv_row_number,
-    'fieldName', column_name, 'fieldValue', v)
-  FROM (SELECT * FROM gtfs_vc_cells WHERE kind = 'url' AND v IS NOT NULL) WHERE NOT gtfs_vc_url_ok(v)
-  UNION ALL
-  SELECT csv_row_number, 'invalid_timezone', json_object('filename', p_file, 'csvRowNumber', csv_row_number,
-    'fieldName', column_name, 'fieldValue', v)
-  FROM (SELECT * FROM gtfs_vc_cells WHERE kind = 'timezone' AND v IS NOT NULL) WHERE NOT gtfs_vc_timezone_ok(v)
-  UNION ALL
-  SELECT csv_row_number,
-    CASE kind WHEN 'time' THEN 'invalid_time' WHEN 'color' THEN 'invalid_color' WHEN 'date' THEN 'invalid_date'
-      WHEN 'integer' THEN 'invalid_integer' WHEN 'enum' THEN 'invalid_integer' ELSE 'invalid_float' END,
-    json_object('filename', p_file, 'csvRowNumber', csv_row_number, 'fieldName', column_name, 'fieldValue', v)
-  FROM gtfs_vc_cells
-  WHERE v IS NOT NULL AND vi IS NULL AND vd IS NULL AND vdt IS NULL
-    AND kind IN ('integer', 'enum', 'time', 'color', 'float', 'latitude', 'longitude', 'date')
-  UNION ALL
-  SELECT csv_row_number, 'unexpected_enum_value', json_object('filename', p_file, 'csvRowNumber', csv_row_number,
-    'fieldName', column_name, 'fieldValue', vi::INTEGER)
-  FROM (SELECT * FROM gtfs_vc_cells WHERE kind = 'enum' AND vi IS NOT NULL)
-  WHERE gtfs_validation_enum_name(java_type, vi) = 'UNRECOGNIZED'
-  UNION ALL
-  -- checkBounds: Integer/Double.compareTo(0) (-0.0 is below 0.0, NaN above), asLatitude / asLongitude ranges
-  SELECT csv_row_number, 'number_out_of_range', json_object('filename', p_file, 'csvRowNumber', csv_row_number,
-    'fieldName', column_name,
-    'fieldType', CASE kind WHEN 'latitude' THEN 'latitude within [-90, 90]'
-                           WHEN 'longitude' THEN 'longitude within [-180, 180]'
-                           ELSE CASE bounds WHEN 'POSITIVE' THEN 'positive ' WHEN 'NON_NEGATIVE' THEN 'non-negative '
-                                            ELSE 'non-zero ' END
-                                || CASE kind WHEN 'integer' THEN 'integer' ELSE 'float' END END,
-    'fieldValue', CASE WHEN kind = 'integer' THEN to_json(vi::INTEGER) ELSE to_json(vd) END)
-  FROM gtfs_vc_cells
-  WHERE (vi IS NOT NULL OR vd IS NOT NULL) AND kind IN ('integer', 'float', 'latitude', 'longitude')
-    AND CASE WHEN kind = 'latitude' THEN isnan(vd) OR NOT (-90 <= vd AND vd <= 90)
-             WHEN kind = 'longitude' THEN isnan(vd) OR NOT (-180 <= vd AND vd <= 180)
-             WHEN bounds = 'POSITIVE' THEN gtfs_vc_cmp0(kind, vi, vd) <= 0
-             WHEN bounds = 'NON_NEGATIVE' THEN gtfs_vc_cmp0(kind, vi, vd) < 0
-             WHEN bounds = 'NON_ZERO' THEN gtfs_vc_cmp0(kind, vi, vd) = 0
-             ELSE false
-        END
-)
-SELECT n.csv_row_number, n.code, gtfs_validation_notice(n.notice) AS notice, r.severity = 'ERROR' AS err
-FROM n JOIN gtfs_validation_rules() r USING (code);
 
 -- RowParser.checkRowLength notices of the data rows.
 CREATE OR REPLACE MACRO gtfs_vc_row_length_notices(p_file) AS TABLE
@@ -1720,7 +1516,7 @@ SELECT r.csv_row_number,
     ELSE json_object('filename', p_file, 'csvRowNumber', r.csv_row_number, 'rowLength', len(r.fields),
                      'headerCount', s.header_n) END) AS notice,
   NOT (len(r.fields) = 1 AND r.fields[1] IS NULL) AS err
-FROM gtfs_vc_rows r, gtfs_vc_state s WHERE NOT r.length_ok;
+FROM gtfs_vc_data_rows() r, gtfs_vc_state s WHERE NOT r.length_ok;
 
 -- CsvFileLoader's TableStatus of the current file.
 CREATE OR REPLACE MACRO gtfs_vc_status() AS (
@@ -1730,3 +1526,2627 @@ CREATE OR REPLACE MACRO gtfs_vc_status() AS (
               ELSE 'PARSABLE_HEADERS_AND_ROWS' END
   FROM gtfs_vc_state s
 );
+
+-- LOADER-GENERATED-BEGIN (test/validation/gen_loader.py; do not edit)
+-- Data rows of stops.txt with the header's length: the raw value of each schema column (the header's column
+-- of that name, NULL without one) and the value Java parses from the trimmed one.
+CREATE OR REPLACE MACRO gtfs_vc_wide_build_stops() AS TABLE
+SELECT csv_row_number,
+  plain,
+  r_stop_id,
+  r_stop_code,
+  r_stop_name,
+  r_tts_stop_name,
+  r_stop_desc,
+  r_stop_lat,
+  gtfs_vc_double(CASE WHEN plain THEN r_stop_lat ELSE gtfs_vc_trim(r_stop_lat) END) AS p_stop_lat,
+  r_stop_lon,
+  gtfs_vc_double(CASE WHEN plain THEN r_stop_lon ELSE gtfs_vc_trim(r_stop_lon) END) AS p_stop_lon,
+  r_zone_id,
+  r_stop_url,
+  r_location_type,
+  gtfs_vc_int(CASE WHEN plain THEN r_location_type ELSE gtfs_vc_trim(r_location_type) END) AS p_location_type,
+  r_parent_station,
+  r_stop_timezone,
+  r_wheelchair_boarding,
+  gtfs_vc_int(CASE WHEN plain THEN r_wheelchair_boarding ELSE gtfs_vc_trim(r_wheelchair_boarding) END) AS p_wheelchair_boarding,
+  r_level_id,
+  r_platform_code,
+  r_stop_access,
+  gtfs_vc_int(CASE WHEN plain THEN r_stop_access ELSE gtfs_vc_trim(r_stop_access) END) AS p_stop_access
+FROM (
+  SELECT d.csv_row_number,
+    d.plain,
+    d.fields[p.pos[1]] AS r_stop_id,
+    d.fields[p.pos[2]] AS r_stop_code,
+    d.fields[p.pos[3]] AS r_stop_name,
+    d.fields[p.pos[4]] AS r_tts_stop_name,
+    d.fields[p.pos[5]] AS r_stop_desc,
+    d.fields[p.pos[6]] AS r_stop_lat,
+    d.fields[p.pos[7]] AS r_stop_lon,
+    d.fields[p.pos[8]] AS r_zone_id,
+    d.fields[p.pos[9]] AS r_stop_url,
+    d.fields[p.pos[10]] AS r_location_type,
+    d.fields[p.pos[11]] AS r_parent_station,
+    d.fields[p.pos[12]] AS r_stop_timezone,
+    d.fields[p.pos[13]] AS r_wheelchair_boarding,
+    d.fields[p.pos[14]] AS r_level_id,
+    d.fields[p.pos[15]] AS r_platform_code,
+    d.fields[p.pos[16]] AS r_stop_access
+  FROM gtfs_vc_data_rows() d, gtfs_vc_pos p
+  WHERE d.length_ok);
+-- RowParser / DefaultFieldValidator notices of the values of stops.txt (fieldValue: raw for the character
+-- checks, trimmed after). One scan keeps the rows with any notice; each check then reads only those.
+CREATE OR REPLACE MACRO gtfs_vc_cell_notices_stops() AS TABLE
+WITH w AS MATERIALIZED (
+  SELECT * FROM gtfs_vc_wide_stops
+  WHERE (r_stop_id IS NULL)
+    OR (NOT plain AND contains(r_stop_id, chr(65533)))
+    OR (NOT plain AND (contains(r_stop_id, chr(10)) OR contains(r_stop_id, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_stop_id) <> r_stop_id)
+    OR (NOT plain AND regexp_matches(CASE WHEN plain THEN r_stop_id ELSE gtfs_vc_trim(r_stop_id) END, '[^\x20-\x7E]'))
+    OR (NOT plain AND contains(r_stop_code, chr(65533)))
+    OR (NOT plain AND (contains(r_stop_code, chr(10)) OR contains(r_stop_code, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_stop_code) <> r_stop_code)
+    OR (NOT plain AND contains(r_stop_name, chr(65533)))
+    OR (NOT plain AND (contains(r_stop_name, chr(10)) OR contains(r_stop_name, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_stop_name) <> r_stop_name)
+    OR (NOT plain AND contains(r_tts_stop_name, chr(65533)))
+    OR (NOT plain AND (contains(r_tts_stop_name, chr(10)) OR contains(r_tts_stop_name, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_tts_stop_name) <> r_tts_stop_name)
+    OR (NOT plain AND contains(r_stop_desc, chr(65533)))
+    OR (NOT plain AND (contains(r_stop_desc, chr(10)) OR contains(r_stop_desc, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_stop_desc) <> r_stop_desc)
+    OR (NOT plain AND contains(r_stop_lat, chr(65533)))
+    OR (NOT plain AND (contains(r_stop_lat, chr(10)) OR contains(r_stop_lat, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_stop_lat) <> r_stop_lat)
+    OR (r_stop_lat IS NOT NULL AND p_stop_lat IS NULL)
+    OR (isnan(p_stop_lat) OR NOT (-90 <= p_stop_lat AND p_stop_lat <= 90))
+    OR (NOT plain AND contains(r_stop_lon, chr(65533)))
+    OR (NOT plain AND (contains(r_stop_lon, chr(10)) OR contains(r_stop_lon, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_stop_lon) <> r_stop_lon)
+    OR (r_stop_lon IS NOT NULL AND p_stop_lon IS NULL)
+    OR (isnan(p_stop_lon) OR NOT (-180 <= p_stop_lon AND p_stop_lon <= 180))
+    OR (NOT plain AND contains(r_zone_id, chr(65533)))
+    OR (NOT plain AND (contains(r_zone_id, chr(10)) OR contains(r_zone_id, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_zone_id) <> r_zone_id)
+    OR (NOT plain AND regexp_matches(CASE WHEN plain THEN r_zone_id ELSE gtfs_vc_trim(r_zone_id) END, '[^\x20-\x7E]'))
+    OR (NOT plain AND contains(r_stop_url, chr(65533)))
+    OR (NOT plain AND (contains(r_stop_url, chr(10)) OR contains(r_stop_url, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_stop_url) <> r_stop_url)
+    OR (r_stop_url IS NOT NULL AND NOT gtfs_vc_url_ok(CASE WHEN plain THEN r_stop_url ELSE gtfs_vc_trim(r_stop_url) END))
+    OR (NOT plain AND contains(r_location_type, chr(65533)))
+    OR (NOT plain AND (contains(r_location_type, chr(10)) OR contains(r_location_type, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_location_type) <> r_location_type)
+    OR (r_location_type IS NOT NULL AND p_location_type IS NULL)
+    OR (gtfs_validation_enum_name('GtfsLocationType', p_location_type) = 'UNRECOGNIZED')
+    OR (NOT plain AND contains(r_parent_station, chr(65533)))
+    OR (NOT plain AND (contains(r_parent_station, chr(10)) OR contains(r_parent_station, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_parent_station) <> r_parent_station)
+    OR (NOT plain AND regexp_matches(CASE WHEN plain THEN r_parent_station ELSE gtfs_vc_trim(r_parent_station) END, '[^\x20-\x7E]'))
+    OR (NOT plain AND contains(r_stop_timezone, chr(65533)))
+    OR (NOT plain AND (contains(r_stop_timezone, chr(10)) OR contains(r_stop_timezone, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_stop_timezone) <> r_stop_timezone)
+    OR (r_stop_timezone IS NOT NULL AND NOT gtfs_vc_timezone_ok(CASE WHEN plain THEN r_stop_timezone ELSE gtfs_vc_trim(r_stop_timezone) END))
+    OR (NOT plain AND contains(r_wheelchair_boarding, chr(65533)))
+    OR (NOT plain AND (contains(r_wheelchair_boarding, chr(10)) OR contains(r_wheelchair_boarding, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_wheelchair_boarding) <> r_wheelchair_boarding)
+    OR (r_wheelchair_boarding IS NOT NULL AND p_wheelchair_boarding IS NULL)
+    OR (gtfs_validation_enum_name('GtfsWheelchairBoarding', p_wheelchair_boarding) = 'UNRECOGNIZED')
+    OR (NOT plain AND contains(r_level_id, chr(65533)))
+    OR (NOT plain AND (contains(r_level_id, chr(10)) OR contains(r_level_id, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_level_id) <> r_level_id)
+    OR (NOT plain AND regexp_matches(CASE WHEN plain THEN r_level_id ELSE gtfs_vc_trim(r_level_id) END, '[^\x20-\x7E]'))
+    OR (NOT plain AND contains(r_platform_code, chr(65533)))
+    OR (NOT plain AND (contains(r_platform_code, chr(10)) OR contains(r_platform_code, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_platform_code) <> r_platform_code)
+    OR (NOT plain AND contains(r_stop_access, chr(65533)))
+    OR (NOT plain AND (contains(r_stop_access, chr(10)) OR contains(r_stop_access, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_stop_access) <> r_stop_access)
+    OR (r_stop_access IS NOT NULL AND p_stop_access IS NULL)
+    OR (gtfs_validation_enum_name('GtfsStopAccess', p_stop_access) = 'UNRECOGNIZED')
+),
+n AS (
+  SELECT csv_row_number, 'missing_required_field' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_id') AS notice
+  FROM w WHERE r_stop_id IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_id', 'fieldValue', r_stop_id) AS notice
+  FROM w WHERE NOT plain AND contains(r_stop_id, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_id', 'fieldValue', r_stop_id) AS notice
+  FROM w WHERE NOT plain AND (contains(r_stop_id, chr(10)) OR contains(r_stop_id, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_id', 'fieldValue', r_stop_id) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_stop_id) <> r_stop_id
+  UNION ALL
+  SELECT csv_row_number, 'non_ascii_or_non_printable_char' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_id', 'fieldValue', CASE WHEN plain THEN r_stop_id ELSE gtfs_vc_trim(r_stop_id) END) AS notice
+  FROM w WHERE NOT plain AND regexp_matches(CASE WHEN plain THEN r_stop_id ELSE gtfs_vc_trim(r_stop_id) END, '[^\x20-\x7E]')
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_code', 'fieldValue', r_stop_code) AS notice
+  FROM w WHERE NOT plain AND contains(r_stop_code, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_code', 'fieldValue', r_stop_code) AS notice
+  FROM w WHERE NOT plain AND (contains(r_stop_code, chr(10)) OR contains(r_stop_code, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_code', 'fieldValue', r_stop_code) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_stop_code) <> r_stop_code
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_name', 'fieldValue', r_stop_name) AS notice
+  FROM w WHERE NOT plain AND contains(r_stop_name, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_name', 'fieldValue', r_stop_name) AS notice
+  FROM w WHERE NOT plain AND (contains(r_stop_name, chr(10)) OR contains(r_stop_name, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_name', 'fieldValue', r_stop_name) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_stop_name) <> r_stop_name
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'tts_stop_name', 'fieldValue', r_tts_stop_name) AS notice
+  FROM w WHERE NOT plain AND contains(r_tts_stop_name, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'tts_stop_name', 'fieldValue', r_tts_stop_name) AS notice
+  FROM w WHERE NOT plain AND (contains(r_tts_stop_name, chr(10)) OR contains(r_tts_stop_name, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'tts_stop_name', 'fieldValue', r_tts_stop_name) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_tts_stop_name) <> r_tts_stop_name
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_desc', 'fieldValue', r_stop_desc) AS notice
+  FROM w WHERE NOT plain AND contains(r_stop_desc, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_desc', 'fieldValue', r_stop_desc) AS notice
+  FROM w WHERE NOT plain AND (contains(r_stop_desc, chr(10)) OR contains(r_stop_desc, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_desc', 'fieldValue', r_stop_desc) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_stop_desc) <> r_stop_desc
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_lat', 'fieldValue', r_stop_lat) AS notice
+  FROM w WHERE NOT plain AND contains(r_stop_lat, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_lat', 'fieldValue', r_stop_lat) AS notice
+  FROM w WHERE NOT plain AND (contains(r_stop_lat, chr(10)) OR contains(r_stop_lat, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_lat', 'fieldValue', r_stop_lat) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_stop_lat) <> r_stop_lat
+  UNION ALL
+  SELECT csv_row_number, 'invalid_float' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_lat', 'fieldValue', CASE WHEN plain THEN r_stop_lat ELSE gtfs_vc_trim(r_stop_lat) END) AS notice
+  FROM w WHERE r_stop_lat IS NOT NULL AND p_stop_lat IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'number_out_of_range' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_lat', 'fieldType', 'latitude within [-90, 90]', 'fieldValue', to_json(p_stop_lat)) AS notice
+  FROM w WHERE isnan(p_stop_lat) OR NOT (-90 <= p_stop_lat AND p_stop_lat <= 90)
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_lon', 'fieldValue', r_stop_lon) AS notice
+  FROM w WHERE NOT plain AND contains(r_stop_lon, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_lon', 'fieldValue', r_stop_lon) AS notice
+  FROM w WHERE NOT plain AND (contains(r_stop_lon, chr(10)) OR contains(r_stop_lon, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_lon', 'fieldValue', r_stop_lon) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_stop_lon) <> r_stop_lon
+  UNION ALL
+  SELECT csv_row_number, 'invalid_float' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_lon', 'fieldValue', CASE WHEN plain THEN r_stop_lon ELSE gtfs_vc_trim(r_stop_lon) END) AS notice
+  FROM w WHERE r_stop_lon IS NOT NULL AND p_stop_lon IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'number_out_of_range' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_lon', 'fieldType', 'longitude within [-180, 180]', 'fieldValue', to_json(p_stop_lon)) AS notice
+  FROM w WHERE isnan(p_stop_lon) OR NOT (-180 <= p_stop_lon AND p_stop_lon <= 180)
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'zone_id', 'fieldValue', r_zone_id) AS notice
+  FROM w WHERE NOT plain AND contains(r_zone_id, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'zone_id', 'fieldValue', r_zone_id) AS notice
+  FROM w WHERE NOT plain AND (contains(r_zone_id, chr(10)) OR contains(r_zone_id, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'zone_id', 'fieldValue', r_zone_id) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_zone_id) <> r_zone_id
+  UNION ALL
+  SELECT csv_row_number, 'non_ascii_or_non_printable_char' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'zone_id', 'fieldValue', CASE WHEN plain THEN r_zone_id ELSE gtfs_vc_trim(r_zone_id) END) AS notice
+  FROM w WHERE NOT plain AND regexp_matches(CASE WHEN plain THEN r_zone_id ELSE gtfs_vc_trim(r_zone_id) END, '[^\x20-\x7E]')
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_url', 'fieldValue', r_stop_url) AS notice
+  FROM w WHERE NOT plain AND contains(r_stop_url, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_url', 'fieldValue', r_stop_url) AS notice
+  FROM w WHERE NOT plain AND (contains(r_stop_url, chr(10)) OR contains(r_stop_url, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_url', 'fieldValue', r_stop_url) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_stop_url) <> r_stop_url
+  UNION ALL
+  SELECT csv_row_number, 'invalid_url' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_url', 'fieldValue', CASE WHEN plain THEN r_stop_url ELSE gtfs_vc_trim(r_stop_url) END) AS notice
+  FROM w WHERE r_stop_url IS NOT NULL AND NOT gtfs_vc_url_ok(CASE WHEN plain THEN r_stop_url ELSE gtfs_vc_trim(r_stop_url) END)
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'location_type', 'fieldValue', r_location_type) AS notice
+  FROM w WHERE NOT plain AND contains(r_location_type, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'location_type', 'fieldValue', r_location_type) AS notice
+  FROM w WHERE NOT plain AND (contains(r_location_type, chr(10)) OR contains(r_location_type, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'location_type', 'fieldValue', r_location_type) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_location_type) <> r_location_type
+  UNION ALL
+  SELECT csv_row_number, 'invalid_integer' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'location_type', 'fieldValue', CASE WHEN plain THEN r_location_type ELSE gtfs_vc_trim(r_location_type) END) AS notice
+  FROM w WHERE r_location_type IS NOT NULL AND p_location_type IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'unexpected_enum_value' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'location_type', 'fieldValue', p_location_type::INTEGER) AS notice
+  FROM w WHERE gtfs_validation_enum_name('GtfsLocationType', p_location_type) = 'UNRECOGNIZED'
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'parent_station', 'fieldValue', r_parent_station) AS notice
+  FROM w WHERE NOT plain AND contains(r_parent_station, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'parent_station', 'fieldValue', r_parent_station) AS notice
+  FROM w WHERE NOT plain AND (contains(r_parent_station, chr(10)) OR contains(r_parent_station, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'parent_station', 'fieldValue', r_parent_station) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_parent_station) <> r_parent_station
+  UNION ALL
+  SELECT csv_row_number, 'non_ascii_or_non_printable_char' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'parent_station', 'fieldValue', CASE WHEN plain THEN r_parent_station ELSE gtfs_vc_trim(r_parent_station) END) AS notice
+  FROM w WHERE NOT plain AND regexp_matches(CASE WHEN plain THEN r_parent_station ELSE gtfs_vc_trim(r_parent_station) END, '[^\x20-\x7E]')
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_timezone', 'fieldValue', r_stop_timezone) AS notice
+  FROM w WHERE NOT plain AND contains(r_stop_timezone, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_timezone', 'fieldValue', r_stop_timezone) AS notice
+  FROM w WHERE NOT plain AND (contains(r_stop_timezone, chr(10)) OR contains(r_stop_timezone, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_timezone', 'fieldValue', r_stop_timezone) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_stop_timezone) <> r_stop_timezone
+  UNION ALL
+  SELECT csv_row_number, 'invalid_timezone' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_timezone', 'fieldValue', CASE WHEN plain THEN r_stop_timezone ELSE gtfs_vc_trim(r_stop_timezone) END) AS notice
+  FROM w WHERE r_stop_timezone IS NOT NULL AND NOT gtfs_vc_timezone_ok(CASE WHEN plain THEN r_stop_timezone ELSE gtfs_vc_trim(r_stop_timezone) END)
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'wheelchair_boarding', 'fieldValue', r_wheelchair_boarding) AS notice
+  FROM w WHERE NOT plain AND contains(r_wheelchair_boarding, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'wheelchair_boarding', 'fieldValue', r_wheelchair_boarding) AS notice
+  FROM w WHERE NOT plain AND (contains(r_wheelchair_boarding, chr(10)) OR contains(r_wheelchair_boarding, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'wheelchair_boarding', 'fieldValue', r_wheelchair_boarding) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_wheelchair_boarding) <> r_wheelchair_boarding
+  UNION ALL
+  SELECT csv_row_number, 'invalid_integer' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'wheelchair_boarding', 'fieldValue', CASE WHEN plain THEN r_wheelchair_boarding ELSE gtfs_vc_trim(r_wheelchair_boarding) END) AS notice
+  FROM w WHERE r_wheelchair_boarding IS NOT NULL AND p_wheelchair_boarding IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'unexpected_enum_value' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'wheelchair_boarding', 'fieldValue', p_wheelchair_boarding::INTEGER) AS notice
+  FROM w WHERE gtfs_validation_enum_name('GtfsWheelchairBoarding', p_wheelchair_boarding) = 'UNRECOGNIZED'
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'level_id', 'fieldValue', r_level_id) AS notice
+  FROM w WHERE NOT plain AND contains(r_level_id, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'level_id', 'fieldValue', r_level_id) AS notice
+  FROM w WHERE NOT plain AND (contains(r_level_id, chr(10)) OR contains(r_level_id, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'level_id', 'fieldValue', r_level_id) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_level_id) <> r_level_id
+  UNION ALL
+  SELECT csv_row_number, 'non_ascii_or_non_printable_char' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'level_id', 'fieldValue', CASE WHEN plain THEN r_level_id ELSE gtfs_vc_trim(r_level_id) END) AS notice
+  FROM w WHERE NOT plain AND regexp_matches(CASE WHEN plain THEN r_level_id ELSE gtfs_vc_trim(r_level_id) END, '[^\x20-\x7E]')
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'platform_code', 'fieldValue', r_platform_code) AS notice
+  FROM w WHERE NOT plain AND contains(r_platform_code, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'platform_code', 'fieldValue', r_platform_code) AS notice
+  FROM w WHERE NOT plain AND (contains(r_platform_code, chr(10)) OR contains(r_platform_code, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'platform_code', 'fieldValue', r_platform_code) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_platform_code) <> r_platform_code
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_access', 'fieldValue', r_stop_access) AS notice
+  FROM w WHERE NOT plain AND contains(r_stop_access, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_access', 'fieldValue', r_stop_access) AS notice
+  FROM w WHERE NOT plain AND (contains(r_stop_access, chr(10)) OR contains(r_stop_access, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_access', 'fieldValue', r_stop_access) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_stop_access) <> r_stop_access
+  UNION ALL
+  SELECT csv_row_number, 'invalid_integer' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_access', 'fieldValue', CASE WHEN plain THEN r_stop_access ELSE gtfs_vc_trim(r_stop_access) END) AS notice
+  FROM w WHERE r_stop_access IS NOT NULL AND p_stop_access IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'unexpected_enum_value' AS code,
+    json_object('filename', 'stops.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_access', 'fieldValue', p_stop_access::INTEGER) AS notice
+  FROM w WHERE gtfs_validation_enum_name('GtfsStopAccess', p_stop_access) = 'UNRECOGNIZED'
+)
+SELECT n.csv_row_number, n.code, gtfs_validation_notice(n.notice) AS notice, r.severity = 'ERROR' AS err
+FROM n JOIN gtfs_validation_rules() r USING (code);
+-- Entities of stops.txt: rows of the header's length without an ERROR notice of their own (CsvFileLoader).
+CREATE OR REPLACE MACRO gtfs_vc_entities_stops() AS TABLE
+SELECT w.csv_row_number,
+  (CASE WHEN plain THEN r_stop_id ELSE gtfs_vc_trim(r_stop_id) END)::VARCHAR AS stop_id,
+  (CASE WHEN plain THEN r_stop_code ELSE gtfs_vc_trim(r_stop_code) END)::VARCHAR AS stop_code,
+  (CASE WHEN plain THEN r_stop_name ELSE gtfs_vc_trim(r_stop_name) END)::VARCHAR AS stop_name,
+  (CASE WHEN plain THEN r_tts_stop_name ELSE gtfs_vc_trim(r_tts_stop_name) END)::VARCHAR AS tts_stop_name,
+  (CASE WHEN plain THEN r_stop_desc ELSE gtfs_vc_trim(r_stop_desc) END)::VARCHAR AS stop_desc,
+  p_stop_lat AS stop_lat,
+  p_stop_lon AS stop_lon,
+  (CASE WHEN plain THEN r_zone_id ELSE gtfs_vc_trim(r_zone_id) END)::VARCHAR AS zone_id,
+  (CASE WHEN plain THEN r_stop_url ELSE gtfs_vc_trim(r_stop_url) END)::VARCHAR AS stop_url,
+  p_location_type AS location_type,
+  (CASE WHEN plain THEN r_parent_station ELSE gtfs_vc_trim(r_parent_station) END)::VARCHAR AS parent_station,
+  (CASE WHEN plain THEN r_stop_timezone ELSE gtfs_vc_trim(r_stop_timezone) END)::VARCHAR AS stop_timezone,
+  p_wheelchair_boarding AS wheelchair_boarding,
+  (CASE WHEN plain THEN r_level_id ELSE gtfs_vc_trim(r_level_id) END)::VARCHAR AS level_id,
+  (CASE WHEN plain THEN r_platform_code ELSE gtfs_vc_trim(r_platform_code) END)::VARCHAR AS platform_code,
+  p_stop_access AS stop_access
+FROM gtfs_vc_wide_stops w
+WHERE NOT EXISTS (SELECT 1 FROM gtfs_vc_notices n WHERE n.err AND n.csv_row_number = w.csv_row_number);
+-- Data rows of pathways.txt with the header's length: the raw value of each schema column (the header's column
+-- of that name, NULL without one) and the value Java parses from the trimmed one.
+CREATE OR REPLACE MACRO gtfs_vc_wide_build_pathways() AS TABLE
+SELECT csv_row_number,
+  plain,
+  r_pathway_id,
+  r_from_stop_id,
+  r_to_stop_id,
+  r_pathway_mode,
+  gtfs_vc_int(CASE WHEN plain THEN r_pathway_mode ELSE gtfs_vc_trim(r_pathway_mode) END) AS p_pathway_mode,
+  r_is_bidirectional,
+  gtfs_vc_int(CASE WHEN plain THEN r_is_bidirectional ELSE gtfs_vc_trim(r_is_bidirectional) END) AS p_is_bidirectional,
+  r_length,
+  gtfs_vc_double(CASE WHEN plain THEN r_length ELSE gtfs_vc_trim(r_length) END) AS p_length,
+  r_traversal_time,
+  gtfs_vc_int(CASE WHEN plain THEN r_traversal_time ELSE gtfs_vc_trim(r_traversal_time) END) AS p_traversal_time,
+  r_stair_count,
+  gtfs_vc_int(CASE WHEN plain THEN r_stair_count ELSE gtfs_vc_trim(r_stair_count) END) AS p_stair_count,
+  r_max_slope,
+  gtfs_vc_double(CASE WHEN plain THEN r_max_slope ELSE gtfs_vc_trim(r_max_slope) END) AS p_max_slope,
+  r_min_width,
+  gtfs_vc_double(CASE WHEN plain THEN r_min_width ELSE gtfs_vc_trim(r_min_width) END) AS p_min_width,
+  r_signposted_as,
+  r_reversed_signposted_as
+FROM (
+  SELECT d.csv_row_number,
+    d.plain,
+    d.fields[p.pos[1]] AS r_pathway_id,
+    d.fields[p.pos[2]] AS r_from_stop_id,
+    d.fields[p.pos[3]] AS r_to_stop_id,
+    d.fields[p.pos[4]] AS r_pathway_mode,
+    d.fields[p.pos[5]] AS r_is_bidirectional,
+    d.fields[p.pos[6]] AS r_length,
+    d.fields[p.pos[7]] AS r_traversal_time,
+    d.fields[p.pos[8]] AS r_stair_count,
+    d.fields[p.pos[9]] AS r_max_slope,
+    d.fields[p.pos[10]] AS r_min_width,
+    d.fields[p.pos[11]] AS r_signposted_as,
+    d.fields[p.pos[12]] AS r_reversed_signposted_as
+  FROM gtfs_vc_data_rows() d, gtfs_vc_pos p
+  WHERE d.length_ok);
+-- RowParser / DefaultFieldValidator notices of the values of pathways.txt (fieldValue: raw for the character
+-- checks, trimmed after). One scan keeps the rows with any notice; each check then reads only those.
+CREATE OR REPLACE MACRO gtfs_vc_cell_notices_pathways() AS TABLE
+WITH w AS MATERIALIZED (
+  SELECT * FROM gtfs_vc_wide_pathways
+  WHERE (r_pathway_id IS NULL)
+    OR (NOT plain AND contains(r_pathway_id, chr(65533)))
+    OR (NOT plain AND (contains(r_pathway_id, chr(10)) OR contains(r_pathway_id, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_pathway_id) <> r_pathway_id)
+    OR (NOT plain AND regexp_matches(CASE WHEN plain THEN r_pathway_id ELSE gtfs_vc_trim(r_pathway_id) END, '[^\x20-\x7E]'))
+    OR (r_from_stop_id IS NULL)
+    OR (NOT plain AND contains(r_from_stop_id, chr(65533)))
+    OR (NOT plain AND (contains(r_from_stop_id, chr(10)) OR contains(r_from_stop_id, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_from_stop_id) <> r_from_stop_id)
+    OR (NOT plain AND regexp_matches(CASE WHEN plain THEN r_from_stop_id ELSE gtfs_vc_trim(r_from_stop_id) END, '[^\x20-\x7E]'))
+    OR (r_to_stop_id IS NULL)
+    OR (NOT plain AND contains(r_to_stop_id, chr(65533)))
+    OR (NOT plain AND (contains(r_to_stop_id, chr(10)) OR contains(r_to_stop_id, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_to_stop_id) <> r_to_stop_id)
+    OR (NOT plain AND regexp_matches(CASE WHEN plain THEN r_to_stop_id ELSE gtfs_vc_trim(r_to_stop_id) END, '[^\x20-\x7E]'))
+    OR (r_pathway_mode IS NULL)
+    OR (NOT plain AND contains(r_pathway_mode, chr(65533)))
+    OR (NOT plain AND (contains(r_pathway_mode, chr(10)) OR contains(r_pathway_mode, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_pathway_mode) <> r_pathway_mode)
+    OR (r_pathway_mode IS NOT NULL AND p_pathway_mode IS NULL)
+    OR (gtfs_validation_enum_name('GtfsPathwayMode', p_pathway_mode) = 'UNRECOGNIZED')
+    OR (r_is_bidirectional IS NULL)
+    OR (NOT plain AND contains(r_is_bidirectional, chr(65533)))
+    OR (NOT plain AND (contains(r_is_bidirectional, chr(10)) OR contains(r_is_bidirectional, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_is_bidirectional) <> r_is_bidirectional)
+    OR (r_is_bidirectional IS NOT NULL AND p_is_bidirectional IS NULL)
+    OR (gtfs_validation_enum_name('GtfsPathwayIsBidirectional', p_is_bidirectional) = 'UNRECOGNIZED')
+    OR (NOT plain AND contains(r_length, chr(65533)))
+    OR (NOT plain AND (contains(r_length, chr(10)) OR contains(r_length, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_length) <> r_length)
+    OR (r_length IS NOT NULL AND p_length IS NULL)
+    OR (gtfs_vc_cmp0('float', NULL::INTEGER, p_length) < 0)
+    OR (NOT plain AND contains(r_traversal_time, chr(65533)))
+    OR (NOT plain AND (contains(r_traversal_time, chr(10)) OR contains(r_traversal_time, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_traversal_time) <> r_traversal_time)
+    OR (r_traversal_time IS NOT NULL AND p_traversal_time IS NULL)
+    OR (p_traversal_time <= 0)
+    OR (NOT plain AND contains(r_stair_count, chr(65533)))
+    OR (NOT plain AND (contains(r_stair_count, chr(10)) OR contains(r_stair_count, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_stair_count) <> r_stair_count)
+    OR (r_stair_count IS NOT NULL AND p_stair_count IS NULL)
+    OR (p_stair_count = 0)
+    OR (NOT plain AND contains(r_max_slope, chr(65533)))
+    OR (NOT plain AND (contains(r_max_slope, chr(10)) OR contains(r_max_slope, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_max_slope) <> r_max_slope)
+    OR (r_max_slope IS NOT NULL AND p_max_slope IS NULL)
+    OR (NOT plain AND contains(r_min_width, chr(65533)))
+    OR (NOT plain AND (contains(r_min_width, chr(10)) OR contains(r_min_width, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_min_width) <> r_min_width)
+    OR (r_min_width IS NOT NULL AND p_min_width IS NULL)
+    OR (gtfs_vc_cmp0('float', NULL::INTEGER, p_min_width) <= 0)
+    OR (NOT plain AND contains(r_signposted_as, chr(65533)))
+    OR (NOT plain AND (contains(r_signposted_as, chr(10)) OR contains(r_signposted_as, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_signposted_as) <> r_signposted_as)
+    OR (NOT plain AND contains(r_reversed_signposted_as, chr(65533)))
+    OR (NOT plain AND (contains(r_reversed_signposted_as, chr(10)) OR contains(r_reversed_signposted_as, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_reversed_signposted_as) <> r_reversed_signposted_as)
+),
+n AS (
+  SELECT csv_row_number, 'missing_required_field' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'pathway_id') AS notice
+  FROM w WHERE r_pathway_id IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'pathway_id', 'fieldValue', r_pathway_id) AS notice
+  FROM w WHERE NOT plain AND contains(r_pathway_id, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'pathway_id', 'fieldValue', r_pathway_id) AS notice
+  FROM w WHERE NOT plain AND (contains(r_pathway_id, chr(10)) OR contains(r_pathway_id, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'pathway_id', 'fieldValue', r_pathway_id) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_pathway_id) <> r_pathway_id
+  UNION ALL
+  SELECT csv_row_number, 'non_ascii_or_non_printable_char' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'pathway_id', 'fieldValue', CASE WHEN plain THEN r_pathway_id ELSE gtfs_vc_trim(r_pathway_id) END) AS notice
+  FROM w WHERE NOT plain AND regexp_matches(CASE WHEN plain THEN r_pathway_id ELSE gtfs_vc_trim(r_pathway_id) END, '[^\x20-\x7E]')
+  UNION ALL
+  SELECT csv_row_number, 'missing_required_field' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'from_stop_id') AS notice
+  FROM w WHERE r_from_stop_id IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'from_stop_id', 'fieldValue', r_from_stop_id) AS notice
+  FROM w WHERE NOT plain AND contains(r_from_stop_id, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'from_stop_id', 'fieldValue', r_from_stop_id) AS notice
+  FROM w WHERE NOT plain AND (contains(r_from_stop_id, chr(10)) OR contains(r_from_stop_id, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'from_stop_id', 'fieldValue', r_from_stop_id) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_from_stop_id) <> r_from_stop_id
+  UNION ALL
+  SELECT csv_row_number, 'non_ascii_or_non_printable_char' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'from_stop_id', 'fieldValue', CASE WHEN plain THEN r_from_stop_id ELSE gtfs_vc_trim(r_from_stop_id) END) AS notice
+  FROM w WHERE NOT plain AND regexp_matches(CASE WHEN plain THEN r_from_stop_id ELSE gtfs_vc_trim(r_from_stop_id) END, '[^\x20-\x7E]')
+  UNION ALL
+  SELECT csv_row_number, 'missing_required_field' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'to_stop_id') AS notice
+  FROM w WHERE r_to_stop_id IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'to_stop_id', 'fieldValue', r_to_stop_id) AS notice
+  FROM w WHERE NOT plain AND contains(r_to_stop_id, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'to_stop_id', 'fieldValue', r_to_stop_id) AS notice
+  FROM w WHERE NOT plain AND (contains(r_to_stop_id, chr(10)) OR contains(r_to_stop_id, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'to_stop_id', 'fieldValue', r_to_stop_id) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_to_stop_id) <> r_to_stop_id
+  UNION ALL
+  SELECT csv_row_number, 'non_ascii_or_non_printable_char' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'to_stop_id', 'fieldValue', CASE WHEN plain THEN r_to_stop_id ELSE gtfs_vc_trim(r_to_stop_id) END) AS notice
+  FROM w WHERE NOT plain AND regexp_matches(CASE WHEN plain THEN r_to_stop_id ELSE gtfs_vc_trim(r_to_stop_id) END, '[^\x20-\x7E]')
+  UNION ALL
+  SELECT csv_row_number, 'missing_required_field' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'pathway_mode') AS notice
+  FROM w WHERE r_pathway_mode IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'pathway_mode', 'fieldValue', r_pathway_mode) AS notice
+  FROM w WHERE NOT plain AND contains(r_pathway_mode, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'pathway_mode', 'fieldValue', r_pathway_mode) AS notice
+  FROM w WHERE NOT plain AND (contains(r_pathway_mode, chr(10)) OR contains(r_pathway_mode, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'pathway_mode', 'fieldValue', r_pathway_mode) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_pathway_mode) <> r_pathway_mode
+  UNION ALL
+  SELECT csv_row_number, 'invalid_integer' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'pathway_mode', 'fieldValue', CASE WHEN plain THEN r_pathway_mode ELSE gtfs_vc_trim(r_pathway_mode) END) AS notice
+  FROM w WHERE r_pathway_mode IS NOT NULL AND p_pathway_mode IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'unexpected_enum_value' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'pathway_mode', 'fieldValue', p_pathway_mode::INTEGER) AS notice
+  FROM w WHERE gtfs_validation_enum_name('GtfsPathwayMode', p_pathway_mode) = 'UNRECOGNIZED'
+  UNION ALL
+  SELECT csv_row_number, 'missing_required_field' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'is_bidirectional') AS notice
+  FROM w WHERE r_is_bidirectional IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'is_bidirectional', 'fieldValue', r_is_bidirectional) AS notice
+  FROM w WHERE NOT plain AND contains(r_is_bidirectional, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'is_bidirectional', 'fieldValue', r_is_bidirectional) AS notice
+  FROM w WHERE NOT plain AND (contains(r_is_bidirectional, chr(10)) OR contains(r_is_bidirectional, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'is_bidirectional', 'fieldValue', r_is_bidirectional) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_is_bidirectional) <> r_is_bidirectional
+  UNION ALL
+  SELECT csv_row_number, 'invalid_integer' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'is_bidirectional', 'fieldValue', CASE WHEN plain THEN r_is_bidirectional ELSE gtfs_vc_trim(r_is_bidirectional) END) AS notice
+  FROM w WHERE r_is_bidirectional IS NOT NULL AND p_is_bidirectional IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'unexpected_enum_value' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'is_bidirectional', 'fieldValue', p_is_bidirectional::INTEGER) AS notice
+  FROM w WHERE gtfs_validation_enum_name('GtfsPathwayIsBidirectional', p_is_bidirectional) = 'UNRECOGNIZED'
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'length', 'fieldValue', r_length) AS notice
+  FROM w WHERE NOT plain AND contains(r_length, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'length', 'fieldValue', r_length) AS notice
+  FROM w WHERE NOT plain AND (contains(r_length, chr(10)) OR contains(r_length, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'length', 'fieldValue', r_length) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_length) <> r_length
+  UNION ALL
+  SELECT csv_row_number, 'invalid_float' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'length', 'fieldValue', CASE WHEN plain THEN r_length ELSE gtfs_vc_trim(r_length) END) AS notice
+  FROM w WHERE r_length IS NOT NULL AND p_length IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'number_out_of_range' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'length', 'fieldType', 'non-negative float', 'fieldValue', to_json(p_length)) AS notice
+  FROM w WHERE gtfs_vc_cmp0('float', NULL::INTEGER, p_length) < 0
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'traversal_time', 'fieldValue', r_traversal_time) AS notice
+  FROM w WHERE NOT plain AND contains(r_traversal_time, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'traversal_time', 'fieldValue', r_traversal_time) AS notice
+  FROM w WHERE NOT plain AND (contains(r_traversal_time, chr(10)) OR contains(r_traversal_time, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'traversal_time', 'fieldValue', r_traversal_time) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_traversal_time) <> r_traversal_time
+  UNION ALL
+  SELECT csv_row_number, 'invalid_integer' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'traversal_time', 'fieldValue', CASE WHEN plain THEN r_traversal_time ELSE gtfs_vc_trim(r_traversal_time) END) AS notice
+  FROM w WHERE r_traversal_time IS NOT NULL AND p_traversal_time IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'number_out_of_range' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'traversal_time', 'fieldType', 'positive integer', 'fieldValue', to_json(p_traversal_time::INTEGER)) AS notice
+  FROM w WHERE p_traversal_time <= 0
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stair_count', 'fieldValue', r_stair_count) AS notice
+  FROM w WHERE NOT plain AND contains(r_stair_count, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stair_count', 'fieldValue', r_stair_count) AS notice
+  FROM w WHERE NOT plain AND (contains(r_stair_count, chr(10)) OR contains(r_stair_count, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stair_count', 'fieldValue', r_stair_count) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_stair_count) <> r_stair_count
+  UNION ALL
+  SELECT csv_row_number, 'invalid_integer' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stair_count', 'fieldValue', CASE WHEN plain THEN r_stair_count ELSE gtfs_vc_trim(r_stair_count) END) AS notice
+  FROM w WHERE r_stair_count IS NOT NULL AND p_stair_count IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'number_out_of_range' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stair_count', 'fieldType', 'non-zero integer', 'fieldValue', to_json(p_stair_count::INTEGER)) AS notice
+  FROM w WHERE p_stair_count = 0
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'max_slope', 'fieldValue', r_max_slope) AS notice
+  FROM w WHERE NOT plain AND contains(r_max_slope, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'max_slope', 'fieldValue', r_max_slope) AS notice
+  FROM w WHERE NOT plain AND (contains(r_max_slope, chr(10)) OR contains(r_max_slope, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'max_slope', 'fieldValue', r_max_slope) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_max_slope) <> r_max_slope
+  UNION ALL
+  SELECT csv_row_number, 'invalid_float' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'max_slope', 'fieldValue', CASE WHEN plain THEN r_max_slope ELSE gtfs_vc_trim(r_max_slope) END) AS notice
+  FROM w WHERE r_max_slope IS NOT NULL AND p_max_slope IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'min_width', 'fieldValue', r_min_width) AS notice
+  FROM w WHERE NOT plain AND contains(r_min_width, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'min_width', 'fieldValue', r_min_width) AS notice
+  FROM w WHERE NOT plain AND (contains(r_min_width, chr(10)) OR contains(r_min_width, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'min_width', 'fieldValue', r_min_width) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_min_width) <> r_min_width
+  UNION ALL
+  SELECT csv_row_number, 'invalid_float' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'min_width', 'fieldValue', CASE WHEN plain THEN r_min_width ELSE gtfs_vc_trim(r_min_width) END) AS notice
+  FROM w WHERE r_min_width IS NOT NULL AND p_min_width IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'number_out_of_range' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'min_width', 'fieldType', 'positive float', 'fieldValue', to_json(p_min_width)) AS notice
+  FROM w WHERE gtfs_vc_cmp0('float', NULL::INTEGER, p_min_width) <= 0
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'signposted_as', 'fieldValue', r_signposted_as) AS notice
+  FROM w WHERE NOT plain AND contains(r_signposted_as, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'signposted_as', 'fieldValue', r_signposted_as) AS notice
+  FROM w WHERE NOT plain AND (contains(r_signposted_as, chr(10)) OR contains(r_signposted_as, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'signposted_as', 'fieldValue', r_signposted_as) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_signposted_as) <> r_signposted_as
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'reversed_signposted_as', 'fieldValue', r_reversed_signposted_as) AS notice
+  FROM w WHERE NOT plain AND contains(r_reversed_signposted_as, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'reversed_signposted_as', 'fieldValue', r_reversed_signposted_as) AS notice
+  FROM w WHERE NOT plain AND (contains(r_reversed_signposted_as, chr(10)) OR contains(r_reversed_signposted_as, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'pathways.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'reversed_signposted_as', 'fieldValue', r_reversed_signposted_as) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_reversed_signposted_as) <> r_reversed_signposted_as
+)
+SELECT n.csv_row_number, n.code, gtfs_validation_notice(n.notice) AS notice, r.severity = 'ERROR' AS err
+FROM n JOIN gtfs_validation_rules() r USING (code);
+-- Entities of pathways.txt: rows of the header's length without an ERROR notice of their own (CsvFileLoader).
+CREATE OR REPLACE MACRO gtfs_vc_entities_pathways() AS TABLE
+SELECT w.csv_row_number,
+  (CASE WHEN plain THEN r_pathway_id ELSE gtfs_vc_trim(r_pathway_id) END)::VARCHAR AS pathway_id,
+  (CASE WHEN plain THEN r_from_stop_id ELSE gtfs_vc_trim(r_from_stop_id) END)::VARCHAR AS from_stop_id,
+  (CASE WHEN plain THEN r_to_stop_id ELSE gtfs_vc_trim(r_to_stop_id) END)::VARCHAR AS to_stop_id,
+  p_pathway_mode AS pathway_mode,
+  p_is_bidirectional AS is_bidirectional,
+  p_length AS length,
+  p_traversal_time AS traversal_time,
+  p_stair_count AS stair_count,
+  p_max_slope AS max_slope,
+  p_min_width AS min_width,
+  (CASE WHEN plain THEN r_signposted_as ELSE gtfs_vc_trim(r_signposted_as) END)::VARCHAR AS signposted_as,
+  (CASE WHEN plain THEN r_reversed_signposted_as ELSE gtfs_vc_trim(r_reversed_signposted_as) END)::VARCHAR AS reversed_signposted_as
+FROM gtfs_vc_wide_pathways w
+WHERE NOT EXISTS (SELECT 1 FROM gtfs_vc_notices n WHERE n.err AND n.csv_row_number = w.csv_row_number);
+-- Data rows of routes.txt with the header's length: the raw value of each schema column (the header's column
+-- of that name, NULL without one) and the value Java parses from the trimmed one.
+CREATE OR REPLACE MACRO gtfs_vc_wide_build_routes() AS TABLE
+SELECT csv_row_number,
+  plain,
+  r_route_id,
+  r_agency_id,
+  r_route_short_name,
+  r_route_long_name,
+  r_route_desc,
+  r_route_type,
+  gtfs_vc_int(CASE WHEN plain THEN r_route_type ELSE gtfs_vc_trim(r_route_type) END) AS p_route_type,
+  r_route_url,
+  r_route_color,
+  gtfs_vc_color(CASE WHEN plain THEN r_route_color ELSE gtfs_vc_trim(r_route_color) END) AS p_route_color,
+  r_route_text_color,
+  gtfs_vc_color(CASE WHEN plain THEN r_route_text_color ELSE gtfs_vc_trim(r_route_text_color) END) AS p_route_text_color,
+  r_route_sort_order,
+  gtfs_vc_int(CASE WHEN plain THEN r_route_sort_order ELSE gtfs_vc_trim(r_route_sort_order) END) AS p_route_sort_order,
+  r_continuous_pickup,
+  gtfs_vc_int(CASE WHEN plain THEN r_continuous_pickup ELSE gtfs_vc_trim(r_continuous_pickup) END) AS p_continuous_pickup,
+  r_continuous_drop_off,
+  gtfs_vc_int(CASE WHEN plain THEN r_continuous_drop_off ELSE gtfs_vc_trim(r_continuous_drop_off) END) AS p_continuous_drop_off,
+  r_network_id,
+  r_cemv_support,
+  gtfs_vc_int(CASE WHEN plain THEN r_cemv_support ELSE gtfs_vc_trim(r_cemv_support) END) AS p_cemv_support
+FROM (
+  SELECT d.csv_row_number,
+    d.plain,
+    d.fields[p.pos[1]] AS r_route_id,
+    d.fields[p.pos[2]] AS r_agency_id,
+    d.fields[p.pos[3]] AS r_route_short_name,
+    d.fields[p.pos[4]] AS r_route_long_name,
+    d.fields[p.pos[5]] AS r_route_desc,
+    d.fields[p.pos[6]] AS r_route_type,
+    d.fields[p.pos[7]] AS r_route_url,
+    d.fields[p.pos[8]] AS r_route_color,
+    d.fields[p.pos[9]] AS r_route_text_color,
+    d.fields[p.pos[10]] AS r_route_sort_order,
+    d.fields[p.pos[11]] AS r_continuous_pickup,
+    d.fields[p.pos[12]] AS r_continuous_drop_off,
+    d.fields[p.pos[13]] AS r_network_id,
+    d.fields[p.pos[14]] AS r_cemv_support
+  FROM gtfs_vc_data_rows() d, gtfs_vc_pos p
+  WHERE d.length_ok);
+-- RowParser / DefaultFieldValidator notices of the values of routes.txt (fieldValue: raw for the character
+-- checks, trimmed after). One scan keeps the rows with any notice; each check then reads only those.
+CREATE OR REPLACE MACRO gtfs_vc_cell_notices_routes() AS TABLE
+WITH w AS MATERIALIZED (
+  SELECT * FROM gtfs_vc_wide_routes
+  WHERE (r_route_id IS NULL)
+    OR (NOT plain AND contains(r_route_id, chr(65533)))
+    OR (NOT plain AND (contains(r_route_id, chr(10)) OR contains(r_route_id, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_route_id) <> r_route_id)
+    OR (NOT plain AND regexp_matches(CASE WHEN plain THEN r_route_id ELSE gtfs_vc_trim(r_route_id) END, '[^\x20-\x7E]'))
+    OR (NOT plain AND contains(r_agency_id, chr(65533)))
+    OR (NOT plain AND (contains(r_agency_id, chr(10)) OR contains(r_agency_id, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_agency_id) <> r_agency_id)
+    OR (NOT plain AND regexp_matches(CASE WHEN plain THEN r_agency_id ELSE gtfs_vc_trim(r_agency_id) END, '[^\x20-\x7E]'))
+    OR (NOT plain AND contains(r_route_short_name, chr(65533)))
+    OR (NOT plain AND (contains(r_route_short_name, chr(10)) OR contains(r_route_short_name, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_route_short_name) <> r_route_short_name)
+    OR (NOT plain AND contains(r_route_long_name, chr(65533)))
+    OR (NOT plain AND (contains(r_route_long_name, chr(10)) OR contains(r_route_long_name, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_route_long_name) <> r_route_long_name)
+    OR (NOT plain AND contains(r_route_desc, chr(65533)))
+    OR (NOT plain AND (contains(r_route_desc, chr(10)) OR contains(r_route_desc, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_route_desc) <> r_route_desc)
+    OR (r_route_type IS NULL)
+    OR (NOT plain AND contains(r_route_type, chr(65533)))
+    OR (NOT plain AND (contains(r_route_type, chr(10)) OR contains(r_route_type, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_route_type) <> r_route_type)
+    OR (r_route_type IS NOT NULL AND p_route_type IS NULL)
+    OR (gtfs_validation_enum_name('GtfsRouteType', p_route_type) = 'UNRECOGNIZED')
+    OR (NOT plain AND contains(r_route_url, chr(65533)))
+    OR (NOT plain AND (contains(r_route_url, chr(10)) OR contains(r_route_url, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_route_url) <> r_route_url)
+    OR (r_route_url IS NOT NULL AND NOT gtfs_vc_url_ok(CASE WHEN plain THEN r_route_url ELSE gtfs_vc_trim(r_route_url) END))
+    OR (NOT plain AND contains(r_route_color, chr(65533)))
+    OR (NOT plain AND (contains(r_route_color, chr(10)) OR contains(r_route_color, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_route_color) <> r_route_color)
+    OR (r_route_color IS NOT NULL AND p_route_color IS NULL)
+    OR (NOT plain AND contains(r_route_text_color, chr(65533)))
+    OR (NOT plain AND (contains(r_route_text_color, chr(10)) OR contains(r_route_text_color, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_route_text_color) <> r_route_text_color)
+    OR (r_route_text_color IS NOT NULL AND p_route_text_color IS NULL)
+    OR (NOT plain AND contains(r_route_sort_order, chr(65533)))
+    OR (NOT plain AND (contains(r_route_sort_order, chr(10)) OR contains(r_route_sort_order, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_route_sort_order) <> r_route_sort_order)
+    OR (r_route_sort_order IS NOT NULL AND p_route_sort_order IS NULL)
+    OR (p_route_sort_order < 0)
+    OR (NOT plain AND contains(r_continuous_pickup, chr(65533)))
+    OR (NOT plain AND (contains(r_continuous_pickup, chr(10)) OR contains(r_continuous_pickup, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_continuous_pickup) <> r_continuous_pickup)
+    OR (r_continuous_pickup IS NOT NULL AND p_continuous_pickup IS NULL)
+    OR (gtfs_validation_enum_name('GtfsContinuousPickupDropOff', p_continuous_pickup) = 'UNRECOGNIZED')
+    OR (NOT plain AND contains(r_continuous_drop_off, chr(65533)))
+    OR (NOT plain AND (contains(r_continuous_drop_off, chr(10)) OR contains(r_continuous_drop_off, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_continuous_drop_off) <> r_continuous_drop_off)
+    OR (r_continuous_drop_off IS NOT NULL AND p_continuous_drop_off IS NULL)
+    OR (gtfs_validation_enum_name('GtfsContinuousPickupDropOff', p_continuous_drop_off) = 'UNRECOGNIZED')
+    OR (NOT plain AND contains(r_network_id, chr(65533)))
+    OR (NOT plain AND (contains(r_network_id, chr(10)) OR contains(r_network_id, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_network_id) <> r_network_id)
+    OR (NOT plain AND regexp_matches(CASE WHEN plain THEN r_network_id ELSE gtfs_vc_trim(r_network_id) END, '[^\x20-\x7E]'))
+    OR (NOT plain AND contains(r_cemv_support, chr(65533)))
+    OR (NOT plain AND (contains(r_cemv_support, chr(10)) OR contains(r_cemv_support, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_cemv_support) <> r_cemv_support)
+    OR (r_cemv_support IS NOT NULL AND p_cemv_support IS NULL)
+    OR (gtfs_validation_enum_name('GtfsContactlessEmvSupport', p_cemv_support) = 'UNRECOGNIZED')
+),
+n AS (
+  SELECT csv_row_number, 'missing_required_field' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_id') AS notice
+  FROM w WHERE r_route_id IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_id', 'fieldValue', r_route_id) AS notice
+  FROM w WHERE NOT plain AND contains(r_route_id, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_id', 'fieldValue', r_route_id) AS notice
+  FROM w WHERE NOT plain AND (contains(r_route_id, chr(10)) OR contains(r_route_id, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_id', 'fieldValue', r_route_id) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_route_id) <> r_route_id
+  UNION ALL
+  SELECT csv_row_number, 'non_ascii_or_non_printable_char' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_id', 'fieldValue', CASE WHEN plain THEN r_route_id ELSE gtfs_vc_trim(r_route_id) END) AS notice
+  FROM w WHERE NOT plain AND regexp_matches(CASE WHEN plain THEN r_route_id ELSE gtfs_vc_trim(r_route_id) END, '[^\x20-\x7E]')
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'agency_id', 'fieldValue', r_agency_id) AS notice
+  FROM w WHERE NOT plain AND contains(r_agency_id, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'agency_id', 'fieldValue', r_agency_id) AS notice
+  FROM w WHERE NOT plain AND (contains(r_agency_id, chr(10)) OR contains(r_agency_id, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'agency_id', 'fieldValue', r_agency_id) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_agency_id) <> r_agency_id
+  UNION ALL
+  SELECT csv_row_number, 'non_ascii_or_non_printable_char' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'agency_id', 'fieldValue', CASE WHEN plain THEN r_agency_id ELSE gtfs_vc_trim(r_agency_id) END) AS notice
+  FROM w WHERE NOT plain AND regexp_matches(CASE WHEN plain THEN r_agency_id ELSE gtfs_vc_trim(r_agency_id) END, '[^\x20-\x7E]')
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_short_name', 'fieldValue', r_route_short_name) AS notice
+  FROM w WHERE NOT plain AND contains(r_route_short_name, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_short_name', 'fieldValue', r_route_short_name) AS notice
+  FROM w WHERE NOT plain AND (contains(r_route_short_name, chr(10)) OR contains(r_route_short_name, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_short_name', 'fieldValue', r_route_short_name) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_route_short_name) <> r_route_short_name
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_long_name', 'fieldValue', r_route_long_name) AS notice
+  FROM w WHERE NOT plain AND contains(r_route_long_name, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_long_name', 'fieldValue', r_route_long_name) AS notice
+  FROM w WHERE NOT plain AND (contains(r_route_long_name, chr(10)) OR contains(r_route_long_name, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_long_name', 'fieldValue', r_route_long_name) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_route_long_name) <> r_route_long_name
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_desc', 'fieldValue', r_route_desc) AS notice
+  FROM w WHERE NOT plain AND contains(r_route_desc, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_desc', 'fieldValue', r_route_desc) AS notice
+  FROM w WHERE NOT plain AND (contains(r_route_desc, chr(10)) OR contains(r_route_desc, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_desc', 'fieldValue', r_route_desc) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_route_desc) <> r_route_desc
+  UNION ALL
+  SELECT csv_row_number, 'missing_required_field' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_type') AS notice
+  FROM w WHERE r_route_type IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_type', 'fieldValue', r_route_type) AS notice
+  FROM w WHERE NOT plain AND contains(r_route_type, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_type', 'fieldValue', r_route_type) AS notice
+  FROM w WHERE NOT plain AND (contains(r_route_type, chr(10)) OR contains(r_route_type, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_type', 'fieldValue', r_route_type) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_route_type) <> r_route_type
+  UNION ALL
+  SELECT csv_row_number, 'invalid_integer' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_type', 'fieldValue', CASE WHEN plain THEN r_route_type ELSE gtfs_vc_trim(r_route_type) END) AS notice
+  FROM w WHERE r_route_type IS NOT NULL AND p_route_type IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'unexpected_enum_value' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_type', 'fieldValue', p_route_type::INTEGER) AS notice
+  FROM w WHERE gtfs_validation_enum_name('GtfsRouteType', p_route_type) = 'UNRECOGNIZED'
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_url', 'fieldValue', r_route_url) AS notice
+  FROM w WHERE NOT plain AND contains(r_route_url, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_url', 'fieldValue', r_route_url) AS notice
+  FROM w WHERE NOT plain AND (contains(r_route_url, chr(10)) OR contains(r_route_url, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_url', 'fieldValue', r_route_url) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_route_url) <> r_route_url
+  UNION ALL
+  SELECT csv_row_number, 'invalid_url' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_url', 'fieldValue', CASE WHEN plain THEN r_route_url ELSE gtfs_vc_trim(r_route_url) END) AS notice
+  FROM w WHERE r_route_url IS NOT NULL AND NOT gtfs_vc_url_ok(CASE WHEN plain THEN r_route_url ELSE gtfs_vc_trim(r_route_url) END)
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_color', 'fieldValue', r_route_color) AS notice
+  FROM w WHERE NOT plain AND contains(r_route_color, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_color', 'fieldValue', r_route_color) AS notice
+  FROM w WHERE NOT plain AND (contains(r_route_color, chr(10)) OR contains(r_route_color, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_color', 'fieldValue', r_route_color) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_route_color) <> r_route_color
+  UNION ALL
+  SELECT csv_row_number, 'invalid_color' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_color', 'fieldValue', CASE WHEN plain THEN r_route_color ELSE gtfs_vc_trim(r_route_color) END) AS notice
+  FROM w WHERE r_route_color IS NOT NULL AND p_route_color IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_text_color', 'fieldValue', r_route_text_color) AS notice
+  FROM w WHERE NOT plain AND contains(r_route_text_color, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_text_color', 'fieldValue', r_route_text_color) AS notice
+  FROM w WHERE NOT plain AND (contains(r_route_text_color, chr(10)) OR contains(r_route_text_color, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_text_color', 'fieldValue', r_route_text_color) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_route_text_color) <> r_route_text_color
+  UNION ALL
+  SELECT csv_row_number, 'invalid_color' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_text_color', 'fieldValue', CASE WHEN plain THEN r_route_text_color ELSE gtfs_vc_trim(r_route_text_color) END) AS notice
+  FROM w WHERE r_route_text_color IS NOT NULL AND p_route_text_color IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_sort_order', 'fieldValue', r_route_sort_order) AS notice
+  FROM w WHERE NOT plain AND contains(r_route_sort_order, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_sort_order', 'fieldValue', r_route_sort_order) AS notice
+  FROM w WHERE NOT plain AND (contains(r_route_sort_order, chr(10)) OR contains(r_route_sort_order, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_sort_order', 'fieldValue', r_route_sort_order) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_route_sort_order) <> r_route_sort_order
+  UNION ALL
+  SELECT csv_row_number, 'invalid_integer' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_sort_order', 'fieldValue', CASE WHEN plain THEN r_route_sort_order ELSE gtfs_vc_trim(r_route_sort_order) END) AS notice
+  FROM w WHERE r_route_sort_order IS NOT NULL AND p_route_sort_order IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'number_out_of_range' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_sort_order', 'fieldType', 'non-negative integer', 'fieldValue', to_json(p_route_sort_order::INTEGER)) AS notice
+  FROM w WHERE p_route_sort_order < 0
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'continuous_pickup', 'fieldValue', r_continuous_pickup) AS notice
+  FROM w WHERE NOT plain AND contains(r_continuous_pickup, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'continuous_pickup', 'fieldValue', r_continuous_pickup) AS notice
+  FROM w WHERE NOT plain AND (contains(r_continuous_pickup, chr(10)) OR contains(r_continuous_pickup, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'continuous_pickup', 'fieldValue', r_continuous_pickup) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_continuous_pickup) <> r_continuous_pickup
+  UNION ALL
+  SELECT csv_row_number, 'invalid_integer' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'continuous_pickup', 'fieldValue', CASE WHEN plain THEN r_continuous_pickup ELSE gtfs_vc_trim(r_continuous_pickup) END) AS notice
+  FROM w WHERE r_continuous_pickup IS NOT NULL AND p_continuous_pickup IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'unexpected_enum_value' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'continuous_pickup', 'fieldValue', p_continuous_pickup::INTEGER) AS notice
+  FROM w WHERE gtfs_validation_enum_name('GtfsContinuousPickupDropOff', p_continuous_pickup) = 'UNRECOGNIZED'
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'continuous_drop_off', 'fieldValue', r_continuous_drop_off) AS notice
+  FROM w WHERE NOT plain AND contains(r_continuous_drop_off, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'continuous_drop_off', 'fieldValue', r_continuous_drop_off) AS notice
+  FROM w WHERE NOT plain AND (contains(r_continuous_drop_off, chr(10)) OR contains(r_continuous_drop_off, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'continuous_drop_off', 'fieldValue', r_continuous_drop_off) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_continuous_drop_off) <> r_continuous_drop_off
+  UNION ALL
+  SELECT csv_row_number, 'invalid_integer' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'continuous_drop_off', 'fieldValue', CASE WHEN plain THEN r_continuous_drop_off ELSE gtfs_vc_trim(r_continuous_drop_off) END) AS notice
+  FROM w WHERE r_continuous_drop_off IS NOT NULL AND p_continuous_drop_off IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'unexpected_enum_value' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'continuous_drop_off', 'fieldValue', p_continuous_drop_off::INTEGER) AS notice
+  FROM w WHERE gtfs_validation_enum_name('GtfsContinuousPickupDropOff', p_continuous_drop_off) = 'UNRECOGNIZED'
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'network_id', 'fieldValue', r_network_id) AS notice
+  FROM w WHERE NOT plain AND contains(r_network_id, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'network_id', 'fieldValue', r_network_id) AS notice
+  FROM w WHERE NOT plain AND (contains(r_network_id, chr(10)) OR contains(r_network_id, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'network_id', 'fieldValue', r_network_id) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_network_id) <> r_network_id
+  UNION ALL
+  SELECT csv_row_number, 'non_ascii_or_non_printable_char' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'network_id', 'fieldValue', CASE WHEN plain THEN r_network_id ELSE gtfs_vc_trim(r_network_id) END) AS notice
+  FROM w WHERE NOT plain AND regexp_matches(CASE WHEN plain THEN r_network_id ELSE gtfs_vc_trim(r_network_id) END, '[^\x20-\x7E]')
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'cemv_support', 'fieldValue', r_cemv_support) AS notice
+  FROM w WHERE NOT plain AND contains(r_cemv_support, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'cemv_support', 'fieldValue', r_cemv_support) AS notice
+  FROM w WHERE NOT plain AND (contains(r_cemv_support, chr(10)) OR contains(r_cemv_support, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'cemv_support', 'fieldValue', r_cemv_support) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_cemv_support) <> r_cemv_support
+  UNION ALL
+  SELECT csv_row_number, 'invalid_integer' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'cemv_support', 'fieldValue', CASE WHEN plain THEN r_cemv_support ELSE gtfs_vc_trim(r_cemv_support) END) AS notice
+  FROM w WHERE r_cemv_support IS NOT NULL AND p_cemv_support IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'unexpected_enum_value' AS code,
+    json_object('filename', 'routes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'cemv_support', 'fieldValue', p_cemv_support::INTEGER) AS notice
+  FROM w WHERE gtfs_validation_enum_name('GtfsContactlessEmvSupport', p_cemv_support) = 'UNRECOGNIZED'
+)
+SELECT n.csv_row_number, n.code, gtfs_validation_notice(n.notice) AS notice, r.severity = 'ERROR' AS err
+FROM n JOIN gtfs_validation_rules() r USING (code);
+-- Entities of routes.txt: rows of the header's length without an ERROR notice of their own (CsvFileLoader).
+CREATE OR REPLACE MACRO gtfs_vc_entities_routes() AS TABLE
+SELECT w.csv_row_number,
+  (CASE WHEN plain THEN r_route_id ELSE gtfs_vc_trim(r_route_id) END)::VARCHAR AS route_id,
+  (CASE WHEN plain THEN r_agency_id ELSE gtfs_vc_trim(r_agency_id) END)::VARCHAR AS agency_id,
+  (CASE WHEN plain THEN r_route_short_name ELSE gtfs_vc_trim(r_route_short_name) END)::VARCHAR AS route_short_name,
+  (CASE WHEN plain THEN r_route_long_name ELSE gtfs_vc_trim(r_route_long_name) END)::VARCHAR AS route_long_name,
+  (CASE WHEN plain THEN r_route_desc ELSE gtfs_vc_trim(r_route_desc) END)::VARCHAR AS route_desc,
+  p_route_type AS route_type,
+  (CASE WHEN plain THEN r_route_url ELSE gtfs_vc_trim(r_route_url) END)::VARCHAR AS route_url,
+  p_route_color AS route_color,
+  p_route_text_color AS route_text_color,
+  p_route_sort_order AS route_sort_order,
+  p_continuous_pickup AS continuous_pickup,
+  p_continuous_drop_off AS continuous_drop_off,
+  (CASE WHEN plain THEN r_network_id ELSE gtfs_vc_trim(r_network_id) END)::VARCHAR AS network_id,
+  p_cemv_support AS cemv_support
+FROM gtfs_vc_wide_routes w
+WHERE NOT EXISTS (SELECT 1 FROM gtfs_vc_notices n WHERE n.err AND n.csv_row_number = w.csv_row_number);
+-- Data rows of trips.txt with the header's length: the raw value of each schema column (the header's column
+-- of that name, NULL without one) and the value Java parses from the trimmed one.
+CREATE OR REPLACE MACRO gtfs_vc_wide_build_trips() AS TABLE
+SELECT csv_row_number,
+  plain,
+  r_trip_id,
+  r_route_id,
+  r_service_id,
+  r_trip_headsign,
+  r_trip_short_name,
+  r_direction_id,
+  gtfs_vc_int(CASE WHEN plain THEN r_direction_id ELSE gtfs_vc_trim(r_direction_id) END) AS p_direction_id,
+  r_block_id,
+  r_shape_id,
+  r_wheelchair_accessible,
+  gtfs_vc_int(CASE WHEN plain THEN r_wheelchair_accessible ELSE gtfs_vc_trim(r_wheelchair_accessible) END) AS p_wheelchair_accessible,
+  r_bikes_allowed,
+  gtfs_vc_int(CASE WHEN plain THEN r_bikes_allowed ELSE gtfs_vc_trim(r_bikes_allowed) END) AS p_bikes_allowed,
+  r_cars_allowed,
+  gtfs_vc_int(CASE WHEN plain THEN r_cars_allowed ELSE gtfs_vc_trim(r_cars_allowed) END) AS p_cars_allowed,
+  r_safe_duration_factor,
+  gtfs_vc_double(CASE WHEN plain THEN r_safe_duration_factor ELSE gtfs_vc_trim(r_safe_duration_factor) END) AS p_safe_duration_factor,
+  r_safe_duration_offset,
+  gtfs_vc_double(CASE WHEN plain THEN r_safe_duration_offset ELSE gtfs_vc_trim(r_safe_duration_offset) END) AS p_safe_duration_offset
+FROM (
+  SELECT d.csv_row_number,
+    d.plain,
+    d.fields[p.pos[1]] AS r_trip_id,
+    d.fields[p.pos[2]] AS r_route_id,
+    d.fields[p.pos[3]] AS r_service_id,
+    d.fields[p.pos[4]] AS r_trip_headsign,
+    d.fields[p.pos[5]] AS r_trip_short_name,
+    d.fields[p.pos[6]] AS r_direction_id,
+    d.fields[p.pos[7]] AS r_block_id,
+    d.fields[p.pos[8]] AS r_shape_id,
+    d.fields[p.pos[9]] AS r_wheelchair_accessible,
+    d.fields[p.pos[10]] AS r_bikes_allowed,
+    d.fields[p.pos[11]] AS r_cars_allowed,
+    d.fields[p.pos[12]] AS r_safe_duration_factor,
+    d.fields[p.pos[13]] AS r_safe_duration_offset
+  FROM gtfs_vc_data_rows() d, gtfs_vc_pos p
+  WHERE d.length_ok);
+-- RowParser / DefaultFieldValidator notices of the values of trips.txt (fieldValue: raw for the character
+-- checks, trimmed after). One scan keeps the rows with any notice; each check then reads only those.
+CREATE OR REPLACE MACRO gtfs_vc_cell_notices_trips() AS TABLE
+WITH w AS MATERIALIZED (
+  SELECT * FROM gtfs_vc_wide_trips
+  WHERE (r_trip_id IS NULL)
+    OR (NOT plain AND contains(r_trip_id, chr(65533)))
+    OR (NOT plain AND (contains(r_trip_id, chr(10)) OR contains(r_trip_id, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_trip_id) <> r_trip_id)
+    OR (NOT plain AND regexp_matches(CASE WHEN plain THEN r_trip_id ELSE gtfs_vc_trim(r_trip_id) END, '[^\x20-\x7E]'))
+    OR (r_route_id IS NULL)
+    OR (NOT plain AND contains(r_route_id, chr(65533)))
+    OR (NOT plain AND (contains(r_route_id, chr(10)) OR contains(r_route_id, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_route_id) <> r_route_id)
+    OR (NOT plain AND regexp_matches(CASE WHEN plain THEN r_route_id ELSE gtfs_vc_trim(r_route_id) END, '[^\x20-\x7E]'))
+    OR (r_service_id IS NULL)
+    OR (NOT plain AND contains(r_service_id, chr(65533)))
+    OR (NOT plain AND (contains(r_service_id, chr(10)) OR contains(r_service_id, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_service_id) <> r_service_id)
+    OR (NOT plain AND regexp_matches(CASE WHEN plain THEN r_service_id ELSE gtfs_vc_trim(r_service_id) END, '[^\x20-\x7E]'))
+    OR (r_trip_headsign IS NULL)
+    OR (NOT plain AND contains(r_trip_headsign, chr(65533)))
+    OR (NOT plain AND (contains(r_trip_headsign, chr(10)) OR contains(r_trip_headsign, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_trip_headsign) <> r_trip_headsign)
+    OR (NOT plain AND contains(r_trip_short_name, chr(65533)))
+    OR (NOT plain AND (contains(r_trip_short_name, chr(10)) OR contains(r_trip_short_name, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_trip_short_name) <> r_trip_short_name)
+    OR (NOT plain AND contains(r_direction_id, chr(65533)))
+    OR (NOT plain AND (contains(r_direction_id, chr(10)) OR contains(r_direction_id, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_direction_id) <> r_direction_id)
+    OR (r_direction_id IS NOT NULL AND p_direction_id IS NULL)
+    OR (gtfs_validation_enum_name('GtfsTripDirectionId', p_direction_id) = 'UNRECOGNIZED')
+    OR (NOT plain AND contains(r_block_id, chr(65533)))
+    OR (NOT plain AND (contains(r_block_id, chr(10)) OR contains(r_block_id, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_block_id) <> r_block_id)
+    OR (NOT plain AND regexp_matches(CASE WHEN plain THEN r_block_id ELSE gtfs_vc_trim(r_block_id) END, '[^\x20-\x7E]'))
+    OR (NOT plain AND contains(r_shape_id, chr(65533)))
+    OR (NOT plain AND (contains(r_shape_id, chr(10)) OR contains(r_shape_id, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_shape_id) <> r_shape_id)
+    OR (NOT plain AND regexp_matches(CASE WHEN plain THEN r_shape_id ELSE gtfs_vc_trim(r_shape_id) END, '[^\x20-\x7E]'))
+    OR (NOT plain AND contains(r_wheelchair_accessible, chr(65533)))
+    OR (NOT plain AND (contains(r_wheelchair_accessible, chr(10)) OR contains(r_wheelchair_accessible, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_wheelchair_accessible) <> r_wheelchair_accessible)
+    OR (r_wheelchair_accessible IS NOT NULL AND p_wheelchair_accessible IS NULL)
+    OR (gtfs_validation_enum_name('GtfsWheelchairBoarding', p_wheelchair_accessible) = 'UNRECOGNIZED')
+    OR (NOT plain AND contains(r_bikes_allowed, chr(65533)))
+    OR (NOT plain AND (contains(r_bikes_allowed, chr(10)) OR contains(r_bikes_allowed, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_bikes_allowed) <> r_bikes_allowed)
+    OR (r_bikes_allowed IS NOT NULL AND p_bikes_allowed IS NULL)
+    OR (gtfs_validation_enum_name('GtfsBikesAllowed', p_bikes_allowed) = 'UNRECOGNIZED')
+    OR (NOT plain AND contains(r_cars_allowed, chr(65533)))
+    OR (NOT plain AND (contains(r_cars_allowed, chr(10)) OR contains(r_cars_allowed, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_cars_allowed) <> r_cars_allowed)
+    OR (r_cars_allowed IS NOT NULL AND p_cars_allowed IS NULL)
+    OR (gtfs_validation_enum_name('GtfsCarsAllowed', p_cars_allowed) = 'UNRECOGNIZED')
+    OR (NOT plain AND contains(r_safe_duration_factor, chr(65533)))
+    OR (NOT plain AND (contains(r_safe_duration_factor, chr(10)) OR contains(r_safe_duration_factor, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_safe_duration_factor) <> r_safe_duration_factor)
+    OR (r_safe_duration_factor IS NOT NULL AND p_safe_duration_factor IS NULL)
+    OR (NOT plain AND contains(r_safe_duration_offset, chr(65533)))
+    OR (NOT plain AND (contains(r_safe_duration_offset, chr(10)) OR contains(r_safe_duration_offset, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_safe_duration_offset) <> r_safe_duration_offset)
+    OR (r_safe_duration_offset IS NOT NULL AND p_safe_duration_offset IS NULL)
+),
+n AS (
+  SELECT csv_row_number, 'missing_required_field' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'trip_id') AS notice
+  FROM w WHERE r_trip_id IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'trip_id', 'fieldValue', r_trip_id) AS notice
+  FROM w WHERE NOT plain AND contains(r_trip_id, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'trip_id', 'fieldValue', r_trip_id) AS notice
+  FROM w WHERE NOT plain AND (contains(r_trip_id, chr(10)) OR contains(r_trip_id, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'trip_id', 'fieldValue', r_trip_id) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_trip_id) <> r_trip_id
+  UNION ALL
+  SELECT csv_row_number, 'non_ascii_or_non_printable_char' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'trip_id', 'fieldValue', CASE WHEN plain THEN r_trip_id ELSE gtfs_vc_trim(r_trip_id) END) AS notice
+  FROM w WHERE NOT plain AND regexp_matches(CASE WHEN plain THEN r_trip_id ELSE gtfs_vc_trim(r_trip_id) END, '[^\x20-\x7E]')
+  UNION ALL
+  SELECT csv_row_number, 'missing_required_field' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_id') AS notice
+  FROM w WHERE r_route_id IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_id', 'fieldValue', r_route_id) AS notice
+  FROM w WHERE NOT plain AND contains(r_route_id, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_id', 'fieldValue', r_route_id) AS notice
+  FROM w WHERE NOT plain AND (contains(r_route_id, chr(10)) OR contains(r_route_id, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_id', 'fieldValue', r_route_id) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_route_id) <> r_route_id
+  UNION ALL
+  SELECT csv_row_number, 'non_ascii_or_non_printable_char' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'route_id', 'fieldValue', CASE WHEN plain THEN r_route_id ELSE gtfs_vc_trim(r_route_id) END) AS notice
+  FROM w WHERE NOT plain AND regexp_matches(CASE WHEN plain THEN r_route_id ELSE gtfs_vc_trim(r_route_id) END, '[^\x20-\x7E]')
+  UNION ALL
+  SELECT csv_row_number, 'missing_required_field' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'service_id') AS notice
+  FROM w WHERE r_service_id IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'service_id', 'fieldValue', r_service_id) AS notice
+  FROM w WHERE NOT plain AND contains(r_service_id, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'service_id', 'fieldValue', r_service_id) AS notice
+  FROM w WHERE NOT plain AND (contains(r_service_id, chr(10)) OR contains(r_service_id, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'service_id', 'fieldValue', r_service_id) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_service_id) <> r_service_id
+  UNION ALL
+  SELECT csv_row_number, 'non_ascii_or_non_printable_char' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'service_id', 'fieldValue', CASE WHEN plain THEN r_service_id ELSE gtfs_vc_trim(r_service_id) END) AS notice
+  FROM w WHERE NOT plain AND regexp_matches(CASE WHEN plain THEN r_service_id ELSE gtfs_vc_trim(r_service_id) END, '[^\x20-\x7E]')
+  UNION ALL
+  SELECT csv_row_number, 'missing_recommended_field' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'trip_headsign') AS notice
+  FROM w WHERE r_trip_headsign IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'trip_headsign', 'fieldValue', r_trip_headsign) AS notice
+  FROM w WHERE NOT plain AND contains(r_trip_headsign, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'trip_headsign', 'fieldValue', r_trip_headsign) AS notice
+  FROM w WHERE NOT plain AND (contains(r_trip_headsign, chr(10)) OR contains(r_trip_headsign, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'trip_headsign', 'fieldValue', r_trip_headsign) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_trip_headsign) <> r_trip_headsign
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'trip_short_name', 'fieldValue', r_trip_short_name) AS notice
+  FROM w WHERE NOT plain AND contains(r_trip_short_name, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'trip_short_name', 'fieldValue', r_trip_short_name) AS notice
+  FROM w WHERE NOT plain AND (contains(r_trip_short_name, chr(10)) OR contains(r_trip_short_name, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'trip_short_name', 'fieldValue', r_trip_short_name) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_trip_short_name) <> r_trip_short_name
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'direction_id', 'fieldValue', r_direction_id) AS notice
+  FROM w WHERE NOT plain AND contains(r_direction_id, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'direction_id', 'fieldValue', r_direction_id) AS notice
+  FROM w WHERE NOT plain AND (contains(r_direction_id, chr(10)) OR contains(r_direction_id, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'direction_id', 'fieldValue', r_direction_id) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_direction_id) <> r_direction_id
+  UNION ALL
+  SELECT csv_row_number, 'invalid_integer' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'direction_id', 'fieldValue', CASE WHEN plain THEN r_direction_id ELSE gtfs_vc_trim(r_direction_id) END) AS notice
+  FROM w WHERE r_direction_id IS NOT NULL AND p_direction_id IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'unexpected_enum_value' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'direction_id', 'fieldValue', p_direction_id::INTEGER) AS notice
+  FROM w WHERE gtfs_validation_enum_name('GtfsTripDirectionId', p_direction_id) = 'UNRECOGNIZED'
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'block_id', 'fieldValue', r_block_id) AS notice
+  FROM w WHERE NOT plain AND contains(r_block_id, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'block_id', 'fieldValue', r_block_id) AS notice
+  FROM w WHERE NOT plain AND (contains(r_block_id, chr(10)) OR contains(r_block_id, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'block_id', 'fieldValue', r_block_id) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_block_id) <> r_block_id
+  UNION ALL
+  SELECT csv_row_number, 'non_ascii_or_non_printable_char' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'block_id', 'fieldValue', CASE WHEN plain THEN r_block_id ELSE gtfs_vc_trim(r_block_id) END) AS notice
+  FROM w WHERE NOT plain AND regexp_matches(CASE WHEN plain THEN r_block_id ELSE gtfs_vc_trim(r_block_id) END, '[^\x20-\x7E]')
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_id', 'fieldValue', r_shape_id) AS notice
+  FROM w WHERE NOT plain AND contains(r_shape_id, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_id', 'fieldValue', r_shape_id) AS notice
+  FROM w WHERE NOT plain AND (contains(r_shape_id, chr(10)) OR contains(r_shape_id, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_id', 'fieldValue', r_shape_id) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_shape_id) <> r_shape_id
+  UNION ALL
+  SELECT csv_row_number, 'non_ascii_or_non_printable_char' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_id', 'fieldValue', CASE WHEN plain THEN r_shape_id ELSE gtfs_vc_trim(r_shape_id) END) AS notice
+  FROM w WHERE NOT plain AND regexp_matches(CASE WHEN plain THEN r_shape_id ELSE gtfs_vc_trim(r_shape_id) END, '[^\x20-\x7E]')
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'wheelchair_accessible', 'fieldValue', r_wheelchair_accessible) AS notice
+  FROM w WHERE NOT plain AND contains(r_wheelchair_accessible, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'wheelchair_accessible', 'fieldValue', r_wheelchair_accessible) AS notice
+  FROM w WHERE NOT plain AND (contains(r_wheelchair_accessible, chr(10)) OR contains(r_wheelchair_accessible, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'wheelchair_accessible', 'fieldValue', r_wheelchair_accessible) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_wheelchair_accessible) <> r_wheelchair_accessible
+  UNION ALL
+  SELECT csv_row_number, 'invalid_integer' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'wheelchair_accessible', 'fieldValue', CASE WHEN plain THEN r_wheelchair_accessible ELSE gtfs_vc_trim(r_wheelchair_accessible) END) AS notice
+  FROM w WHERE r_wheelchair_accessible IS NOT NULL AND p_wheelchair_accessible IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'unexpected_enum_value' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'wheelchair_accessible', 'fieldValue', p_wheelchair_accessible::INTEGER) AS notice
+  FROM w WHERE gtfs_validation_enum_name('GtfsWheelchairBoarding', p_wheelchair_accessible) = 'UNRECOGNIZED'
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'bikes_allowed', 'fieldValue', r_bikes_allowed) AS notice
+  FROM w WHERE NOT plain AND contains(r_bikes_allowed, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'bikes_allowed', 'fieldValue', r_bikes_allowed) AS notice
+  FROM w WHERE NOT plain AND (contains(r_bikes_allowed, chr(10)) OR contains(r_bikes_allowed, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'bikes_allowed', 'fieldValue', r_bikes_allowed) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_bikes_allowed) <> r_bikes_allowed
+  UNION ALL
+  SELECT csv_row_number, 'invalid_integer' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'bikes_allowed', 'fieldValue', CASE WHEN plain THEN r_bikes_allowed ELSE gtfs_vc_trim(r_bikes_allowed) END) AS notice
+  FROM w WHERE r_bikes_allowed IS NOT NULL AND p_bikes_allowed IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'unexpected_enum_value' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'bikes_allowed', 'fieldValue', p_bikes_allowed::INTEGER) AS notice
+  FROM w WHERE gtfs_validation_enum_name('GtfsBikesAllowed', p_bikes_allowed) = 'UNRECOGNIZED'
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'cars_allowed', 'fieldValue', r_cars_allowed) AS notice
+  FROM w WHERE NOT plain AND contains(r_cars_allowed, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'cars_allowed', 'fieldValue', r_cars_allowed) AS notice
+  FROM w WHERE NOT plain AND (contains(r_cars_allowed, chr(10)) OR contains(r_cars_allowed, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'cars_allowed', 'fieldValue', r_cars_allowed) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_cars_allowed) <> r_cars_allowed
+  UNION ALL
+  SELECT csv_row_number, 'invalid_integer' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'cars_allowed', 'fieldValue', CASE WHEN plain THEN r_cars_allowed ELSE gtfs_vc_trim(r_cars_allowed) END) AS notice
+  FROM w WHERE r_cars_allowed IS NOT NULL AND p_cars_allowed IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'unexpected_enum_value' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'cars_allowed', 'fieldValue', p_cars_allowed::INTEGER) AS notice
+  FROM w WHERE gtfs_validation_enum_name('GtfsCarsAllowed', p_cars_allowed) = 'UNRECOGNIZED'
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'safe_duration_factor', 'fieldValue', r_safe_duration_factor) AS notice
+  FROM w WHERE NOT plain AND contains(r_safe_duration_factor, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'safe_duration_factor', 'fieldValue', r_safe_duration_factor) AS notice
+  FROM w WHERE NOT plain AND (contains(r_safe_duration_factor, chr(10)) OR contains(r_safe_duration_factor, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'safe_duration_factor', 'fieldValue', r_safe_duration_factor) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_safe_duration_factor) <> r_safe_duration_factor
+  UNION ALL
+  SELECT csv_row_number, 'invalid_float' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'safe_duration_factor', 'fieldValue', CASE WHEN plain THEN r_safe_duration_factor ELSE gtfs_vc_trim(r_safe_duration_factor) END) AS notice
+  FROM w WHERE r_safe_duration_factor IS NOT NULL AND p_safe_duration_factor IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'safe_duration_offset', 'fieldValue', r_safe_duration_offset) AS notice
+  FROM w WHERE NOT plain AND contains(r_safe_duration_offset, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'safe_duration_offset', 'fieldValue', r_safe_duration_offset) AS notice
+  FROM w WHERE NOT plain AND (contains(r_safe_duration_offset, chr(10)) OR contains(r_safe_duration_offset, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'safe_duration_offset', 'fieldValue', r_safe_duration_offset) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_safe_duration_offset) <> r_safe_duration_offset
+  UNION ALL
+  SELECT csv_row_number, 'invalid_float' AS code,
+    json_object('filename', 'trips.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'safe_duration_offset', 'fieldValue', CASE WHEN plain THEN r_safe_duration_offset ELSE gtfs_vc_trim(r_safe_duration_offset) END) AS notice
+  FROM w WHERE r_safe_duration_offset IS NOT NULL AND p_safe_duration_offset IS NULL
+)
+SELECT n.csv_row_number, n.code, gtfs_validation_notice(n.notice) AS notice, r.severity = 'ERROR' AS err
+FROM n JOIN gtfs_validation_rules() r USING (code);
+-- Entities of trips.txt: rows of the header's length without an ERROR notice of their own (CsvFileLoader).
+CREATE OR REPLACE MACRO gtfs_vc_entities_trips() AS TABLE
+SELECT w.csv_row_number,
+  (CASE WHEN plain THEN r_trip_id ELSE gtfs_vc_trim(r_trip_id) END)::VARCHAR AS trip_id,
+  (CASE WHEN plain THEN r_route_id ELSE gtfs_vc_trim(r_route_id) END)::VARCHAR AS route_id,
+  (CASE WHEN plain THEN r_service_id ELSE gtfs_vc_trim(r_service_id) END)::VARCHAR AS service_id,
+  (CASE WHEN plain THEN r_trip_headsign ELSE gtfs_vc_trim(r_trip_headsign) END)::VARCHAR AS trip_headsign,
+  (CASE WHEN plain THEN r_trip_short_name ELSE gtfs_vc_trim(r_trip_short_name) END)::VARCHAR AS trip_short_name,
+  p_direction_id AS direction_id,
+  (CASE WHEN plain THEN r_block_id ELSE gtfs_vc_trim(r_block_id) END)::VARCHAR AS block_id,
+  (CASE WHEN plain THEN r_shape_id ELSE gtfs_vc_trim(r_shape_id) END)::VARCHAR AS shape_id,
+  p_wheelchair_accessible AS wheelchair_accessible,
+  p_bikes_allowed AS bikes_allowed,
+  p_cars_allowed AS cars_allowed,
+  p_safe_duration_factor AS safe_duration_factor,
+  p_safe_duration_offset AS safe_duration_offset
+FROM gtfs_vc_wide_trips w
+WHERE NOT EXISTS (SELECT 1 FROM gtfs_vc_notices n WHERE n.err AND n.csv_row_number = w.csv_row_number);
+-- Data rows of stop_times.txt with the header's length: the raw value of each schema column (the header's column
+-- of that name, NULL without one) and the value Java parses from the trimmed one.
+CREATE OR REPLACE MACRO gtfs_vc_wide_build_stop_times() AS TABLE
+SELECT csv_row_number,
+  plain,
+  r_trip_id,
+  r_arrival_time,
+  gtfs_vc_time(CASE WHEN plain THEN r_arrival_time ELSE gtfs_vc_trim(r_arrival_time) END) AS p_arrival_time,
+  r_departure_time,
+  gtfs_vc_time(CASE WHEN plain THEN r_departure_time ELSE gtfs_vc_trim(r_departure_time) END) AS p_departure_time,
+  r_stop_id,
+  r_location_group_id,
+  r_location_id,
+  r_stop_sequence,
+  gtfs_vc_int(CASE WHEN plain THEN r_stop_sequence ELSE gtfs_vc_trim(r_stop_sequence) END) AS p_stop_sequence,
+  r_stop_headsign,
+  r_start_pickup_drop_off_window,
+  gtfs_vc_time(CASE WHEN plain THEN r_start_pickup_drop_off_window ELSE gtfs_vc_trim(r_start_pickup_drop_off_window) END) AS p_start_pickup_drop_off_window,
+  r_end_pickup_drop_off_window,
+  gtfs_vc_time(CASE WHEN plain THEN r_end_pickup_drop_off_window ELSE gtfs_vc_trim(r_end_pickup_drop_off_window) END) AS p_end_pickup_drop_off_window,
+  r_pickup_type,
+  gtfs_vc_int(CASE WHEN plain THEN r_pickup_type ELSE gtfs_vc_trim(r_pickup_type) END) AS p_pickup_type,
+  r_drop_off_type,
+  gtfs_vc_int(CASE WHEN plain THEN r_drop_off_type ELSE gtfs_vc_trim(r_drop_off_type) END) AS p_drop_off_type,
+  r_continuous_pickup,
+  gtfs_vc_int(CASE WHEN plain THEN r_continuous_pickup ELSE gtfs_vc_trim(r_continuous_pickup) END) AS p_continuous_pickup,
+  r_continuous_drop_off,
+  gtfs_vc_int(CASE WHEN plain THEN r_continuous_drop_off ELSE gtfs_vc_trim(r_continuous_drop_off) END) AS p_continuous_drop_off,
+  r_shape_dist_traveled,
+  gtfs_vc_double(CASE WHEN plain THEN r_shape_dist_traveled ELSE gtfs_vc_trim(r_shape_dist_traveled) END) AS p_shape_dist_traveled,
+  r_timepoint,
+  gtfs_vc_int(CASE WHEN plain THEN r_timepoint ELSE gtfs_vc_trim(r_timepoint) END) AS p_timepoint,
+  r_pickup_booking_rule_id,
+  r_drop_off_booking_rule_id
+FROM (
+  SELECT d.csv_row_number,
+    d.plain,
+    d.fields[p.pos[1]] AS r_trip_id,
+    d.fields[p.pos[2]] AS r_arrival_time,
+    d.fields[p.pos[3]] AS r_departure_time,
+    d.fields[p.pos[4]] AS r_stop_id,
+    d.fields[p.pos[5]] AS r_location_group_id,
+    d.fields[p.pos[6]] AS r_location_id,
+    d.fields[p.pos[7]] AS r_stop_sequence,
+    d.fields[p.pos[8]] AS r_stop_headsign,
+    d.fields[p.pos[9]] AS r_start_pickup_drop_off_window,
+    d.fields[p.pos[10]] AS r_end_pickup_drop_off_window,
+    d.fields[p.pos[11]] AS r_pickup_type,
+    d.fields[p.pos[12]] AS r_drop_off_type,
+    d.fields[p.pos[13]] AS r_continuous_pickup,
+    d.fields[p.pos[14]] AS r_continuous_drop_off,
+    d.fields[p.pos[15]] AS r_shape_dist_traveled,
+    d.fields[p.pos[16]] AS r_timepoint,
+    d.fields[p.pos[17]] AS r_pickup_booking_rule_id,
+    d.fields[p.pos[18]] AS r_drop_off_booking_rule_id
+  FROM gtfs_vc_data_rows() d, gtfs_vc_pos p
+  WHERE d.length_ok);
+-- RowParser / DefaultFieldValidator notices of the values of stop_times.txt (fieldValue: raw for the character
+-- checks, trimmed after). One scan keeps the rows with any notice; each check then reads only those.
+CREATE OR REPLACE MACRO gtfs_vc_cell_notices_stop_times() AS TABLE
+WITH w AS MATERIALIZED (
+  SELECT * FROM gtfs_vc_wide_stop_times
+  WHERE (r_trip_id IS NULL)
+    OR (NOT plain AND contains(r_trip_id, chr(65533)))
+    OR (NOT plain AND (contains(r_trip_id, chr(10)) OR contains(r_trip_id, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_trip_id) <> r_trip_id)
+    OR (NOT plain AND regexp_matches(CASE WHEN plain THEN r_trip_id ELSE gtfs_vc_trim(r_trip_id) END, '[^\x20-\x7E]'))
+    OR (NOT plain AND contains(r_arrival_time, chr(65533)))
+    OR (NOT plain AND (contains(r_arrival_time, chr(10)) OR contains(r_arrival_time, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_arrival_time) <> r_arrival_time)
+    OR (r_arrival_time IS NOT NULL AND p_arrival_time IS NULL)
+    OR (NOT plain AND contains(r_departure_time, chr(65533)))
+    OR (NOT plain AND (contains(r_departure_time, chr(10)) OR contains(r_departure_time, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_departure_time) <> r_departure_time)
+    OR (r_departure_time IS NOT NULL AND p_departure_time IS NULL)
+    OR (NOT plain AND contains(r_stop_id, chr(65533)))
+    OR (NOT plain AND (contains(r_stop_id, chr(10)) OR contains(r_stop_id, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_stop_id) <> r_stop_id)
+    OR (NOT plain AND regexp_matches(CASE WHEN plain THEN r_stop_id ELSE gtfs_vc_trim(r_stop_id) END, '[^\x20-\x7E]'))
+    OR (NOT plain AND contains(r_location_group_id, chr(65533)))
+    OR (NOT plain AND (contains(r_location_group_id, chr(10)) OR contains(r_location_group_id, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_location_group_id) <> r_location_group_id)
+    OR (NOT plain AND regexp_matches(CASE WHEN plain THEN r_location_group_id ELSE gtfs_vc_trim(r_location_group_id) END, '[^\x20-\x7E]'))
+    OR (NOT plain AND contains(r_location_id, chr(65533)))
+    OR (NOT plain AND (contains(r_location_id, chr(10)) OR contains(r_location_id, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_location_id) <> r_location_id)
+    OR (NOT plain AND regexp_matches(CASE WHEN plain THEN r_location_id ELSE gtfs_vc_trim(r_location_id) END, '[^\x20-\x7E]'))
+    OR (r_stop_sequence IS NULL)
+    OR (NOT plain AND contains(r_stop_sequence, chr(65533)))
+    OR (NOT plain AND (contains(r_stop_sequence, chr(10)) OR contains(r_stop_sequence, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_stop_sequence) <> r_stop_sequence)
+    OR (r_stop_sequence IS NOT NULL AND p_stop_sequence IS NULL)
+    OR (p_stop_sequence < 0)
+    OR (NOT plain AND contains(r_stop_headsign, chr(65533)))
+    OR (NOT plain AND (contains(r_stop_headsign, chr(10)) OR contains(r_stop_headsign, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_stop_headsign) <> r_stop_headsign)
+    OR (NOT plain AND contains(r_start_pickup_drop_off_window, chr(65533)))
+    OR (NOT plain AND (contains(r_start_pickup_drop_off_window, chr(10)) OR contains(r_start_pickup_drop_off_window, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_start_pickup_drop_off_window) <> r_start_pickup_drop_off_window)
+    OR (r_start_pickup_drop_off_window IS NOT NULL AND p_start_pickup_drop_off_window IS NULL)
+    OR (NOT plain AND contains(r_end_pickup_drop_off_window, chr(65533)))
+    OR (NOT plain AND (contains(r_end_pickup_drop_off_window, chr(10)) OR contains(r_end_pickup_drop_off_window, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_end_pickup_drop_off_window) <> r_end_pickup_drop_off_window)
+    OR (r_end_pickup_drop_off_window IS NOT NULL AND p_end_pickup_drop_off_window IS NULL)
+    OR (NOT plain AND contains(r_pickup_type, chr(65533)))
+    OR (NOT plain AND (contains(r_pickup_type, chr(10)) OR contains(r_pickup_type, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_pickup_type) <> r_pickup_type)
+    OR (r_pickup_type IS NOT NULL AND p_pickup_type IS NULL)
+    OR (gtfs_validation_enum_name('GtfsPickupDropOff', p_pickup_type) = 'UNRECOGNIZED')
+    OR (NOT plain AND contains(r_drop_off_type, chr(65533)))
+    OR (NOT plain AND (contains(r_drop_off_type, chr(10)) OR contains(r_drop_off_type, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_drop_off_type) <> r_drop_off_type)
+    OR (r_drop_off_type IS NOT NULL AND p_drop_off_type IS NULL)
+    OR (gtfs_validation_enum_name('GtfsPickupDropOff', p_drop_off_type) = 'UNRECOGNIZED')
+    OR (NOT plain AND contains(r_continuous_pickup, chr(65533)))
+    OR (NOT plain AND (contains(r_continuous_pickup, chr(10)) OR contains(r_continuous_pickup, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_continuous_pickup) <> r_continuous_pickup)
+    OR (r_continuous_pickup IS NOT NULL AND p_continuous_pickup IS NULL)
+    OR (gtfs_validation_enum_name('GtfsContinuousPickupDropOff', p_continuous_pickup) = 'UNRECOGNIZED')
+    OR (NOT plain AND contains(r_continuous_drop_off, chr(65533)))
+    OR (NOT plain AND (contains(r_continuous_drop_off, chr(10)) OR contains(r_continuous_drop_off, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_continuous_drop_off) <> r_continuous_drop_off)
+    OR (r_continuous_drop_off IS NOT NULL AND p_continuous_drop_off IS NULL)
+    OR (gtfs_validation_enum_name('GtfsContinuousPickupDropOff', p_continuous_drop_off) = 'UNRECOGNIZED')
+    OR (NOT plain AND contains(r_shape_dist_traveled, chr(65533)))
+    OR (NOT plain AND (contains(r_shape_dist_traveled, chr(10)) OR contains(r_shape_dist_traveled, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_shape_dist_traveled) <> r_shape_dist_traveled)
+    OR (r_shape_dist_traveled IS NOT NULL AND p_shape_dist_traveled IS NULL)
+    OR (gtfs_vc_cmp0('float', NULL::INTEGER, p_shape_dist_traveled) < 0)
+    OR (NOT plain AND contains(r_timepoint, chr(65533)))
+    OR (NOT plain AND (contains(r_timepoint, chr(10)) OR contains(r_timepoint, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_timepoint) <> r_timepoint)
+    OR (r_timepoint IS NOT NULL AND p_timepoint IS NULL)
+    OR (gtfs_validation_enum_name('GtfsStopTimeTimepoint', p_timepoint) = 'UNRECOGNIZED')
+    OR (NOT plain AND contains(r_pickup_booking_rule_id, chr(65533)))
+    OR (NOT plain AND (contains(r_pickup_booking_rule_id, chr(10)) OR contains(r_pickup_booking_rule_id, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_pickup_booking_rule_id) <> r_pickup_booking_rule_id)
+    OR (NOT plain AND regexp_matches(CASE WHEN plain THEN r_pickup_booking_rule_id ELSE gtfs_vc_trim(r_pickup_booking_rule_id) END, '[^\x20-\x7E]'))
+    OR (NOT plain AND contains(r_drop_off_booking_rule_id, chr(65533)))
+    OR (NOT plain AND (contains(r_drop_off_booking_rule_id, chr(10)) OR contains(r_drop_off_booking_rule_id, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_drop_off_booking_rule_id) <> r_drop_off_booking_rule_id)
+    OR (NOT plain AND regexp_matches(CASE WHEN plain THEN r_drop_off_booking_rule_id ELSE gtfs_vc_trim(r_drop_off_booking_rule_id) END, '[^\x20-\x7E]'))
+),
+n AS (
+  SELECT csv_row_number, 'missing_required_field' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'trip_id') AS notice
+  FROM w WHERE r_trip_id IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'trip_id', 'fieldValue', r_trip_id) AS notice
+  FROM w WHERE NOT plain AND contains(r_trip_id, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'trip_id', 'fieldValue', r_trip_id) AS notice
+  FROM w WHERE NOT plain AND (contains(r_trip_id, chr(10)) OR contains(r_trip_id, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'trip_id', 'fieldValue', r_trip_id) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_trip_id) <> r_trip_id
+  UNION ALL
+  SELECT csv_row_number, 'non_ascii_or_non_printable_char' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'trip_id', 'fieldValue', CASE WHEN plain THEN r_trip_id ELSE gtfs_vc_trim(r_trip_id) END) AS notice
+  FROM w WHERE NOT plain AND regexp_matches(CASE WHEN plain THEN r_trip_id ELSE gtfs_vc_trim(r_trip_id) END, '[^\x20-\x7E]')
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'arrival_time', 'fieldValue', r_arrival_time) AS notice
+  FROM w WHERE NOT plain AND contains(r_arrival_time, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'arrival_time', 'fieldValue', r_arrival_time) AS notice
+  FROM w WHERE NOT plain AND (contains(r_arrival_time, chr(10)) OR contains(r_arrival_time, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'arrival_time', 'fieldValue', r_arrival_time) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_arrival_time) <> r_arrival_time
+  UNION ALL
+  SELECT csv_row_number, 'invalid_time' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'arrival_time', 'fieldValue', CASE WHEN plain THEN r_arrival_time ELSE gtfs_vc_trim(r_arrival_time) END) AS notice
+  FROM w WHERE r_arrival_time IS NOT NULL AND p_arrival_time IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'departure_time', 'fieldValue', r_departure_time) AS notice
+  FROM w WHERE NOT plain AND contains(r_departure_time, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'departure_time', 'fieldValue', r_departure_time) AS notice
+  FROM w WHERE NOT plain AND (contains(r_departure_time, chr(10)) OR contains(r_departure_time, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'departure_time', 'fieldValue', r_departure_time) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_departure_time) <> r_departure_time
+  UNION ALL
+  SELECT csv_row_number, 'invalid_time' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'departure_time', 'fieldValue', CASE WHEN plain THEN r_departure_time ELSE gtfs_vc_trim(r_departure_time) END) AS notice
+  FROM w WHERE r_departure_time IS NOT NULL AND p_departure_time IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_id', 'fieldValue', r_stop_id) AS notice
+  FROM w WHERE NOT plain AND contains(r_stop_id, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_id', 'fieldValue', r_stop_id) AS notice
+  FROM w WHERE NOT plain AND (contains(r_stop_id, chr(10)) OR contains(r_stop_id, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_id', 'fieldValue', r_stop_id) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_stop_id) <> r_stop_id
+  UNION ALL
+  SELECT csv_row_number, 'non_ascii_or_non_printable_char' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_id', 'fieldValue', CASE WHEN plain THEN r_stop_id ELSE gtfs_vc_trim(r_stop_id) END) AS notice
+  FROM w WHERE NOT plain AND regexp_matches(CASE WHEN plain THEN r_stop_id ELSE gtfs_vc_trim(r_stop_id) END, '[^\x20-\x7E]')
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'location_group_id', 'fieldValue', r_location_group_id) AS notice
+  FROM w WHERE NOT plain AND contains(r_location_group_id, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'location_group_id', 'fieldValue', r_location_group_id) AS notice
+  FROM w WHERE NOT plain AND (contains(r_location_group_id, chr(10)) OR contains(r_location_group_id, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'location_group_id', 'fieldValue', r_location_group_id) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_location_group_id) <> r_location_group_id
+  UNION ALL
+  SELECT csv_row_number, 'non_ascii_or_non_printable_char' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'location_group_id', 'fieldValue', CASE WHEN plain THEN r_location_group_id ELSE gtfs_vc_trim(r_location_group_id) END) AS notice
+  FROM w WHERE NOT plain AND regexp_matches(CASE WHEN plain THEN r_location_group_id ELSE gtfs_vc_trim(r_location_group_id) END, '[^\x20-\x7E]')
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'location_id', 'fieldValue', r_location_id) AS notice
+  FROM w WHERE NOT plain AND contains(r_location_id, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'location_id', 'fieldValue', r_location_id) AS notice
+  FROM w WHERE NOT plain AND (contains(r_location_id, chr(10)) OR contains(r_location_id, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'location_id', 'fieldValue', r_location_id) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_location_id) <> r_location_id
+  UNION ALL
+  SELECT csv_row_number, 'non_ascii_or_non_printable_char' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'location_id', 'fieldValue', CASE WHEN plain THEN r_location_id ELSE gtfs_vc_trim(r_location_id) END) AS notice
+  FROM w WHERE NOT plain AND regexp_matches(CASE WHEN plain THEN r_location_id ELSE gtfs_vc_trim(r_location_id) END, '[^\x20-\x7E]')
+  UNION ALL
+  SELECT csv_row_number, 'missing_required_field' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_sequence') AS notice
+  FROM w WHERE r_stop_sequence IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_sequence', 'fieldValue', r_stop_sequence) AS notice
+  FROM w WHERE NOT plain AND contains(r_stop_sequence, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_sequence', 'fieldValue', r_stop_sequence) AS notice
+  FROM w WHERE NOT plain AND (contains(r_stop_sequence, chr(10)) OR contains(r_stop_sequence, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_sequence', 'fieldValue', r_stop_sequence) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_stop_sequence) <> r_stop_sequence
+  UNION ALL
+  SELECT csv_row_number, 'invalid_integer' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_sequence', 'fieldValue', CASE WHEN plain THEN r_stop_sequence ELSE gtfs_vc_trim(r_stop_sequence) END) AS notice
+  FROM w WHERE r_stop_sequence IS NOT NULL AND p_stop_sequence IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'number_out_of_range' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_sequence', 'fieldType', 'non-negative integer', 'fieldValue', to_json(p_stop_sequence::INTEGER)) AS notice
+  FROM w WHERE p_stop_sequence < 0
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_headsign', 'fieldValue', r_stop_headsign) AS notice
+  FROM w WHERE NOT plain AND contains(r_stop_headsign, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_headsign', 'fieldValue', r_stop_headsign) AS notice
+  FROM w WHERE NOT plain AND (contains(r_stop_headsign, chr(10)) OR contains(r_stop_headsign, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'stop_headsign', 'fieldValue', r_stop_headsign) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_stop_headsign) <> r_stop_headsign
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'start_pickup_drop_off_window', 'fieldValue', r_start_pickup_drop_off_window) AS notice
+  FROM w WHERE NOT plain AND contains(r_start_pickup_drop_off_window, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'start_pickup_drop_off_window', 'fieldValue', r_start_pickup_drop_off_window) AS notice
+  FROM w WHERE NOT plain AND (contains(r_start_pickup_drop_off_window, chr(10)) OR contains(r_start_pickup_drop_off_window, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'start_pickup_drop_off_window', 'fieldValue', r_start_pickup_drop_off_window) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_start_pickup_drop_off_window) <> r_start_pickup_drop_off_window
+  UNION ALL
+  SELECT csv_row_number, 'invalid_time' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'start_pickup_drop_off_window', 'fieldValue', CASE WHEN plain THEN r_start_pickup_drop_off_window ELSE gtfs_vc_trim(r_start_pickup_drop_off_window) END) AS notice
+  FROM w WHERE r_start_pickup_drop_off_window IS NOT NULL AND p_start_pickup_drop_off_window IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'end_pickup_drop_off_window', 'fieldValue', r_end_pickup_drop_off_window) AS notice
+  FROM w WHERE NOT plain AND contains(r_end_pickup_drop_off_window, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'end_pickup_drop_off_window', 'fieldValue', r_end_pickup_drop_off_window) AS notice
+  FROM w WHERE NOT plain AND (contains(r_end_pickup_drop_off_window, chr(10)) OR contains(r_end_pickup_drop_off_window, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'end_pickup_drop_off_window', 'fieldValue', r_end_pickup_drop_off_window) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_end_pickup_drop_off_window) <> r_end_pickup_drop_off_window
+  UNION ALL
+  SELECT csv_row_number, 'invalid_time' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'end_pickup_drop_off_window', 'fieldValue', CASE WHEN plain THEN r_end_pickup_drop_off_window ELSE gtfs_vc_trim(r_end_pickup_drop_off_window) END) AS notice
+  FROM w WHERE r_end_pickup_drop_off_window IS NOT NULL AND p_end_pickup_drop_off_window IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'pickup_type', 'fieldValue', r_pickup_type) AS notice
+  FROM w WHERE NOT plain AND contains(r_pickup_type, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'pickup_type', 'fieldValue', r_pickup_type) AS notice
+  FROM w WHERE NOT plain AND (contains(r_pickup_type, chr(10)) OR contains(r_pickup_type, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'pickup_type', 'fieldValue', r_pickup_type) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_pickup_type) <> r_pickup_type
+  UNION ALL
+  SELECT csv_row_number, 'invalid_integer' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'pickup_type', 'fieldValue', CASE WHEN plain THEN r_pickup_type ELSE gtfs_vc_trim(r_pickup_type) END) AS notice
+  FROM w WHERE r_pickup_type IS NOT NULL AND p_pickup_type IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'unexpected_enum_value' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'pickup_type', 'fieldValue', p_pickup_type::INTEGER) AS notice
+  FROM w WHERE gtfs_validation_enum_name('GtfsPickupDropOff', p_pickup_type) = 'UNRECOGNIZED'
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'drop_off_type', 'fieldValue', r_drop_off_type) AS notice
+  FROM w WHERE NOT plain AND contains(r_drop_off_type, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'drop_off_type', 'fieldValue', r_drop_off_type) AS notice
+  FROM w WHERE NOT plain AND (contains(r_drop_off_type, chr(10)) OR contains(r_drop_off_type, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'drop_off_type', 'fieldValue', r_drop_off_type) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_drop_off_type) <> r_drop_off_type
+  UNION ALL
+  SELECT csv_row_number, 'invalid_integer' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'drop_off_type', 'fieldValue', CASE WHEN plain THEN r_drop_off_type ELSE gtfs_vc_trim(r_drop_off_type) END) AS notice
+  FROM w WHERE r_drop_off_type IS NOT NULL AND p_drop_off_type IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'unexpected_enum_value' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'drop_off_type', 'fieldValue', p_drop_off_type::INTEGER) AS notice
+  FROM w WHERE gtfs_validation_enum_name('GtfsPickupDropOff', p_drop_off_type) = 'UNRECOGNIZED'
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'continuous_pickup', 'fieldValue', r_continuous_pickup) AS notice
+  FROM w WHERE NOT plain AND contains(r_continuous_pickup, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'continuous_pickup', 'fieldValue', r_continuous_pickup) AS notice
+  FROM w WHERE NOT plain AND (contains(r_continuous_pickup, chr(10)) OR contains(r_continuous_pickup, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'continuous_pickup', 'fieldValue', r_continuous_pickup) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_continuous_pickup) <> r_continuous_pickup
+  UNION ALL
+  SELECT csv_row_number, 'invalid_integer' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'continuous_pickup', 'fieldValue', CASE WHEN plain THEN r_continuous_pickup ELSE gtfs_vc_trim(r_continuous_pickup) END) AS notice
+  FROM w WHERE r_continuous_pickup IS NOT NULL AND p_continuous_pickup IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'unexpected_enum_value' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'continuous_pickup', 'fieldValue', p_continuous_pickup::INTEGER) AS notice
+  FROM w WHERE gtfs_validation_enum_name('GtfsContinuousPickupDropOff', p_continuous_pickup) = 'UNRECOGNIZED'
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'continuous_drop_off', 'fieldValue', r_continuous_drop_off) AS notice
+  FROM w WHERE NOT plain AND contains(r_continuous_drop_off, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'continuous_drop_off', 'fieldValue', r_continuous_drop_off) AS notice
+  FROM w WHERE NOT plain AND (contains(r_continuous_drop_off, chr(10)) OR contains(r_continuous_drop_off, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'continuous_drop_off', 'fieldValue', r_continuous_drop_off) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_continuous_drop_off) <> r_continuous_drop_off
+  UNION ALL
+  SELECT csv_row_number, 'invalid_integer' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'continuous_drop_off', 'fieldValue', CASE WHEN plain THEN r_continuous_drop_off ELSE gtfs_vc_trim(r_continuous_drop_off) END) AS notice
+  FROM w WHERE r_continuous_drop_off IS NOT NULL AND p_continuous_drop_off IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'unexpected_enum_value' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'continuous_drop_off', 'fieldValue', p_continuous_drop_off::INTEGER) AS notice
+  FROM w WHERE gtfs_validation_enum_name('GtfsContinuousPickupDropOff', p_continuous_drop_off) = 'UNRECOGNIZED'
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_dist_traveled', 'fieldValue', r_shape_dist_traveled) AS notice
+  FROM w WHERE NOT plain AND contains(r_shape_dist_traveled, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_dist_traveled', 'fieldValue', r_shape_dist_traveled) AS notice
+  FROM w WHERE NOT plain AND (contains(r_shape_dist_traveled, chr(10)) OR contains(r_shape_dist_traveled, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_dist_traveled', 'fieldValue', r_shape_dist_traveled) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_shape_dist_traveled) <> r_shape_dist_traveled
+  UNION ALL
+  SELECT csv_row_number, 'invalid_float' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_dist_traveled', 'fieldValue', CASE WHEN plain THEN r_shape_dist_traveled ELSE gtfs_vc_trim(r_shape_dist_traveled) END) AS notice
+  FROM w WHERE r_shape_dist_traveled IS NOT NULL AND p_shape_dist_traveled IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'number_out_of_range' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_dist_traveled', 'fieldType', 'non-negative float', 'fieldValue', to_json(p_shape_dist_traveled)) AS notice
+  FROM w WHERE gtfs_vc_cmp0('float', NULL::INTEGER, p_shape_dist_traveled) < 0
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'timepoint', 'fieldValue', r_timepoint) AS notice
+  FROM w WHERE NOT plain AND contains(r_timepoint, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'timepoint', 'fieldValue', r_timepoint) AS notice
+  FROM w WHERE NOT plain AND (contains(r_timepoint, chr(10)) OR contains(r_timepoint, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'timepoint', 'fieldValue', r_timepoint) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_timepoint) <> r_timepoint
+  UNION ALL
+  SELECT csv_row_number, 'invalid_integer' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'timepoint', 'fieldValue', CASE WHEN plain THEN r_timepoint ELSE gtfs_vc_trim(r_timepoint) END) AS notice
+  FROM w WHERE r_timepoint IS NOT NULL AND p_timepoint IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'unexpected_enum_value' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'timepoint', 'fieldValue', p_timepoint::INTEGER) AS notice
+  FROM w WHERE gtfs_validation_enum_name('GtfsStopTimeTimepoint', p_timepoint) = 'UNRECOGNIZED'
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'pickup_booking_rule_id', 'fieldValue', r_pickup_booking_rule_id) AS notice
+  FROM w WHERE NOT plain AND contains(r_pickup_booking_rule_id, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'pickup_booking_rule_id', 'fieldValue', r_pickup_booking_rule_id) AS notice
+  FROM w WHERE NOT plain AND (contains(r_pickup_booking_rule_id, chr(10)) OR contains(r_pickup_booking_rule_id, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'pickup_booking_rule_id', 'fieldValue', r_pickup_booking_rule_id) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_pickup_booking_rule_id) <> r_pickup_booking_rule_id
+  UNION ALL
+  SELECT csv_row_number, 'non_ascii_or_non_printable_char' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'pickup_booking_rule_id', 'fieldValue', CASE WHEN plain THEN r_pickup_booking_rule_id ELSE gtfs_vc_trim(r_pickup_booking_rule_id) END) AS notice
+  FROM w WHERE NOT plain AND regexp_matches(CASE WHEN plain THEN r_pickup_booking_rule_id ELSE gtfs_vc_trim(r_pickup_booking_rule_id) END, '[^\x20-\x7E]')
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'drop_off_booking_rule_id', 'fieldValue', r_drop_off_booking_rule_id) AS notice
+  FROM w WHERE NOT plain AND contains(r_drop_off_booking_rule_id, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'drop_off_booking_rule_id', 'fieldValue', r_drop_off_booking_rule_id) AS notice
+  FROM w WHERE NOT plain AND (contains(r_drop_off_booking_rule_id, chr(10)) OR contains(r_drop_off_booking_rule_id, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'drop_off_booking_rule_id', 'fieldValue', r_drop_off_booking_rule_id) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_drop_off_booking_rule_id) <> r_drop_off_booking_rule_id
+  UNION ALL
+  SELECT csv_row_number, 'non_ascii_or_non_printable_char' AS code,
+    json_object('filename', 'stop_times.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'drop_off_booking_rule_id', 'fieldValue', CASE WHEN plain THEN r_drop_off_booking_rule_id ELSE gtfs_vc_trim(r_drop_off_booking_rule_id) END) AS notice
+  FROM w WHERE NOT plain AND regexp_matches(CASE WHEN plain THEN r_drop_off_booking_rule_id ELSE gtfs_vc_trim(r_drop_off_booking_rule_id) END, '[^\x20-\x7E]')
+)
+SELECT n.csv_row_number, n.code, gtfs_validation_notice(n.notice) AS notice, r.severity = 'ERROR' AS err
+FROM n JOIN gtfs_validation_rules() r USING (code);
+-- Entities of stop_times.txt: rows of the header's length without an ERROR notice of their own (CsvFileLoader).
+CREATE OR REPLACE MACRO gtfs_vc_entities_stop_times() AS TABLE
+SELECT w.csv_row_number,
+  (CASE WHEN plain THEN r_trip_id ELSE gtfs_vc_trim(r_trip_id) END)::VARCHAR AS trip_id,
+  p_arrival_time AS arrival_time,
+  p_departure_time AS departure_time,
+  (CASE WHEN plain THEN r_stop_id ELSE gtfs_vc_trim(r_stop_id) END)::VARCHAR AS stop_id,
+  (CASE WHEN plain THEN r_location_group_id ELSE gtfs_vc_trim(r_location_group_id) END)::VARCHAR AS location_group_id,
+  (CASE WHEN plain THEN r_location_id ELSE gtfs_vc_trim(r_location_id) END)::VARCHAR AS location_id,
+  p_stop_sequence AS stop_sequence,
+  (CASE WHEN plain THEN r_stop_headsign ELSE gtfs_vc_trim(r_stop_headsign) END)::VARCHAR AS stop_headsign,
+  p_start_pickup_drop_off_window AS start_pickup_drop_off_window,
+  p_end_pickup_drop_off_window AS end_pickup_drop_off_window,
+  p_pickup_type AS pickup_type,
+  p_drop_off_type AS drop_off_type,
+  p_continuous_pickup AS continuous_pickup,
+  p_continuous_drop_off AS continuous_drop_off,
+  p_shape_dist_traveled AS shape_dist_traveled,
+  p_timepoint AS timepoint,
+  (CASE WHEN plain THEN r_pickup_booking_rule_id ELSE gtfs_vc_trim(r_pickup_booking_rule_id) END)::VARCHAR AS pickup_booking_rule_id,
+  (CASE WHEN plain THEN r_drop_off_booking_rule_id ELSE gtfs_vc_trim(r_drop_off_booking_rule_id) END)::VARCHAR AS drop_off_booking_rule_id
+FROM gtfs_vc_wide_stop_times w
+WHERE NOT EXISTS (SELECT 1 FROM gtfs_vc_notices n WHERE n.err AND n.csv_row_number = w.csv_row_number);
+-- Data rows of shapes.txt with the header's length: the raw value of each schema column (the header's column
+-- of that name, NULL without one) and the value Java parses from the trimmed one.
+CREATE OR REPLACE MACRO gtfs_vc_wide_build_shapes() AS TABLE
+SELECT csv_row_number,
+  plain,
+  r_shape_id,
+  r_shape_pt_lat,
+  gtfs_vc_double(CASE WHEN plain THEN r_shape_pt_lat ELSE gtfs_vc_trim(r_shape_pt_lat) END) AS p_shape_pt_lat,
+  r_shape_pt_lon,
+  gtfs_vc_double(CASE WHEN plain THEN r_shape_pt_lon ELSE gtfs_vc_trim(r_shape_pt_lon) END) AS p_shape_pt_lon,
+  r_shape_pt_sequence,
+  gtfs_vc_int(CASE WHEN plain THEN r_shape_pt_sequence ELSE gtfs_vc_trim(r_shape_pt_sequence) END) AS p_shape_pt_sequence,
+  r_shape_dist_traveled,
+  gtfs_vc_double(CASE WHEN plain THEN r_shape_dist_traveled ELSE gtfs_vc_trim(r_shape_dist_traveled) END) AS p_shape_dist_traveled
+FROM (
+  SELECT d.csv_row_number,
+    d.plain,
+    d.fields[p.pos[1]] AS r_shape_id,
+    d.fields[p.pos[2]] AS r_shape_pt_lat,
+    d.fields[p.pos[3]] AS r_shape_pt_lon,
+    d.fields[p.pos[4]] AS r_shape_pt_sequence,
+    d.fields[p.pos[5]] AS r_shape_dist_traveled
+  FROM gtfs_vc_data_rows() d, gtfs_vc_pos p
+  WHERE d.length_ok);
+-- RowParser / DefaultFieldValidator notices of the values of shapes.txt (fieldValue: raw for the character
+-- checks, trimmed after). One scan keeps the rows with any notice; each check then reads only those.
+CREATE OR REPLACE MACRO gtfs_vc_cell_notices_shapes() AS TABLE
+WITH w AS MATERIALIZED (
+  SELECT * FROM gtfs_vc_wide_shapes
+  WHERE (r_shape_id IS NULL)
+    OR (NOT plain AND contains(r_shape_id, chr(65533)))
+    OR (NOT plain AND (contains(r_shape_id, chr(10)) OR contains(r_shape_id, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_shape_id) <> r_shape_id)
+    OR (NOT plain AND regexp_matches(CASE WHEN plain THEN r_shape_id ELSE gtfs_vc_trim(r_shape_id) END, '[^\x20-\x7E]'))
+    OR (r_shape_pt_lat IS NULL)
+    OR (NOT plain AND contains(r_shape_pt_lat, chr(65533)))
+    OR (NOT plain AND (contains(r_shape_pt_lat, chr(10)) OR contains(r_shape_pt_lat, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_shape_pt_lat) <> r_shape_pt_lat)
+    OR (r_shape_pt_lat IS NOT NULL AND p_shape_pt_lat IS NULL)
+    OR (isnan(p_shape_pt_lat) OR NOT (-90 <= p_shape_pt_lat AND p_shape_pt_lat <= 90))
+    OR (r_shape_pt_lon IS NULL)
+    OR (NOT plain AND contains(r_shape_pt_lon, chr(65533)))
+    OR (NOT plain AND (contains(r_shape_pt_lon, chr(10)) OR contains(r_shape_pt_lon, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_shape_pt_lon) <> r_shape_pt_lon)
+    OR (r_shape_pt_lon IS NOT NULL AND p_shape_pt_lon IS NULL)
+    OR (isnan(p_shape_pt_lon) OR NOT (-180 <= p_shape_pt_lon AND p_shape_pt_lon <= 180))
+    OR (r_shape_pt_sequence IS NULL)
+    OR (NOT plain AND contains(r_shape_pt_sequence, chr(65533)))
+    OR (NOT plain AND (contains(r_shape_pt_sequence, chr(10)) OR contains(r_shape_pt_sequence, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_shape_pt_sequence) <> r_shape_pt_sequence)
+    OR (r_shape_pt_sequence IS NOT NULL AND p_shape_pt_sequence IS NULL)
+    OR (p_shape_pt_sequence < 0)
+    OR (NOT plain AND contains(r_shape_dist_traveled, chr(65533)))
+    OR (NOT plain AND (contains(r_shape_dist_traveled, chr(10)) OR contains(r_shape_dist_traveled, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_shape_dist_traveled) <> r_shape_dist_traveled)
+    OR (r_shape_dist_traveled IS NOT NULL AND p_shape_dist_traveled IS NULL)
+    OR (gtfs_vc_cmp0('float', NULL::INTEGER, p_shape_dist_traveled) < 0)
+),
+n AS (
+  SELECT csv_row_number, 'missing_required_field' AS code,
+    json_object('filename', 'shapes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_id') AS notice
+  FROM w WHERE r_shape_id IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'shapes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_id', 'fieldValue', r_shape_id) AS notice
+  FROM w WHERE NOT plain AND contains(r_shape_id, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'shapes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_id', 'fieldValue', r_shape_id) AS notice
+  FROM w WHERE NOT plain AND (contains(r_shape_id, chr(10)) OR contains(r_shape_id, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'shapes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_id', 'fieldValue', r_shape_id) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_shape_id) <> r_shape_id
+  UNION ALL
+  SELECT csv_row_number, 'non_ascii_or_non_printable_char' AS code,
+    json_object('filename', 'shapes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_id', 'fieldValue', CASE WHEN plain THEN r_shape_id ELSE gtfs_vc_trim(r_shape_id) END) AS notice
+  FROM w WHERE NOT plain AND regexp_matches(CASE WHEN plain THEN r_shape_id ELSE gtfs_vc_trim(r_shape_id) END, '[^\x20-\x7E]')
+  UNION ALL
+  SELECT csv_row_number, 'missing_required_field' AS code,
+    json_object('filename', 'shapes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_pt_lat') AS notice
+  FROM w WHERE r_shape_pt_lat IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'shapes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_pt_lat', 'fieldValue', r_shape_pt_lat) AS notice
+  FROM w WHERE NOT plain AND contains(r_shape_pt_lat, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'shapes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_pt_lat', 'fieldValue', r_shape_pt_lat) AS notice
+  FROM w WHERE NOT plain AND (contains(r_shape_pt_lat, chr(10)) OR contains(r_shape_pt_lat, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'shapes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_pt_lat', 'fieldValue', r_shape_pt_lat) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_shape_pt_lat) <> r_shape_pt_lat
+  UNION ALL
+  SELECT csv_row_number, 'invalid_float' AS code,
+    json_object('filename', 'shapes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_pt_lat', 'fieldValue', CASE WHEN plain THEN r_shape_pt_lat ELSE gtfs_vc_trim(r_shape_pt_lat) END) AS notice
+  FROM w WHERE r_shape_pt_lat IS NOT NULL AND p_shape_pt_lat IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'number_out_of_range' AS code,
+    json_object('filename', 'shapes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_pt_lat', 'fieldType', 'latitude within [-90, 90]', 'fieldValue', to_json(p_shape_pt_lat)) AS notice
+  FROM w WHERE isnan(p_shape_pt_lat) OR NOT (-90 <= p_shape_pt_lat AND p_shape_pt_lat <= 90)
+  UNION ALL
+  SELECT csv_row_number, 'missing_required_field' AS code,
+    json_object('filename', 'shapes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_pt_lon') AS notice
+  FROM w WHERE r_shape_pt_lon IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'shapes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_pt_lon', 'fieldValue', r_shape_pt_lon) AS notice
+  FROM w WHERE NOT plain AND contains(r_shape_pt_lon, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'shapes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_pt_lon', 'fieldValue', r_shape_pt_lon) AS notice
+  FROM w WHERE NOT plain AND (contains(r_shape_pt_lon, chr(10)) OR contains(r_shape_pt_lon, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'shapes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_pt_lon', 'fieldValue', r_shape_pt_lon) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_shape_pt_lon) <> r_shape_pt_lon
+  UNION ALL
+  SELECT csv_row_number, 'invalid_float' AS code,
+    json_object('filename', 'shapes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_pt_lon', 'fieldValue', CASE WHEN plain THEN r_shape_pt_lon ELSE gtfs_vc_trim(r_shape_pt_lon) END) AS notice
+  FROM w WHERE r_shape_pt_lon IS NOT NULL AND p_shape_pt_lon IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'number_out_of_range' AS code,
+    json_object('filename', 'shapes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_pt_lon', 'fieldType', 'longitude within [-180, 180]', 'fieldValue', to_json(p_shape_pt_lon)) AS notice
+  FROM w WHERE isnan(p_shape_pt_lon) OR NOT (-180 <= p_shape_pt_lon AND p_shape_pt_lon <= 180)
+  UNION ALL
+  SELECT csv_row_number, 'missing_required_field' AS code,
+    json_object('filename', 'shapes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_pt_sequence') AS notice
+  FROM w WHERE r_shape_pt_sequence IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'shapes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_pt_sequence', 'fieldValue', r_shape_pt_sequence) AS notice
+  FROM w WHERE NOT plain AND contains(r_shape_pt_sequence, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'shapes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_pt_sequence', 'fieldValue', r_shape_pt_sequence) AS notice
+  FROM w WHERE NOT plain AND (contains(r_shape_pt_sequence, chr(10)) OR contains(r_shape_pt_sequence, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'shapes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_pt_sequence', 'fieldValue', r_shape_pt_sequence) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_shape_pt_sequence) <> r_shape_pt_sequence
+  UNION ALL
+  SELECT csv_row_number, 'invalid_integer' AS code,
+    json_object('filename', 'shapes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_pt_sequence', 'fieldValue', CASE WHEN plain THEN r_shape_pt_sequence ELSE gtfs_vc_trim(r_shape_pt_sequence) END) AS notice
+  FROM w WHERE r_shape_pt_sequence IS NOT NULL AND p_shape_pt_sequence IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'number_out_of_range' AS code,
+    json_object('filename', 'shapes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_pt_sequence', 'fieldType', 'non-negative integer', 'fieldValue', to_json(p_shape_pt_sequence::INTEGER)) AS notice
+  FROM w WHERE p_shape_pt_sequence < 0
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'shapes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_dist_traveled', 'fieldValue', r_shape_dist_traveled) AS notice
+  FROM w WHERE NOT plain AND contains(r_shape_dist_traveled, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'shapes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_dist_traveled', 'fieldValue', r_shape_dist_traveled) AS notice
+  FROM w WHERE NOT plain AND (contains(r_shape_dist_traveled, chr(10)) OR contains(r_shape_dist_traveled, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'shapes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_dist_traveled', 'fieldValue', r_shape_dist_traveled) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_shape_dist_traveled) <> r_shape_dist_traveled
+  UNION ALL
+  SELECT csv_row_number, 'invalid_float' AS code,
+    json_object('filename', 'shapes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_dist_traveled', 'fieldValue', CASE WHEN plain THEN r_shape_dist_traveled ELSE gtfs_vc_trim(r_shape_dist_traveled) END) AS notice
+  FROM w WHERE r_shape_dist_traveled IS NOT NULL AND p_shape_dist_traveled IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'number_out_of_range' AS code,
+    json_object('filename', 'shapes.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'shape_dist_traveled', 'fieldType', 'non-negative float', 'fieldValue', to_json(p_shape_dist_traveled)) AS notice
+  FROM w WHERE gtfs_vc_cmp0('float', NULL::INTEGER, p_shape_dist_traveled) < 0
+)
+SELECT n.csv_row_number, n.code, gtfs_validation_notice(n.notice) AS notice, r.severity = 'ERROR' AS err
+FROM n JOIN gtfs_validation_rules() r USING (code);
+-- Entities of shapes.txt: rows of the header's length without an ERROR notice of their own (CsvFileLoader).
+CREATE OR REPLACE MACRO gtfs_vc_entities_shapes() AS TABLE
+SELECT w.csv_row_number,
+  (CASE WHEN plain THEN r_shape_id ELSE gtfs_vc_trim(r_shape_id) END)::VARCHAR AS shape_id,
+  p_shape_pt_lat AS shape_pt_lat,
+  p_shape_pt_lon AS shape_pt_lon,
+  p_shape_pt_sequence AS shape_pt_sequence,
+  p_shape_dist_traveled AS shape_dist_traveled
+FROM gtfs_vc_wide_shapes w
+WHERE NOT EXISTS (SELECT 1 FROM gtfs_vc_notices n WHERE n.err AND n.csv_row_number = w.csv_row_number);
+-- Data rows of calendar.txt with the header's length: the raw value of each schema column (the header's column
+-- of that name, NULL without one) and the value Java parses from the trimmed one.
+CREATE OR REPLACE MACRO gtfs_vc_wide_build_calendar() AS TABLE
+SELECT csv_row_number,
+  plain,
+  r_service_id,
+  r_monday,
+  gtfs_vc_int(CASE WHEN plain THEN r_monday ELSE gtfs_vc_trim(r_monday) END) AS p_monday,
+  r_tuesday,
+  gtfs_vc_int(CASE WHEN plain THEN r_tuesday ELSE gtfs_vc_trim(r_tuesday) END) AS p_tuesday,
+  r_wednesday,
+  gtfs_vc_int(CASE WHEN plain THEN r_wednesday ELSE gtfs_vc_trim(r_wednesday) END) AS p_wednesday,
+  r_thursday,
+  gtfs_vc_int(CASE WHEN plain THEN r_thursday ELSE gtfs_vc_trim(r_thursday) END) AS p_thursday,
+  r_friday,
+  gtfs_vc_int(CASE WHEN plain THEN r_friday ELSE gtfs_vc_trim(r_friday) END) AS p_friday,
+  r_saturday,
+  gtfs_vc_int(CASE WHEN plain THEN r_saturday ELSE gtfs_vc_trim(r_saturday) END) AS p_saturday,
+  r_sunday,
+  gtfs_vc_int(CASE WHEN plain THEN r_sunday ELSE gtfs_vc_trim(r_sunday) END) AS p_sunday,
+  r_start_date,
+  gtfs_vc_date(CASE WHEN plain THEN r_start_date ELSE gtfs_vc_trim(r_start_date) END) AS p_start_date,
+  r_end_date,
+  gtfs_vc_date(CASE WHEN plain THEN r_end_date ELSE gtfs_vc_trim(r_end_date) END) AS p_end_date
+FROM (
+  SELECT d.csv_row_number,
+    d.plain,
+    d.fields[p.pos[1]] AS r_service_id,
+    d.fields[p.pos[2]] AS r_monday,
+    d.fields[p.pos[3]] AS r_tuesday,
+    d.fields[p.pos[4]] AS r_wednesday,
+    d.fields[p.pos[5]] AS r_thursday,
+    d.fields[p.pos[6]] AS r_friday,
+    d.fields[p.pos[7]] AS r_saturday,
+    d.fields[p.pos[8]] AS r_sunday,
+    d.fields[p.pos[9]] AS r_start_date,
+    d.fields[p.pos[10]] AS r_end_date
+  FROM gtfs_vc_data_rows() d, gtfs_vc_pos p
+  WHERE d.length_ok);
+-- RowParser / DefaultFieldValidator notices of the values of calendar.txt (fieldValue: raw for the character
+-- checks, trimmed after). One scan keeps the rows with any notice; each check then reads only those.
+CREATE OR REPLACE MACRO gtfs_vc_cell_notices_calendar() AS TABLE
+WITH w AS MATERIALIZED (
+  SELECT * FROM gtfs_vc_wide_calendar
+  WHERE (r_service_id IS NULL)
+    OR (NOT plain AND contains(r_service_id, chr(65533)))
+    OR (NOT plain AND (contains(r_service_id, chr(10)) OR contains(r_service_id, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_service_id) <> r_service_id)
+    OR (NOT plain AND regexp_matches(CASE WHEN plain THEN r_service_id ELSE gtfs_vc_trim(r_service_id) END, '[^\x20-\x7E]'))
+    OR (r_monday IS NULL)
+    OR (NOT plain AND contains(r_monday, chr(65533)))
+    OR (NOT plain AND (contains(r_monday, chr(10)) OR contains(r_monday, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_monday) <> r_monday)
+    OR (r_monday IS NOT NULL AND p_monday IS NULL)
+    OR (gtfs_validation_enum_name('GtfsCalendarService', p_monday) = 'UNRECOGNIZED')
+    OR (r_tuesday IS NULL)
+    OR (NOT plain AND contains(r_tuesday, chr(65533)))
+    OR (NOT plain AND (contains(r_tuesday, chr(10)) OR contains(r_tuesday, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_tuesday) <> r_tuesday)
+    OR (r_tuesday IS NOT NULL AND p_tuesday IS NULL)
+    OR (gtfs_validation_enum_name('GtfsCalendarService', p_tuesday) = 'UNRECOGNIZED')
+    OR (r_wednesday IS NULL)
+    OR (NOT plain AND contains(r_wednesday, chr(65533)))
+    OR (NOT plain AND (contains(r_wednesday, chr(10)) OR contains(r_wednesday, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_wednesday) <> r_wednesday)
+    OR (r_wednesday IS NOT NULL AND p_wednesday IS NULL)
+    OR (gtfs_validation_enum_name('GtfsCalendarService', p_wednesday) = 'UNRECOGNIZED')
+    OR (r_thursday IS NULL)
+    OR (NOT plain AND contains(r_thursday, chr(65533)))
+    OR (NOT plain AND (contains(r_thursday, chr(10)) OR contains(r_thursday, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_thursday) <> r_thursday)
+    OR (r_thursday IS NOT NULL AND p_thursday IS NULL)
+    OR (gtfs_validation_enum_name('GtfsCalendarService', p_thursday) = 'UNRECOGNIZED')
+    OR (r_friday IS NULL)
+    OR (NOT plain AND contains(r_friday, chr(65533)))
+    OR (NOT plain AND (contains(r_friday, chr(10)) OR contains(r_friday, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_friday) <> r_friday)
+    OR (r_friday IS NOT NULL AND p_friday IS NULL)
+    OR (gtfs_validation_enum_name('GtfsCalendarService', p_friday) = 'UNRECOGNIZED')
+    OR (r_saturday IS NULL)
+    OR (NOT plain AND contains(r_saturday, chr(65533)))
+    OR (NOT plain AND (contains(r_saturday, chr(10)) OR contains(r_saturday, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_saturday) <> r_saturday)
+    OR (r_saturday IS NOT NULL AND p_saturday IS NULL)
+    OR (gtfs_validation_enum_name('GtfsCalendarService', p_saturday) = 'UNRECOGNIZED')
+    OR (r_sunday IS NULL)
+    OR (NOT plain AND contains(r_sunday, chr(65533)))
+    OR (NOT plain AND (contains(r_sunday, chr(10)) OR contains(r_sunday, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_sunday) <> r_sunday)
+    OR (r_sunday IS NOT NULL AND p_sunday IS NULL)
+    OR (gtfs_validation_enum_name('GtfsCalendarService', p_sunday) = 'UNRECOGNIZED')
+    OR (r_start_date IS NULL)
+    OR (NOT plain AND contains(r_start_date, chr(65533)))
+    OR (NOT plain AND (contains(r_start_date, chr(10)) OR contains(r_start_date, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_start_date) <> r_start_date)
+    OR (r_start_date IS NOT NULL AND p_start_date IS NULL)
+    OR (r_end_date IS NULL)
+    OR (NOT plain AND contains(r_end_date, chr(65533)))
+    OR (NOT plain AND (contains(r_end_date, chr(10)) OR contains(r_end_date, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_end_date) <> r_end_date)
+    OR (r_end_date IS NOT NULL AND p_end_date IS NULL)
+),
+n AS (
+  SELECT csv_row_number, 'missing_required_field' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'service_id') AS notice
+  FROM w WHERE r_service_id IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'service_id', 'fieldValue', r_service_id) AS notice
+  FROM w WHERE NOT plain AND contains(r_service_id, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'service_id', 'fieldValue', r_service_id) AS notice
+  FROM w WHERE NOT plain AND (contains(r_service_id, chr(10)) OR contains(r_service_id, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'service_id', 'fieldValue', r_service_id) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_service_id) <> r_service_id
+  UNION ALL
+  SELECT csv_row_number, 'non_ascii_or_non_printable_char' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'service_id', 'fieldValue', CASE WHEN plain THEN r_service_id ELSE gtfs_vc_trim(r_service_id) END) AS notice
+  FROM w WHERE NOT plain AND regexp_matches(CASE WHEN plain THEN r_service_id ELSE gtfs_vc_trim(r_service_id) END, '[^\x20-\x7E]')
+  UNION ALL
+  SELECT csv_row_number, 'missing_required_field' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'monday') AS notice
+  FROM w WHERE r_monday IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'monday', 'fieldValue', r_monday) AS notice
+  FROM w WHERE NOT plain AND contains(r_monday, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'monday', 'fieldValue', r_monday) AS notice
+  FROM w WHERE NOT plain AND (contains(r_monday, chr(10)) OR contains(r_monday, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'monday', 'fieldValue', r_monday) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_monday) <> r_monday
+  UNION ALL
+  SELECT csv_row_number, 'invalid_integer' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'monday', 'fieldValue', CASE WHEN plain THEN r_monday ELSE gtfs_vc_trim(r_monday) END) AS notice
+  FROM w WHERE r_monday IS NOT NULL AND p_monday IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'unexpected_enum_value' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'monday', 'fieldValue', p_monday::INTEGER) AS notice
+  FROM w WHERE gtfs_validation_enum_name('GtfsCalendarService', p_monday) = 'UNRECOGNIZED'
+  UNION ALL
+  SELECT csv_row_number, 'missing_required_field' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'tuesday') AS notice
+  FROM w WHERE r_tuesday IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'tuesday', 'fieldValue', r_tuesday) AS notice
+  FROM w WHERE NOT plain AND contains(r_tuesday, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'tuesday', 'fieldValue', r_tuesday) AS notice
+  FROM w WHERE NOT plain AND (contains(r_tuesday, chr(10)) OR contains(r_tuesday, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'tuesday', 'fieldValue', r_tuesday) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_tuesday) <> r_tuesday
+  UNION ALL
+  SELECT csv_row_number, 'invalid_integer' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'tuesday', 'fieldValue', CASE WHEN plain THEN r_tuesday ELSE gtfs_vc_trim(r_tuesday) END) AS notice
+  FROM w WHERE r_tuesday IS NOT NULL AND p_tuesday IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'unexpected_enum_value' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'tuesday', 'fieldValue', p_tuesday::INTEGER) AS notice
+  FROM w WHERE gtfs_validation_enum_name('GtfsCalendarService', p_tuesday) = 'UNRECOGNIZED'
+  UNION ALL
+  SELECT csv_row_number, 'missing_required_field' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'wednesday') AS notice
+  FROM w WHERE r_wednesday IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'wednesday', 'fieldValue', r_wednesday) AS notice
+  FROM w WHERE NOT plain AND contains(r_wednesday, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'wednesday', 'fieldValue', r_wednesday) AS notice
+  FROM w WHERE NOT plain AND (contains(r_wednesday, chr(10)) OR contains(r_wednesday, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'wednesday', 'fieldValue', r_wednesday) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_wednesday) <> r_wednesday
+  UNION ALL
+  SELECT csv_row_number, 'invalid_integer' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'wednesday', 'fieldValue', CASE WHEN plain THEN r_wednesday ELSE gtfs_vc_trim(r_wednesday) END) AS notice
+  FROM w WHERE r_wednesday IS NOT NULL AND p_wednesday IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'unexpected_enum_value' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'wednesday', 'fieldValue', p_wednesday::INTEGER) AS notice
+  FROM w WHERE gtfs_validation_enum_name('GtfsCalendarService', p_wednesday) = 'UNRECOGNIZED'
+  UNION ALL
+  SELECT csv_row_number, 'missing_required_field' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'thursday') AS notice
+  FROM w WHERE r_thursday IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'thursday', 'fieldValue', r_thursday) AS notice
+  FROM w WHERE NOT plain AND contains(r_thursday, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'thursday', 'fieldValue', r_thursday) AS notice
+  FROM w WHERE NOT plain AND (contains(r_thursday, chr(10)) OR contains(r_thursday, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'thursday', 'fieldValue', r_thursday) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_thursday) <> r_thursday
+  UNION ALL
+  SELECT csv_row_number, 'invalid_integer' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'thursday', 'fieldValue', CASE WHEN plain THEN r_thursday ELSE gtfs_vc_trim(r_thursday) END) AS notice
+  FROM w WHERE r_thursday IS NOT NULL AND p_thursday IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'unexpected_enum_value' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'thursday', 'fieldValue', p_thursday::INTEGER) AS notice
+  FROM w WHERE gtfs_validation_enum_name('GtfsCalendarService', p_thursday) = 'UNRECOGNIZED'
+  UNION ALL
+  SELECT csv_row_number, 'missing_required_field' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'friday') AS notice
+  FROM w WHERE r_friday IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'friday', 'fieldValue', r_friday) AS notice
+  FROM w WHERE NOT plain AND contains(r_friday, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'friday', 'fieldValue', r_friday) AS notice
+  FROM w WHERE NOT plain AND (contains(r_friday, chr(10)) OR contains(r_friday, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'friday', 'fieldValue', r_friday) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_friday) <> r_friday
+  UNION ALL
+  SELECT csv_row_number, 'invalid_integer' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'friday', 'fieldValue', CASE WHEN plain THEN r_friday ELSE gtfs_vc_trim(r_friday) END) AS notice
+  FROM w WHERE r_friday IS NOT NULL AND p_friday IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'unexpected_enum_value' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'friday', 'fieldValue', p_friday::INTEGER) AS notice
+  FROM w WHERE gtfs_validation_enum_name('GtfsCalendarService', p_friday) = 'UNRECOGNIZED'
+  UNION ALL
+  SELECT csv_row_number, 'missing_required_field' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'saturday') AS notice
+  FROM w WHERE r_saturday IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'saturday', 'fieldValue', r_saturday) AS notice
+  FROM w WHERE NOT plain AND contains(r_saturday, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'saturday', 'fieldValue', r_saturday) AS notice
+  FROM w WHERE NOT plain AND (contains(r_saturday, chr(10)) OR contains(r_saturday, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'saturday', 'fieldValue', r_saturday) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_saturday) <> r_saturday
+  UNION ALL
+  SELECT csv_row_number, 'invalid_integer' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'saturday', 'fieldValue', CASE WHEN plain THEN r_saturday ELSE gtfs_vc_trim(r_saturday) END) AS notice
+  FROM w WHERE r_saturday IS NOT NULL AND p_saturday IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'unexpected_enum_value' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'saturday', 'fieldValue', p_saturday::INTEGER) AS notice
+  FROM w WHERE gtfs_validation_enum_name('GtfsCalendarService', p_saturday) = 'UNRECOGNIZED'
+  UNION ALL
+  SELECT csv_row_number, 'missing_required_field' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'sunday') AS notice
+  FROM w WHERE r_sunday IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'sunday', 'fieldValue', r_sunday) AS notice
+  FROM w WHERE NOT plain AND contains(r_sunday, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'sunday', 'fieldValue', r_sunday) AS notice
+  FROM w WHERE NOT plain AND (contains(r_sunday, chr(10)) OR contains(r_sunday, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'sunday', 'fieldValue', r_sunday) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_sunday) <> r_sunday
+  UNION ALL
+  SELECT csv_row_number, 'invalid_integer' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'sunday', 'fieldValue', CASE WHEN plain THEN r_sunday ELSE gtfs_vc_trim(r_sunday) END) AS notice
+  FROM w WHERE r_sunday IS NOT NULL AND p_sunday IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'unexpected_enum_value' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'sunday', 'fieldValue', p_sunday::INTEGER) AS notice
+  FROM w WHERE gtfs_validation_enum_name('GtfsCalendarService', p_sunday) = 'UNRECOGNIZED'
+  UNION ALL
+  SELECT csv_row_number, 'missing_required_field' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'start_date') AS notice
+  FROM w WHERE r_start_date IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'start_date', 'fieldValue', r_start_date) AS notice
+  FROM w WHERE NOT plain AND contains(r_start_date, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'start_date', 'fieldValue', r_start_date) AS notice
+  FROM w WHERE NOT plain AND (contains(r_start_date, chr(10)) OR contains(r_start_date, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'start_date', 'fieldValue', r_start_date) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_start_date) <> r_start_date
+  UNION ALL
+  SELECT csv_row_number, 'invalid_date' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'start_date', 'fieldValue', CASE WHEN plain THEN r_start_date ELSE gtfs_vc_trim(r_start_date) END) AS notice
+  FROM w WHERE r_start_date IS NOT NULL AND p_start_date IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'missing_required_field' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'end_date') AS notice
+  FROM w WHERE r_end_date IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'end_date', 'fieldValue', r_end_date) AS notice
+  FROM w WHERE NOT plain AND contains(r_end_date, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'end_date', 'fieldValue', r_end_date) AS notice
+  FROM w WHERE NOT plain AND (contains(r_end_date, chr(10)) OR contains(r_end_date, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'end_date', 'fieldValue', r_end_date) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_end_date) <> r_end_date
+  UNION ALL
+  SELECT csv_row_number, 'invalid_date' AS code,
+    json_object('filename', 'calendar.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'end_date', 'fieldValue', CASE WHEN plain THEN r_end_date ELSE gtfs_vc_trim(r_end_date) END) AS notice
+  FROM w WHERE r_end_date IS NOT NULL AND p_end_date IS NULL
+)
+SELECT n.csv_row_number, n.code, gtfs_validation_notice(n.notice) AS notice, r.severity = 'ERROR' AS err
+FROM n JOIN gtfs_validation_rules() r USING (code);
+-- Entities of calendar.txt: rows of the header's length without an ERROR notice of their own (CsvFileLoader).
+CREATE OR REPLACE MACRO gtfs_vc_entities_calendar() AS TABLE
+SELECT w.csv_row_number,
+  (CASE WHEN plain THEN r_service_id ELSE gtfs_vc_trim(r_service_id) END)::VARCHAR AS service_id,
+  p_monday AS monday,
+  p_tuesday AS tuesday,
+  p_wednesday AS wednesday,
+  p_thursday AS thursday,
+  p_friday AS friday,
+  p_saturday AS saturday,
+  p_sunday AS sunday,
+  p_start_date AS start_date,
+  p_end_date AS end_date
+FROM gtfs_vc_wide_calendar w
+WHERE NOT EXISTS (SELECT 1 FROM gtfs_vc_notices n WHERE n.err AND n.csv_row_number = w.csv_row_number);
+-- Data rows of calendar_dates.txt with the header's length: the raw value of each schema column (the header's column
+-- of that name, NULL without one) and the value Java parses from the trimmed one.
+CREATE OR REPLACE MACRO gtfs_vc_wide_build_calendar_dates() AS TABLE
+SELECT csv_row_number,
+  plain,
+  r_service_id,
+  r_date,
+  gtfs_vc_date(CASE WHEN plain THEN r_date ELSE gtfs_vc_trim(r_date) END) AS p_date,
+  r_exception_type,
+  gtfs_vc_int(CASE WHEN plain THEN r_exception_type ELSE gtfs_vc_trim(r_exception_type) END) AS p_exception_type
+FROM (
+  SELECT d.csv_row_number,
+    d.plain,
+    d.fields[p.pos[1]] AS r_service_id,
+    d.fields[p.pos[2]] AS r_date,
+    d.fields[p.pos[3]] AS r_exception_type
+  FROM gtfs_vc_data_rows() d, gtfs_vc_pos p
+  WHERE d.length_ok);
+-- RowParser / DefaultFieldValidator notices of the values of calendar_dates.txt (fieldValue: raw for the character
+-- checks, trimmed after). One scan keeps the rows with any notice; each check then reads only those.
+CREATE OR REPLACE MACRO gtfs_vc_cell_notices_calendar_dates() AS TABLE
+WITH w AS MATERIALIZED (
+  SELECT * FROM gtfs_vc_wide_calendar_dates
+  WHERE (r_service_id IS NULL)
+    OR (NOT plain AND contains(r_service_id, chr(65533)))
+    OR (NOT plain AND (contains(r_service_id, chr(10)) OR contains(r_service_id, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_service_id) <> r_service_id)
+    OR (NOT plain AND regexp_matches(CASE WHEN plain THEN r_service_id ELSE gtfs_vc_trim(r_service_id) END, '[^\x20-\x7E]'))
+    OR (r_date IS NULL)
+    OR (NOT plain AND contains(r_date, chr(65533)))
+    OR (NOT plain AND (contains(r_date, chr(10)) OR contains(r_date, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_date) <> r_date)
+    OR (r_date IS NOT NULL AND p_date IS NULL)
+    OR (r_exception_type IS NULL)
+    OR (NOT plain AND contains(r_exception_type, chr(65533)))
+    OR (NOT plain AND (contains(r_exception_type, chr(10)) OR contains(r_exception_type, chr(13))))
+    OR (NOT plain AND gtfs_vc_trim(r_exception_type) <> r_exception_type)
+    OR (r_exception_type IS NOT NULL AND p_exception_type IS NULL)
+    OR (gtfs_validation_enum_name('GtfsCalendarDateExceptionType', p_exception_type) = 'UNRECOGNIZED')
+),
+n AS (
+  SELECT csv_row_number, 'missing_required_field' AS code,
+    json_object('filename', 'calendar_dates.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'service_id') AS notice
+  FROM w WHERE r_service_id IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'calendar_dates.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'service_id', 'fieldValue', r_service_id) AS notice
+  FROM w WHERE NOT plain AND contains(r_service_id, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'calendar_dates.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'service_id', 'fieldValue', r_service_id) AS notice
+  FROM w WHERE NOT plain AND (contains(r_service_id, chr(10)) OR contains(r_service_id, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'calendar_dates.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'service_id', 'fieldValue', r_service_id) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_service_id) <> r_service_id
+  UNION ALL
+  SELECT csv_row_number, 'non_ascii_or_non_printable_char' AS code,
+    json_object('filename', 'calendar_dates.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'service_id', 'fieldValue', CASE WHEN plain THEN r_service_id ELSE gtfs_vc_trim(r_service_id) END) AS notice
+  FROM w WHERE NOT plain AND regexp_matches(CASE WHEN plain THEN r_service_id ELSE gtfs_vc_trim(r_service_id) END, '[^\x20-\x7E]')
+  UNION ALL
+  SELECT csv_row_number, 'missing_required_field' AS code,
+    json_object('filename', 'calendar_dates.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'date') AS notice
+  FROM w WHERE r_date IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'calendar_dates.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'date', 'fieldValue', r_date) AS notice
+  FROM w WHERE NOT plain AND contains(r_date, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'calendar_dates.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'date', 'fieldValue', r_date) AS notice
+  FROM w WHERE NOT plain AND (contains(r_date, chr(10)) OR contains(r_date, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'calendar_dates.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'date', 'fieldValue', r_date) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_date) <> r_date
+  UNION ALL
+  SELECT csv_row_number, 'invalid_date' AS code,
+    json_object('filename', 'calendar_dates.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'date', 'fieldValue', CASE WHEN plain THEN r_date ELSE gtfs_vc_trim(r_date) END) AS notice
+  FROM w WHERE r_date IS NOT NULL AND p_date IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'missing_required_field' AS code,
+    json_object('filename', 'calendar_dates.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'exception_type') AS notice
+  FROM w WHERE r_exception_type IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'invalid_character' AS code,
+    json_object('filename', 'calendar_dates.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'exception_type', 'fieldValue', r_exception_type) AS notice
+  FROM w WHERE NOT plain AND contains(r_exception_type, chr(65533))
+  UNION ALL
+  SELECT csv_row_number, 'new_line_in_value' AS code,
+    json_object('filename', 'calendar_dates.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'exception_type', 'fieldValue', r_exception_type) AS notice
+  FROM w WHERE NOT plain AND (contains(r_exception_type, chr(10)) OR contains(r_exception_type, chr(13)))
+  UNION ALL
+  SELECT csv_row_number, 'leading_or_trailing_whitespaces' AS code,
+    json_object('filename', 'calendar_dates.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'exception_type', 'fieldValue', r_exception_type) AS notice
+  FROM w WHERE NOT plain AND gtfs_vc_trim(r_exception_type) <> r_exception_type
+  UNION ALL
+  SELECT csv_row_number, 'invalid_integer' AS code,
+    json_object('filename', 'calendar_dates.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'exception_type', 'fieldValue', CASE WHEN plain THEN r_exception_type ELSE gtfs_vc_trim(r_exception_type) END) AS notice
+  FROM w WHERE r_exception_type IS NOT NULL AND p_exception_type IS NULL
+  UNION ALL
+  SELECT csv_row_number, 'unexpected_enum_value' AS code,
+    json_object('filename', 'calendar_dates.txt', 'csvRowNumber', csv_row_number, 'fieldName', 'exception_type', 'fieldValue', p_exception_type::INTEGER) AS notice
+  FROM w WHERE gtfs_validation_enum_name('GtfsCalendarDateExceptionType', p_exception_type) = 'UNRECOGNIZED'
+)
+SELECT n.csv_row_number, n.code, gtfs_validation_notice(n.notice) AS notice, r.severity = 'ERROR' AS err
+FROM n JOIN gtfs_validation_rules() r USING (code);
+-- Entities of calendar_dates.txt: rows of the header's length without an ERROR notice of their own (CsvFileLoader).
+CREATE OR REPLACE MACRO gtfs_vc_entities_calendar_dates() AS TABLE
+SELECT w.csv_row_number,
+  (CASE WHEN plain THEN r_service_id ELSE gtfs_vc_trim(r_service_id) END)::VARCHAR AS service_id,
+  p_date AS date,
+  p_exception_type AS exception_type
+FROM gtfs_vc_wide_calendar_dates w
+WHERE NOT EXISTS (SELECT 1 FROM gtfs_vc_notices n WHERE n.err AND n.csv_row_number = w.csv_row_number);
+-- LOADER-GENERATED-END

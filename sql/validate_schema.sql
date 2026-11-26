@@ -122,25 +122,195 @@ CREATE OR REPLACE TEMP TABLE gtfs_v_calendar_dates (
 -- GENERATED-END
 -- CORE-TABLES (core workstream tables below this line)
 -- Loader working tables, refilled for each loaded file by validate_load.sql (see validate_core.sql).
--- The file being loaded (content: its bytes while it is decoded): decoded text (Java's UTF-8 decoding, U+FFFD for malformed bytes, BOMs stripped) and the
--- line of the first invalid line ending (LineEndingCheckingInputStream), NULL when every line ends in LF or CRLF.
-CREATE OR REPLACE TEMP TABLE gtfs_vc_text (filename VARCHAR, text VARCHAR, invalid_line_ending_row BIGINT, content BLOB);
+-- The file being loaded: its decoded text (Java's UTF-8 decoding, U+FFFD for malformed bytes, BOMs stripped), only kept
+-- while gtfs_vc_parse_records or gtfs_vc_failure need it; the line of the first invalid line ending
+-- (LineEndingCheckingInputStream), NULL when every line ends in LF or CRLF; multiline when a quoted value runs past the
+-- end of its line.
+CREATE OR REPLACE TEMP TABLE gtfs_vc_text (filename VARCHAR, text VARCHAR, invalid_line_ending_row BIGINT, multiline BOOLEAN);
+-- Its lines (the text split on LF), line_no from 1.
+CREATE OR REPLACE TEMP TABLE gtfs_vc_lines (line_no BIGINT, line VARCHAR);
 -- Its CSV records as univocity returns them: kind comment / empty / ws (only whitespace) / row, the line number the
--- record ends on (CsvRow.getRowNumber) and the values (NULL for an empty value).
+-- record ends on (CsvRow.getRowNumber), the values (NULL for an empty value), the length of the longest value (NULL
+-- when the line is too short to exceed 4096) and plain (see gtfs_vc_line_records).
 CREATE OR REPLACE TEMP TABLE gtfs_vc_records (
-  rec_no BIGINT, csv_row_number BIGINT, kind VARCHAR, fields VARCHAR[], max_len BIGINT);
+  rec_no BIGINT, csv_row_number BIGINT, kind VARCHAR, fields VARCHAR[], max_len BIGINT, plain BOOLEAN);
 -- Its header (CsvHeader) and parse state: has_header unless the file is empty, header_n columns, fail_rec the record
 -- of a TextParsingException (csv_parsing_failed), header_ok when neither the parser nor DefaultTableHeaderValidator
 -- found an error in the header.
 CREATE OR REPLACE TEMP TABLE gtfs_vc_header (column_name VARCHAR, column_index INTEGER);
 CREATE OR REPLACE TEMP TABLE gtfs_vc_state (has_header BOOLEAN, header_n INTEGER, header_ok BOOLEAN, fail_rec BIGINT);
--- Its data rows (RowParser.checkRowLength: length_ok; entity: no ERROR notice of its own).
-CREATE OR REPLACE TEMP TABLE gtfs_vc_rows (
-  csv_row_number BIGINT, fields VARCHAR[], length_ok BOOLEAN, entity BOOLEAN);
--- One cell per row and loaded schema column: raw value, trimmed value and the typed value Java parses.
-CREATE OR REPLACE TEMP TABLE gtfs_vc_cells (
-  csv_row_number BIGINT, col_ord INTEGER, column_name VARCHAR, kind VARCHAR, java_type VARCHAR, level VARCHAR,
-  bounds VARCHAR, raw VARCHAR, v VARCHAR, vi BIGINT, vd DOUBLE, vdt DATE);
+-- pos[i]: the 1-based header position of the file's i-th schema column (gtfs_vc_schema().col_ord), NULL if absent.
+CREATE OR REPLACE TEMP TABLE gtfs_vc_pos (pos INTEGER[]);
+-- gtfs_vc_wide_<table>: the file's data rows of the header's length, one column per schema column (see
+-- gtfs_vc_wide_build_<table> in validate_core.sql).
+-- LOADER-GENERATED-BEGIN (test/validation/gen_loader.py; do not edit)
+CREATE OR REPLACE TEMP TABLE gtfs_vc_wide_stops (
+  csv_row_number BIGINT,
+  plain BOOLEAN,
+  r_stop_id VARCHAR,
+  r_stop_code VARCHAR,
+  r_stop_name VARCHAR,
+  r_tts_stop_name VARCHAR,
+  r_stop_desc VARCHAR,
+  r_stop_lat VARCHAR,
+  p_stop_lat DOUBLE,
+  r_stop_lon VARCHAR,
+  p_stop_lon DOUBLE,
+  r_zone_id VARCHAR,
+  r_stop_url VARCHAR,
+  r_location_type VARCHAR,
+  p_location_type INTEGER,
+  r_parent_station VARCHAR,
+  r_stop_timezone VARCHAR,
+  r_wheelchair_boarding VARCHAR,
+  p_wheelchair_boarding INTEGER,
+  r_level_id VARCHAR,
+  r_platform_code VARCHAR,
+  r_stop_access VARCHAR,
+  p_stop_access INTEGER);
+CREATE OR REPLACE TEMP TABLE gtfs_vc_wide_pathways (
+  csv_row_number BIGINT,
+  plain BOOLEAN,
+  r_pathway_id VARCHAR,
+  r_from_stop_id VARCHAR,
+  r_to_stop_id VARCHAR,
+  r_pathway_mode VARCHAR,
+  p_pathway_mode INTEGER,
+  r_is_bidirectional VARCHAR,
+  p_is_bidirectional INTEGER,
+  r_length VARCHAR,
+  p_length DOUBLE,
+  r_traversal_time VARCHAR,
+  p_traversal_time INTEGER,
+  r_stair_count VARCHAR,
+  p_stair_count INTEGER,
+  r_max_slope VARCHAR,
+  p_max_slope DOUBLE,
+  r_min_width VARCHAR,
+  p_min_width DOUBLE,
+  r_signposted_as VARCHAR,
+  r_reversed_signposted_as VARCHAR);
+CREATE OR REPLACE TEMP TABLE gtfs_vc_wide_routes (
+  csv_row_number BIGINT,
+  plain BOOLEAN,
+  r_route_id VARCHAR,
+  r_agency_id VARCHAR,
+  r_route_short_name VARCHAR,
+  r_route_long_name VARCHAR,
+  r_route_desc VARCHAR,
+  r_route_type VARCHAR,
+  p_route_type INTEGER,
+  r_route_url VARCHAR,
+  r_route_color VARCHAR,
+  p_route_color INTEGER,
+  r_route_text_color VARCHAR,
+  p_route_text_color INTEGER,
+  r_route_sort_order VARCHAR,
+  p_route_sort_order INTEGER,
+  r_continuous_pickup VARCHAR,
+  p_continuous_pickup INTEGER,
+  r_continuous_drop_off VARCHAR,
+  p_continuous_drop_off INTEGER,
+  r_network_id VARCHAR,
+  r_cemv_support VARCHAR,
+  p_cemv_support INTEGER);
+CREATE OR REPLACE TEMP TABLE gtfs_vc_wide_trips (
+  csv_row_number BIGINT,
+  plain BOOLEAN,
+  r_trip_id VARCHAR,
+  r_route_id VARCHAR,
+  r_service_id VARCHAR,
+  r_trip_headsign VARCHAR,
+  r_trip_short_name VARCHAR,
+  r_direction_id VARCHAR,
+  p_direction_id INTEGER,
+  r_block_id VARCHAR,
+  r_shape_id VARCHAR,
+  r_wheelchair_accessible VARCHAR,
+  p_wheelchair_accessible INTEGER,
+  r_bikes_allowed VARCHAR,
+  p_bikes_allowed INTEGER,
+  r_cars_allowed VARCHAR,
+  p_cars_allowed INTEGER,
+  r_safe_duration_factor VARCHAR,
+  p_safe_duration_factor DOUBLE,
+  r_safe_duration_offset VARCHAR,
+  p_safe_duration_offset DOUBLE);
+CREATE OR REPLACE TEMP TABLE gtfs_vc_wide_stop_times (
+  csv_row_number BIGINT,
+  plain BOOLEAN,
+  r_trip_id VARCHAR,
+  r_arrival_time VARCHAR,
+  p_arrival_time INTEGER,
+  r_departure_time VARCHAR,
+  p_departure_time INTEGER,
+  r_stop_id VARCHAR,
+  r_location_group_id VARCHAR,
+  r_location_id VARCHAR,
+  r_stop_sequence VARCHAR,
+  p_stop_sequence INTEGER,
+  r_stop_headsign VARCHAR,
+  r_start_pickup_drop_off_window VARCHAR,
+  p_start_pickup_drop_off_window INTEGER,
+  r_end_pickup_drop_off_window VARCHAR,
+  p_end_pickup_drop_off_window INTEGER,
+  r_pickup_type VARCHAR,
+  p_pickup_type INTEGER,
+  r_drop_off_type VARCHAR,
+  p_drop_off_type INTEGER,
+  r_continuous_pickup VARCHAR,
+  p_continuous_pickup INTEGER,
+  r_continuous_drop_off VARCHAR,
+  p_continuous_drop_off INTEGER,
+  r_shape_dist_traveled VARCHAR,
+  p_shape_dist_traveled DOUBLE,
+  r_timepoint VARCHAR,
+  p_timepoint INTEGER,
+  r_pickup_booking_rule_id VARCHAR,
+  r_drop_off_booking_rule_id VARCHAR);
+CREATE OR REPLACE TEMP TABLE gtfs_vc_wide_shapes (
+  csv_row_number BIGINT,
+  plain BOOLEAN,
+  r_shape_id VARCHAR,
+  r_shape_pt_lat VARCHAR,
+  p_shape_pt_lat DOUBLE,
+  r_shape_pt_lon VARCHAR,
+  p_shape_pt_lon DOUBLE,
+  r_shape_pt_sequence VARCHAR,
+  p_shape_pt_sequence INTEGER,
+  r_shape_dist_traveled VARCHAR,
+  p_shape_dist_traveled DOUBLE);
+CREATE OR REPLACE TEMP TABLE gtfs_vc_wide_calendar (
+  csv_row_number BIGINT,
+  plain BOOLEAN,
+  r_service_id VARCHAR,
+  r_monday VARCHAR,
+  p_monday INTEGER,
+  r_tuesday VARCHAR,
+  p_tuesday INTEGER,
+  r_wednesday VARCHAR,
+  p_wednesday INTEGER,
+  r_thursday VARCHAR,
+  p_thursday INTEGER,
+  r_friday VARCHAR,
+  p_friday INTEGER,
+  r_saturday VARCHAR,
+  p_saturday INTEGER,
+  r_sunday VARCHAR,
+  p_sunday INTEGER,
+  r_start_date VARCHAR,
+  p_start_date DATE,
+  r_end_date VARCHAR,
+  p_end_date DATE);
+CREATE OR REPLACE TEMP TABLE gtfs_vc_wide_calendar_dates (
+  csv_row_number BIGINT,
+  plain BOOLEAN,
+  r_service_id VARCHAR,
+  r_date VARCHAR,
+  p_date DATE,
+  r_exception_type VARCHAR,
+  p_exception_type INTEGER);
+-- LOADER-GENERATED-END
 -- Its row notices (RowParser, DefaultFieldValidator); err when the notice is an ERROR.
 CREATE OR REPLACE TEMP TABLE gtfs_vc_notices (csv_row_number BIGINT, code VARCHAR, notice JSON, err BOOLEAN);
 -- Every rule's notices before validate_finish.sql adds their severity, filename and row (one statement per rule).

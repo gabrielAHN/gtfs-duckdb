@@ -74,10 +74,43 @@ All are TEMP tables, recreated empty by `validate_schema.sql` on every run.
 - `gtfs_validation_columns(filename, column_name, column_index)`: the header of each loaded file, as `CsvHeader` holds it.
 - `gtfs_validation_generic_notices(code, notice)`: notices from the core group.
 - `gtfs_validation_notices(code, severity, filename, csv_row_number, notice)`: the result, filled by `validate_finish.sql`.
-- `gtfs_vc_*`: the loader's working tables (the text, records, header, cells and notices of the file being loaded).
-  `validate_finish.sql` empties them.
+- `gtfs_vc_*`: the loader's working tables (the lines, records, header, wide rows and notices of the file being
+  loaded, see below). `validate_load.sql` replaces the large ones with empty tables as soon as it has used them;
+  `validate_finish.sql` empties the rest.
 - `gtfs_v_<table>` for the 8 files: the entities. Columns: `csv_row_number BIGINT` and every field of the Java schema
   (`test/validation/typed_schema.json`, generated from `Gtfs*Schema.java`).
+
+### Loading a file
+
+`validate_load.sql` ports `CsvFileLoader.load`. Every step after the first works on one row per line or per record,
+so DuckDB spreads it over all threads; a step over the whole text in one row would run on one thread.
+
+1. `gtfs_vc_lines`: the file decoded as Java decodes it (U+FFFD for malformed UTF-8, BOMs stripped) and split on LF.
+2. `gtfs_vc_records` from `gtfs_vc_line_records()`: one record per line. A line without a quote splits on commas; a
+   line with one goes through the same tokenizer as the whole-text parser. A line where a quoted value runs past its
+   end is marked `open`, and then the whole file is parsed by `gtfs_vc_parse_records()` instead (one token stream
+   over the text, single-threaded; rare in real feeds). A record is `plain` when its line has only characters from
+   `!` to `~`: none of its values needs trimming or can have a character notice, so those checks skip it.
+3. The header, its notices and `gtfs_vc_pos` (each schema column's position in the header).
+4. `gtfs_vc_wide_<table>` from `gtfs_vc_wide_build_<table>()`: one row per data row of the header's length, with the raw
+   value `r_<column>` of every schema column (NULL when the header lacks it) and, for typed columns, the value Java
+   parses, `p_<column>`.
+5. Row-length notices, then `gtfs_vc_cell_notices_<table>()` (RowParser and DefaultFieldValidator checks, one column
+   at a time) and the entities, `gtfs_vc_entities_<table>()`.
+
+The three per-table macros and the `gtfs_vc_wide_<table>` tables are generated from `gtfs_vc_schema()` by
+`python3 test/validation/gen_loader.py` (between the `LOADER-GENERATED` lines); after changing the schema, rerun it.
+`test_validation.py` fails when the blocks are out of date, and checks that forcing the whole-text parser on every
+fixture changes no notice, file status or entity.
+
+DuckDB details the loader depends on:
+
+- `coalesce(TRY(decode(x)), fallback(x))` evaluates the slow fallback for valid text on DuckDB v2.0; a `CASE` does
+  not. Write `TRY(decode(x))` in both the condition and the branch: DuckDB computes a repeated subexpression once,
+  before the `CASE`, so a bare `decode(x)` in the branch throws on invalid UTF-8.
+- An `UPDATE ... SET c = (uncorrelated subquery) WHERE false` still computes the subquery; put the condition inside it.
+- On DuckDB v1.4 a `DELETE` keeps the table's memory; `CREATE OR REPLACE TEMP TABLE t AS SELECT * FROM t LIMIT 0`
+  frees it, and macros that read `t` still work afterwards.
 
 ### Entity rows
 
@@ -206,5 +239,6 @@ of nested lambdas.
   codes shared with another group must then only produce no extra notice. CI runs the same tests against the built
   extension (`GTFS_EXTENSION`).
 - `python3 test/validation/harness.py diff <feed dir or zip>` compares a whole feed with the oracle, code by code.
+- `python3 test/validation/gen_loader.py --check` fails when the generated loader blocks are out of date.
 - A notice whose file field names alternatives (`calendar.txt or calendar_dates.txt`) is in scope when every
   alternative is one of the 8 files.

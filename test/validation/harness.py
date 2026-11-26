@@ -124,15 +124,17 @@ QUERIES = {
 }
 
 
-def validate_then(feed_dir, date, bin, tmp, statements):
+def validate_then(feed_dir, date, bin, tmp, statements, macro_overrides=None):
     """Validates feed_dir (the real PRAGMA with GTFS_EXTENSION, else the emulation), runs `statements` in the same
-    session and returns the CLI's stdout."""
+    session and returns the CLI's stdout. macro_overrides (a list, possibly empty) forces the emulation and runs its
+    CREATE OR REPLACE MACRO statements after the macro sections."""
     ext = os.environ.get("GTFS_EXTENSION")
-    if ext:
+    if ext and macro_overrides is None:
         args = [f"PRAGMA gtfs_validate({quote(str(feed_dir))}, {quote(date) if date else 'NULL'});"]
         script = [f"LOAD {quote(ext)};"] + args
     else:
-        script = [section("validate_schema")] + [section(s) for s in MACRO_SECTIONS] + pragma_sql(feed_dir, date)
+        script = [section("validate_schema")] + [section(s) for s in MACRO_SECTIONS] + list(macro_overrides or [])
+        script += pragma_sql(feed_dir, date)
     script_path = os.path.join(tmp, "script.sql")
     Path(script_path).write_text("\n".join(script + statements))
     env = {k: v for k, v in os.environ.items() if k != "AI_AGENT"}
@@ -143,8 +145,8 @@ def validate_then(feed_dir, date, bin, tmp, statements):
     return proc.stdout
 
 
-def run(feed_dir, date=DEFAULT_DATE, bin=None, queries=None):
-    """Validates feed_dir and returns {query name: rows} for QUERIES plus `queries`."""
+def run(feed_dir, date=DEFAULT_DATE, bin=None, queries=None, macro_overrides=None):
+    """Validates feed_dir and returns {query name: rows} for QUERIES plus `queries` (macro_overrides: validate_then)."""
     bin = bin or duckdb_bins()[0]
     feed_dir = Path(feed_dir).resolve()
     queries = {**QUERIES, **(queries or {})}
@@ -153,7 +155,7 @@ def run(feed_dir, date=DEFAULT_DATE, bin=None, queries=None):
             f"COPY ({sql}) TO {quote(os.path.join(tmp, name + '.json'))} (FORMAT JSON, ARRAY true);"
             for name, sql in queries.items()
         ]
-        validate_then(feed_dir, date, bin, tmp, copies)
+        validate_then(feed_dir, date, bin, tmp, copies, macro_overrides)
         out = {}
         for name in queries:
             rows = json.loads(Path(tmp, name + ".json").read_text() or "[]")

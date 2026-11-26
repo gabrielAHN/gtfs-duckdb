@@ -126,6 +126,40 @@ class FixtureParityTest(unittest.TestCase):
             Path(os.environ.get("GTFS_VALIDATION_REPORT", os.devnull)).write_text("\n\n".join(failures))
 
 
+# Every line becomes an 'open' record, so validate_load.sql parses every file with the whole-text parser
+# (gtfs_vc_parse_records), whose records are never plain.
+WHOLE_TEXT_ONLY = """CREATE OR REPLACE MACRO gtfs_vc_line_records() AS TABLE
+SELECT line_no AS rec_no, line_no AS csv_row_number, 'open' AS kind, NULL::VARCHAR[] AS fields, NULL::BIGINT AS max_len,
+  false AS plain
+FROM gtfs_vc_lines;"""
+
+
+class LoaderTest(unittest.TestCase):
+    maxDiff = None
+
+    def test_loader_macros_are_generated(self):
+        gen = Path(harness.__file__).resolve().parent / "gen_loader.py"
+        proc = subprocess.run([sys.executable, str(gen), "--check"], capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+
+    def test_line_records_match_the_whole_text_parser(self):
+        # validate_load.sql parses each line on its own (in parallel), skips the per-value character checks of plain
+        # rows, and falls back to the whole-text parser only when a quoted value spans lines. Forcing that fallback
+        # for every file must not change a notice, a file status or an entity.
+        entities = " UNION ALL ".join(
+            f"SELECT '{t}' AS t, count(*) AS n, sum(hash(x)) AS h FROM gtfs_v_{t} x" for t in harness.FILES
+        )
+        queries = {"entities": f"SELECT t, n, h::VARCHAR AS h FROM ({entities}) ORDER BY t"}
+        for name in harness.fixture_names():
+            with self.subTest(fixture=name):
+                with tempfile.TemporaryDirectory() as tmp:
+                    feed = harness.materialize(name, Path(tmp) / "feed")
+                    lines = harness.run(feed, queries=queries, macro_overrides=[])
+                    whole = harness.run(feed, queries=queries, macro_overrides=[WHOLE_TEXT_ONLY])
+                for key in ("notices", "files", "entities"):
+                    self.assertEqual(lines[key], whole[key], f"{name}: {key}")
+
+
 class PipelineTest(unittest.TestCase):
     def test_summary_and_files_are_reported(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -157,7 +191,8 @@ class PipelineTest(unittest.TestCase):
         self.assertTrue(out["notices"] is not None)
 
     def test_working_tables_are_emptied(self):
-        tables = ["gtfs_vc_text", "gtfs_vc_records", "gtfs_vc_header", "gtfs_vc_state", "gtfs_vc_rows", "gtfs_vc_cells"]
+        tables = ["gtfs_vc_text", "gtfs_vc_lines", "gtfs_vc_records", "gtfs_vc_header", "gtfs_vc_state", "gtfs_vc_pos"]
+        tables += [f"gtfs_vc_wide_{t}" for t in harness.FILES]
         tables += ["gtfs_vc_notices", "gtfs_vc_rule_notices"]
         sql = " UNION ALL ".join(f"SELECT '{t}' AS t, count(*) AS n FROM {t}" for t in tables)
         with tempfile.TemporaryDirectory() as tmp:
