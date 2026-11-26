@@ -160,11 +160,13 @@ FROM q
 WINDOW w AS (PARTITION BY shape_id ORDER BY idx ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW);
 
 -- The segments (i, i + 1) of each shape with the edge normal S2.robustCrossProd(a, b) = (b + a) x (b - a) that
--- S2EdgeUtil.getClosestPoint(x, a, b) projects on.
+-- S2EdgeUtil.getClosestPoint(x, a, b) projects on, and next_len, the length in meters of the next segment (NULL for the
+-- last one).
 CREATE OR REPLACE MACRO gtfs_vr_shapes_match_segments() AS TABLE
 WITH s AS (
   SELECT shape_id, idx AS i, geo, x AS a_x, y AS a_y, z AS a_z,
-         lead(x) OVER w AS b_x, lead(y) OVER w AS b_y, lead(z) OVER w AS b_z
+         lead(x) OVER w AS b_x, lead(y) OVER w AS b_y, lead(z) OVER w AS b_z,
+         lead(x, 2) OVER w AS c_x, lead(y, 2) OVER w AS c_y, lead(z, 2) OVER w AS c_z
   FROM gtfs_vr_shapes_match_points()
   WINDOW w AS (PARTITION BY shape_id ORDER BY idx)
 ), u AS (
@@ -172,7 +174,8 @@ WITH s AS (
   FROM s WHERE b_x IS NOT NULL
 ), n AS (
   SELECT shape_id, i, geo, a_x, a_y, a_z, b_x, b_y, b_z,
-         u_y * v_z - u_z * v_y AS n_x, u_z * v_x - u_x * v_z AS n_y, u_x * v_y - u_y * v_x AS n_z
+         u_y * v_z - u_z * v_y AS n_x, u_z * v_x - u_x * v_z AS n_y, u_x * v_y - u_y * v_x AS n_z,
+         CASE WHEN c_x IS NOT NULL THEN gtfs_vr_shapes_angle(b_x, b_y, b_z, c_x, c_y, c_z) * 6371010.0 END AS next_len
   FROM u
 )
 SELECT *, n_x * n_x + n_y * n_y + n_z * n_z AS n2 FROM n;
@@ -278,24 +281,35 @@ WITH pts AS MATERIALIZED (
          1.0 / sqrt(p_x * p_x + p_y * p_y + p_z * p_z) AS p_inv
   FROM proj2
 ), proj4 AS (
-  SELECT pair_id, maxd, s_x, s_y, s_z, i, geo, a_x, a_y, a_z, b_x, b_y, b_z,
+  SELECT pair_id, maxd, s_x, s_y, s_z, i, geo, a_x, a_y, a_z, b_x, b_y, b_z, next_len,
          CASE WHEN inside THEN p_x * p_inv WHEN a_closer THEN a_x ELSE b_x END AS c_x,
          CASE WHEN inside THEN p_y * p_inv WHEN a_closer THEN a_y ELSE b_y END AS c_y,
          CASE WHEN inside THEN p_z * p_inv WHEN a_closer THEN a_z ELSE b_z END AS c_z
   FROM proj3
 ), seg_d AS (
-  SELECT pair_id, maxd, i,
+  SELECT pair_id, maxd, i, next_len,
          gtfs_vr_shapes_angle(s_x, s_y, s_z, c_x, c_y, c_z) * 6371010.0 AS d,
          gtfs_vr_shapes_angle(s_x, s_y, s_z, b_x, b_y, b_z) * 6371010.0 AS e,
          {'g': geo + gtfs_vr_shapes_angle(c_x, c_y, c_z, a_x, a_y, a_z) * 6371010.0,
           'd': gtfs_vr_shapes_angle(s_x, s_y, s_z, c_x, c_y, c_z) * 6371010.0,
           'i': i::BIGINT, 't': 0::INTEGER, 'f': 0.0::DOUBLE} AS m
   FROM proj4
+), pair_segs AS MATERIALIZED (
+  -- One streaming pass over every (pair, segment), which can be hundreds of millions of rows: the closest segment, and
+  -- the segments within maxd with the one before each, the only rows the windows below read. A segment ends where the
+  -- next one starts, so the segment before one within maxd ends within maxd + the next segment's length (+ 1 m).
+  SELECT pair_id, maxd, arg_min(m, {'d': d, 'i': i}) AS closest,
+         list({'i': i, 'd': d, 'e': e, 'm': m}) FILTER (WHERE d <= maxd OR e <= maxd + next_len + 1.0) AS near
+  FROM seg_d GROUP BY pair_id, maxd
+), seg_n AS (
+  SELECT pair_id, maxd, x.i AS i, x.d AS d, x.e AS e, x.m AS m
+  FROM (SELECT pair_id, maxd, unnest(near) AS x FROM pair_segs)
 ), seg_w AS (
   -- ShapePoints.matchesFromLocation: one local match per run of segments within maxd, a new run starting where the
-  -- previous segment was getting further away and this one comes back closer than its end.
+  -- previous segment was getting further away and this one comes back closer than its end. The previous row of a
+  -- segment within maxd is the segment before it (pair_segs keeps it).
   SELECT *, d <= maxd AS in_range, lag(d <= maxd) OVER w AS prev_in, lag(d) OVER w AS prev_d, lag(e) OVER w AS prev_e
-  FROM seg_d
+  FROM seg_n
   WINDOW w AS (PARTITION BY pair_id ORDER BY i)
 ), seg_g AS (
   SELECT *, sum(CASE WHEN in_range AND (prev_in IS NULL OR NOT prev_in OR (prev_e > prev_d AND d < prev_e))
@@ -308,7 +322,7 @@ WITH pts AS MATERIALIZED (
   FROM local_matches GROUP BY pair_id
 ), pair_closest AS (
   -- ShapePoints.matchFromLocation: the closest point of the shape (first segment on ties), or its only point.
-  SELECT pair_id, arg_min(m, {'d': d, 'i': i}) AS closest FROM seg_d GROUP BY pair_id
+  SELECT pair_id, closest FROM pair_segs
   UNION ALL
   SELECT pr.pair_id, {'g': 0.0::DOUBLE, 'd': gtfs_vr_shapes_angle(pr.s_x, pr.s_y, pr.s_z, p.x, p.y, p.z) * 6371010.0,
                       'i': 0::BIGINT, 't': 1::INTEGER, 'f': 0.0::DOUBLE}
