@@ -58,37 +58,37 @@ From the command line, [GTFS Tools](https://github.com/gabrielAHN/gtfs-tools) ru
 
 ## Memory
 
-Each file is read whole, so the memory a validation needs grows with the largest file, usually `stop_times.txt`.
-Measured on a Mac with the statements the PRAGMA runs, at the default number of threads (peak resident memory of the
-DuckDB process):
+Each file is read whole. DuckDB v2.0 runs the whole PRAGMA as one transaction, so it keeps everything it loads until
+the PRAGMA ends: about 10 times the size of `stop_times.txt`, plus the other files, held in memory up to
+`memory_limit` and in `temp_directory` beyond it. Measured on a Mac (Apple M4, 10 cores, 16 GB) at the default number of
+threads, as the peak resident memory of the DuckDB process. v2.0.0 runs the built extension; v1.4.3 runs the same
+statements in the stock DuckDB CLI, because the extension has no native v1.4 build (only the browser one).
 
 | DuckDB | stop_times.txt | memory_limit | Peak memory | Time |
 |---|---|---|---|---|
-| v2.0.0 | 37 MB (New York City Subway) | default | 2.4 GiB | 3.4 s |
-| v2.0.0 | 37 MB | `'2GB'` | 2.2 GiB | 2.9 s |
-| v2.0.0 | 37 MB | `'1GB'` | 1.5 GiB | 5.0 s |
-| v2.0.0 | 37 MB | `'512MB'` | 1.0 GiB | 5.2 s |
-| v2.0.0 | 150 MB (the same feed, 4 times over) | default | 4.1 GiB | 6.3 s |
-| v2.0.0 | 150 MB | `'2GB'` | 2.8 GiB | 9.1 s |
-| v2.0.0 | 150 MB | `'1GB'` | 2.0 GiB | 12 s |
-| v1.4.3 | 37 MB | default | 3.9 GiB | 4.1 s |
-| v1.4.3 | 37 MB | `'2GB'` | 3.0 to 3.4 GiB | 4.5 s |
-| v1.4.3 | 37 MB | `'1.5GB'` | 3.0 GiB | 5.1 s |
+| v2.0.0 | 37 MB (New York City Subway) | default | 1.2 GiB | 2.4 s |
+| v2.0.0 | 37 MB | `'2GB'` | 1.3 GiB | 2.3 s |
+| v2.0.0 | 37 MB | `'1GB'` | 1.2 GiB | 2.7 s |
+| v2.0.0 | 37 MB | `'512MB'` | 0.9 GiB | 2.8 s |
+| v2.0.0 | 150 MB (the same feed, 4 times over) | default | 2.8 GiB | 4.3 s |
+| v2.0.0 | 150 MB | `'2GB'` | 2.5 GiB | 5.0 s |
+| v2.0.0 | 150 MB | `'1GB'` | 1.8 GiB | 6.0 s |
+| v1.4.3 | 37 MB | default | 2.1 GiB | 3.4 s |
+| v1.4.3 | 37 MB | `'2GB'` | 2.1 GiB | 3.0 s |
+| v1.4.3 | 37 MB | `'1.5GB'` | 2.1 GiB | 3.3 s |
 | v1.4.3 | 37 MB | `'1GB'` | out of memory | |
 | v1.4.3 | 150 MB | `'2GB'` or `'3GB'` | out of memory | |
 
-`SET memory_limit` lowers the peak by spilling to disk, at some cost in time. The peak can exceed the limit, and grows
-with the file: with DuckDB v2.0.0 at `memory_limit='2GB'`, by about 5 times the extra size between the two files
-above. At that rate a 1 GB `stop_times.txt`, as some national feeds have, would need about 7 GiB (an estimate, not
-measured).
+`SET memory_limit` lowers the peak by spilling to disk, at some cost in time; the peak can exceed the limit. What
+does not fit in memory must fit in the temp directory, which DuckDB caps at `max_temp_directory_size` (by default 90%
+of the free disk). With GTFS Tools' settings (2 threads, `memory_limit='4096MB'`), the Chicago CTA feed (362 MB
+`stop_times.txt`) failed with 1.5 GiB of temp space and finished with 3 GiB, in 40 s with a 4.8 GiB peak; the Paris
+feed (809 MB) ran out of temp space at 3 GiB. At 10 times the file, a 1 GB `stop_times.txt`, as some national feeds
+have, needs about 10 GB of memory and temp space together (an estimate, not measured).
 
-DuckDB v1.4, the version of DuckDB-WASM that GTFS Viz runs in the browser, needs more. With `SET threads=1` the New York
-feed takes 9.6 s at `memory_limit='2GB'`. The 150 MB file runs out of memory at 2 GB on one thread too, and with
-`memory_limit='4GB'` its memory footprint passed 6.7 GiB before it was stopped (not measured further). Run one at a time
-at 2 GB, three rules run out of memory on it: the travel speed rules (`fast_travel_between_consecutive_stops` and
-`fast_travel_between_far_stops`), `duplicate_trips`, and the matching of stops to shapes (`stop_too_far_from_shape`,
-`stop_too_far_from_shape_using_user_distance`, `stop_has_too_many_matches_for_shape` and
-`stops_match_shape_out_of_order`). Use DuckDB v2.0 for feeds larger than New York City's.
+DuckDB v1.4, the version of DuckDB-WASM that GTFS Viz runs in the browser, commits each statement, but needs more
+memory for the same feed. With `SET threads=1` the New York feed takes 6.0 s at `memory_limit='2GB'` (1.9 GiB), and
+the 150 MB file runs out of memory at 2 GB on one thread too. Use DuckDB v2.0 for feeds larger than New York City's.
 
 ## What is validated
 

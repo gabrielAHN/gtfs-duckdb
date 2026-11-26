@@ -62,7 +62,8 @@ stock DuckDB CLI (it creates the macros with `CREATE OR REPLACE MACRO`), so the 
 building the extension. A DuckDB session binds a macro's tables when the macro is created, which is why every table a
 macro reads must be created by `validate_schema.sql` (the harness runs it before creating the macros).
 
-DuckDB v2.0 runs all the statements a PRAGMA expands into in one transaction; v1.4 commits each statement. The harness
+DuckDB v2.0 runs all the statements a PRAGMA expands into in one transaction, and refuses a `COMMIT` among them ("A
+statement that expands into several cannot contain a transaction statement"); v1.4 commits each statement. The harness
 emulates both: on v2.0 it wraps the statements, and the queries a test runs after them, in `BEGIN TRANSACTION` ...
 `COMMIT`. Inside that transaction:
 
