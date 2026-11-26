@@ -82,7 +82,7 @@ statements in the stock DuckDB CLI, because the extension has no native v1.4 bui
 `SET memory_limit` lowers the peak by spilling to disk, at some cost in time; the peak can exceed the limit. What
 does not fit in memory must fit in the temp directory, which DuckDB caps at `max_temp_directory_size` (by default 90%
 of the free disk). With GTFS Tools' settings (2 threads, `memory_limit='4096MB'`), the Chicago CTA feed (362 MB
-`stop_times.txt`) failed with 1.5 GiB of temp space and finished with 3 GiB, in 40 s with a 4.8 GiB peak; the Paris
+`stop_times.txt`) failed with 1.4 GiB of temp space and finished with 3 GiB, in 40 s with a 4.8 GiB peak; the Paris
 feed (809 MB) ran out of temp space at 3 GiB. At 10 times the file, a 1 GB `stop_times.txt`, as some national feeds
 have, needs about 10 GB of memory and temp space together (an estimate, not measured).
 
