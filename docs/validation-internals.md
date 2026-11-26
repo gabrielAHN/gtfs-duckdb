@@ -62,6 +62,15 @@ stock DuckDB CLI (it creates the macros with `CREATE OR REPLACE MACRO`), so the 
 building the extension. A DuckDB session binds a macro's tables when the macro is created, which is why every table a
 macro reads must be created by `validate_schema.sql` (the harness runs it before creating the macros).
 
+DuckDB v2.0 runs all the statements a PRAGMA expands into in one transaction; v1.4 commits each statement. The harness
+emulates both: on v2.0 it wraps the statements, and the queries a test runs after them, in `BEGIN TRANSACTION` ...
+`COMMIT`. Inside that transaction:
+
+- The optimizer has no statistics for the tables the PRAGMA wrote, so a rule's join order can differ from the one an
+  `EXPLAIN` after the PRAGMA shows. The plan tests (`harness.plan`, `harness.operator_rows`) run inside it.
+- Nothing written is freed before the end: a `DELETE`, `DROP`, `TRUNCATE` or `CREATE OR REPLACE` keeps the old rows'
+  memory until the commit, so the PRAGMA's peak memory is everything the loader wrote.
+
 ## Tables
 
 All are TEMP tables, recreated empty by `validate_schema.sql` on every run.
@@ -109,8 +118,16 @@ DuckDB details the loader depends on:
   not. Write `TRY(decode(x))` in both the condition and the branch: DuckDB computes a repeated subexpression once,
   before the `CASE`, so a bare `decode(x)` in the branch throws on invalid UTF-8.
 - An `UPDATE ... SET c = (uncorrelated subquery) WHERE false` still computes the subquery; put the condition inside it.
-- On DuckDB v1.4 a `DELETE` keeps the table's memory; `CREATE OR REPLACE TEMP TABLE t AS SELECT * FROM t LIMIT 0`
-  frees it, and macros that read `t` still work afterwards.
+- On DuckDB v1.4 a `DELETE` keeps the table's memory; `CREATE OR REPLACE TEMP TABLE t (columns)` frees it, and macros
+  that read `t` still work afterwards.
+- Never refill a table that was replaced `AS SELECT` in the same transaction: on DuckDB v2.0.0, an `INSERT ... SELECT`
+  from a table into it loses all its rows when they are more than a row group (122,880 rows; 100,000 load, 130,000 do
+  not) and `preserve_insertion_order` is on, its default; the loss survives the commit. Inserting from `range()`,
+  replacing the table by naming its columns, or `preserve_insertion_order = false` avoids it; v1.4.3 is not affected.
+  `validate_load.sql` therefore replaces
+  `gtfs_vc_lines` and `gtfs_vc_records`, which the next file refills, by naming their columns; it replaces
+  `gtfs_vc_wide_<table>` `AS SELECT` only after its last use in the PRAGMA. `test_validation.py` loads two files over
+  a row group each with the default settings.
 
 ### Entity rows
 

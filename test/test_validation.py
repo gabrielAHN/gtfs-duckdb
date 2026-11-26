@@ -159,6 +159,27 @@ class LoaderTest(unittest.TestCase):
                 for key in ("notices", "files", "entities"):
                     self.assertEqual(lines[key], whole[key], f"{name}: {key}")
 
+    def test_files_over_one_row_group_load_completely(self):
+        # DuckDB v2.0 runs the PRAGMA in one transaction (harness.emulated_pragma). There, an INSERT ... SELECT from a
+        # table into a table replaced AS SELECT earlier in the transaction lost its rows when they spanned several row
+        # groups (122,880 rows) and preserve_insertion_order was on, its default: stop_times.txt and shapes.txt loaded
+        # empty. calendar.txt and calendar_dates.txt, loaded one after the other, each get more rows than a row group
+        # (services of one day plus one added date: the calendar rules expand each service into its dates).
+        n = 130_000
+        with tempfile.TemporaryDirectory() as tmp:
+            feed = harness.materialize("base", Path(tmp) / "feed")
+            with open(feed / "calendar.txt", "a") as f:
+                f.writelines(f"X{i},1,1,1,1,1,1,1,20260704,20260704\n" for i in range(n))
+            dates = "".join(f"X{i},20260705,1\n" for i in range(n))
+            (feed / "calendar_dates.txt").write_text("service_id,date,exception_type\n" + dates)
+            for bin_ in harness.duckdb_bins():
+                with self.subTest(bin=bin_):
+                    out = harness.run(
+                        feed, bin=bin_, queries={"notices": "SELECT * FROM gtfs_validation_notices LIMIT 0"}
+                    )
+                    rows = {r["filename"]: r["row_count"] for r in out["files"]}
+                    self.assertEqual((rows["calendar.txt"], rows["calendar_dates.txt"]), (n + 1, n))
+
 
 class PipelineTest(unittest.TestCase):
     def test_summary_and_files_are_reported(self):
@@ -281,6 +302,42 @@ class PlanTest(unittest.TestCase):
                             keys.append([conditions] if isinstance(conditions, str) else conditions)
                     on_cells = [k for k in keys if all(f"c{a} = n{a}" in k or f"n{a} = c{a}" in k for a in "xyz")]
                     self.assertTrue(on_cells, keys)
+
+    def test_stop_to_shape_matching_looks_up_two_points_per_stop(self):
+        # The matching rule looks up the shape points before and after each stop. As two joins with the shape's points,
+        # DuckDB v2.0 joined those two lookups first inside the PRAGMA's transaction, where the tables it wrote have no
+        # statistics: every pair of points of a shape (San Diego's example feed ran out of memory). One shape of n
+        # points with k stops on it: no operator may output more than about k rows per point.
+        n, k = 2000, 20
+        with tempfile.TemporaryDirectory() as tmp:
+            feed = long_shape_feed(Path(tmp) / "feed", n, k)
+            for bin_ in harness.duckdb_bins():
+                with self.subTest(bin=bin_):
+                    ops = harness.operator_rows(feed, "SELECT * FROM gtfs_vr_shapes_stop_matching()", bin=bin_)
+                    biggest = max(ops, key=lambda op: op["rows"])
+                    self.assertLessEqual(biggest["rows"], 2 * n * k, biggest)
+
+
+def long_shape_feed(dest, n, k):
+    """A valid feed of one trip on one straight shape of n points, about 11 m apart, with k stops on shape points and
+    shape_dist_traveled on both files."""
+    dest.mkdir(parents=True)
+    every = n // k
+    files = {
+        "stops.txt": "stop_id,stop_name,stop_lat,stop_lon\n"
+        + "".join(f"s{j},Stop {j},{40 + j * every * 0.0001:.7f},-73.9\n" for j in range(k)),
+        "routes.txt": "route_id,route_short_name,route_type\nr1,1,3\n",
+        "trips.txt": "route_id,service_id,trip_id,shape_id\nr1,c1,t1,sh1\n",
+        "calendar.txt": "service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\n"
+        "c1,1,1,1,1,1,1,1,20260101,20301231\n",
+        "shapes.txt": "shape_id,shape_pt_lat,shape_pt_lon,shape_pt_sequence,shape_dist_traveled\n"
+        + "".join(f"sh1,{40 + i * 0.0001:.7f},-73.9,{i + 1},{i * 11.1:.1f}\n" for i in range(n)),
+        "stop_times.txt": "trip_id,arrival_time,departure_time,stop_id,stop_sequence,shape_dist_traveled\n"
+        + "".join(f"t1,08:{j:02d}:00,08:{j:02d}:00,s{j},{j + 1},{j * every * 11.1:.1f}\n" for j in range(k)),
+    }
+    for name, text in files.items():
+        (dest / name).write_text(text)
+    return dest
 
 
 if __name__ == "__main__":

@@ -6,7 +6,10 @@
 -- Port of CsvFileLoader.load (macros in validate_core.sql): read the file once, split it into lines, parse its
 -- records, check the header, then rows, values and entities, and record its TableStatus and notices.
 -- Each step after the split works on one row per line or record, so DuckDB runs it on every thread. The big working
--- tables are emptied as soon as they are used, with CREATE OR REPLACE (DuckDB v1.4 keeps a DELETE's memory).
+-- tables are emptied as soon as they are used, with CREATE OR REPLACE (DuckDB v1.4 keeps a DELETE's memory). One that a
+-- later file refills names its columns (as in validate_schema.sql): DuckDB v2.0 runs the whole PRAGMA in one
+-- transaction, and there an INSERT ... SELECT from a table into a table replaced AS SELECT in the same transaction
+-- loses its rows when it spans several row groups and preserve_insertion_order is on (its default).
 DELETE FROM gtfs_vc_text;
 DELETE FROM gtfs_vc_header;
 DELETE FROM gtfs_vc_state;
@@ -31,7 +34,7 @@ UPDATE gtfs_vc_text SET text = (
   SELECT string_agg(l.line, chr(10) ORDER BY l.line_no) FROM gtfs_vc_lines l
   WHERE gtfs_vc_text.multiline
     OR EXISTS (SELECT 1 FROM gtfs_vc_records r WHERE r.kind = 'row' AND (r.max_len > 4096 OR len(r.fields) > 512)));
-CREATE OR REPLACE TEMP TABLE gtfs_vc_lines AS SELECT * FROM gtfs_vc_lines LIMIT 0;
+CREATE OR REPLACE TEMP TABLE gtfs_vc_lines (line_no BIGINT, line VARCHAR);
 DELETE FROM gtfs_vc_records WHERE (SELECT multiline FROM gtfs_vc_text);
 INSERT INTO gtfs_vc_records SELECT * FROM gtfs_vc_parse_records();
 CREATE OR REPLACE TEMP TABLE gtfs_vc_fail AS SELECT * FROM gtfs_vc_failure();
@@ -56,9 +59,11 @@ LEFT JOIN (SELECT column_name, min(column_index) AS column_index FROM gtfs_vc_he
 WHERE s.filename = {{FILE}};
 INSERT INTO gtfs_vc_wide_{{TABLE}} SELECT * FROM gtfs_vc_wide_build_{{TABLE}}();
 INSERT INTO gtfs_vc_notices SELECT * FROM gtfs_vc_row_length_notices({{FILE}});
-CREATE OR REPLACE TEMP TABLE gtfs_vc_records AS SELECT * FROM gtfs_vc_records LIMIT 0;
+CREATE OR REPLACE TEMP TABLE gtfs_vc_records (
+  rec_no BIGINT, csv_row_number BIGINT, kind VARCHAR, fields VARCHAR[], max_len BIGINT, plain BOOLEAN);
 INSERT INTO gtfs_vc_notices SELECT * FROM gtfs_vc_cell_notices_{{TABLE}}();
 INSERT INTO gtfs_v_{{TABLE}} SELECT * FROM gtfs_vc_entities_{{TABLE}}();
+-- Its last use in this PRAGMA (validate_schema.sql replaces it, naming its columns, before the next one fills it).
 CREATE OR REPLACE TEMP TABLE gtfs_vc_wide_{{TABLE}} AS SELECT * FROM gtfs_vc_wide_{{TABLE}} LIMIT 0;
 INSERT INTO gtfs_validation_generic_notices SELECT code, notice FROM gtfs_vc_notices;
 INSERT INTO gtfs_validation_columns

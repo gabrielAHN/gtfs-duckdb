@@ -358,16 +358,31 @@ WITH pts AS MATERIALIZED (
               ELSE greatest(ui.start_idx, ui.cm1) + 1 END AS next_idx,
          ui.cm1 >= ui.start_idx AND ui.cm1 + 1 < ui.n_pts AS interpolated
   FROM user_idx2 ui
+), user_ends AS (
+  -- The vertices before (b = false) and after (b = true) each stop, in one join with pts. Two joins with pts on the
+  -- same shape_id let the optimizer join the two lookups first, every pair of points of a shape, when it has no
+  -- statistics: DuckDB v2.0 runs all of PRAGMA gtfs_validate in one transaction, where written tables have none.
+  SELECT uv.trip_row, uv.k, uv.s_lat, uv.s_lon, uv.sud, uv.interpolated, uv.prev_idx, uv.e.b AS b,
+         p.geo, p.ud, p.x, p.y, p.z
+  FROM (SELECT *, unnest([{'b': false, 'idx': prev_idx}, {'b': true, 'idx': next_idx}]) AS e FROM user_vertex) uv
+  JOIN pts p ON p.shape_id = uv.shape_id AND p.idx = uv.e.idx
+), user_ab AS (
+  SELECT trip_row, k, s_lat, s_lon, sud, interpolated, prev_idx,
+         any_value(geo) FILTER (WHERE NOT b) AS a_geo, any_value(geo) FILTER (WHERE b) AS b_geo,
+         any_value(ud) FILTER (WHERE NOT b) AS a_ud, any_value(ud) FILTER (WHERE b) AS b_ud,
+         any_value(x) FILTER (WHERE NOT b) AS a_x, any_value(y) FILTER (WHERE NOT b) AS a_y,
+         any_value(z) FILTER (WHERE NOT b) AS a_z, any_value(x) FILTER (WHERE b) AS b_x,
+         any_value(y) FILTER (WHERE b) AS b_y, any_value(z) FILTER (WHERE b) AS b_z
+  FROM user_ends
+  GROUP BY trip_row, k, s_lat, s_lon, sud, interpolated, prev_idx
+  HAVING count(*) = 2
 ), user_frac AS (
-  SELECT uv.trip_row, uv.k, uv.s_lat, uv.s_lon, pa.geo AS a_geo, pb.geo AS b_geo,
-         pa.x AS a_x, pa.y AS a_y, pa.z AS a_z, pb.x AS b_x, pb.y AS b_y, pb.z AS b_z,
-         CASE WHEN NOT uv.interpolated THEN 0.0
-              WHEN abs(pa.ud - pb.ud) <= greatest(1e-9 * 32, 1e-9 * 32 * greatest(abs(pa.ud), abs(pb.ud))) THEN 0.0
-              ELSE (uv.sud - pa.ud) / (pb.ud - pa.ud) END AS f,
-         gtfs_vr_shapes_angle(pa.x, pa.y, pa.z, pb.x, pb.y, pb.z) AS ab, uv.prev_idx
-  FROM user_vertex uv
-  JOIN pts pa ON pa.shape_id = uv.shape_id AND pa.idx = uv.prev_idx
-  JOIN pts pb ON pb.shape_id = uv.shape_id AND pb.idx = uv.next_idx
+  SELECT trip_row, k, s_lat, s_lon, a_geo, b_geo, a_x, a_y, a_z, b_x, b_y, b_z,
+         CASE WHEN NOT interpolated THEN 0.0
+              WHEN abs(a_ud - b_ud) <= greatest(1e-9 * 32, 1e-9 * 32 * greatest(abs(a_ud), abs(b_ud))) THEN 0.0
+              ELSE (sud - a_ud) / (b_ud - a_ud) END AS f,
+         gtfs_vr_shapes_angle(a_x, a_y, a_z, b_x, b_y, b_z) AS ab, prev_idx
+  FROM user_ab
 ), user_loc AS (
   -- ShapePoints.interpolate: S2EdgeUtil.interpolate(f, a, b) unless the vertices are S2.approxEquals (1e-15 rad).
   -- Native trig here: only the distance to the stop is used, the notice location is recomputed exactly later.

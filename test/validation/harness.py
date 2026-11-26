@@ -124,19 +124,54 @@ QUERIES = {
 }
 
 
+_ONE_TRANSACTION = {}
+
+
+def pragma_in_one_transaction(bin):
+    """Whether `bin` runs PRAGMA gtfs_validate in one transaction. DuckDB v2.0 runs a statement that expands into
+    several in one transaction; v1.4 commits each. It matters: a table written in an open transaction gives the optimizer
+    no statistics, and a replaced or emptied one keeps its memory until the transaction ends."""
+    if bin not in _ONE_TRANSACTION:
+        env = {k: v for k, v in os.environ.items() if k != "AI_AGENT"}
+        sql = "SELECT library_version FROM pragma_version();"
+        proc = subprocess.run(
+            [bin, "-batch", "-noheader", "-list", ":memory:", "-c", sql],
+            capture_output=True,
+            text=True,
+            env=env,
+            timeout=120,
+        )
+        lines = proc.stdout.strip().splitlines()
+        if proc.returncode != 0 or not lines:
+            raise RuntimeError(f"{bin} failed ({proc.returncode}): {proc.stderr.strip()[-2000:]}")
+        _ONE_TRANSACTION[bin] = not lines[-1].strip().lstrip("v").startswith(("0.", "1."))
+    return _ONE_TRANSACTION[bin]
+
+
+def emulated_pragma(feed_dir, date, bin, then=()):
+    """The statements PRAGMA gtfs_validate runs, then `then`. Where `bin` runs the PRAGMA in one transaction
+    (pragma_in_one_transaction), all of them run in one, so `then` sees what the PRAGMA's own statements see: an EXPLAIN
+    plans without the statistics of the tables the PRAGMA wrote, as its rules are planned."""
+    parts = pragma_sql(feed_dir, date) + list(then)
+    if pragma_in_one_transaction(bin):
+        parts = ["BEGIN TRANSACTION;"] + parts + ["COMMIT;"]
+    return parts
+
+
 def validate_then(feed_dir, date, bin, tmp, statements, macro_overrides=None):
     """Validates feed_dir (the real PRAGMA with GTFS_EXTENSION, else the emulation), runs `statements` in the same
-    session and returns the CLI's stdout. macro_overrides (a list, possibly empty) forces the emulation and runs its
-    CREATE OR REPLACE MACRO statements after the macro sections."""
+    session (in the emulation's transaction, see emulated_pragma) and returns the CLI's stdout. macro_overrides (a
+    list, possibly empty) forces the emulation and runs its CREATE OR REPLACE MACRO statements after the macro
+    sections."""
     ext = os.environ.get("GTFS_EXTENSION")
     if ext and macro_overrides is None:
         args = [f"PRAGMA gtfs_validate({quote(str(feed_dir))}, {quote(date) if date else 'NULL'});"]
-        script = [f"LOAD {quote(ext)};"] + args
+        script = [f"LOAD {quote(ext)};"] + args + list(statements)
     else:
         script = [section("validate_schema")] + [section(s) for s in MACRO_SECTIONS] + list(macro_overrides or [])
-        script += pragma_sql(feed_dir, date)
+        script += emulated_pragma(feed_dir, date, bin, statements)
     script_path = os.path.join(tmp, "script.sql")
-    Path(script_path).write_text("\n".join(script + statements))
+    Path(script_path).write_text("\n".join(script))
     env = {k: v for k, v in os.environ.items() if k != "AI_AGENT"}
     cmd = [bin, "-bail", "-batch"] + (["-unsigned"] if ext else []) + [":memory:", "-c", f".read {script_path}"]
     proc = subprocess.run(cmd, capture_output=True, text=True, env=env, cwd=tmp, timeout=3600)
@@ -182,6 +217,25 @@ def plan(feed_dir, sql, date=DEFAULT_DATE, bin=None):
         node = nodes.pop()
         ops.append({"name": node["name"].strip(), "extra_info": node.get("extra_info") or {}})
         nodes.extend(node.get("children", []))
+    return ops
+
+
+def operator_rows(feed_dir, sql, date=DEFAULT_DATE, bin=None):
+    """Validates feed_dir, runs `sql` with EXPLAIN ANALYZE (in the emulation's transaction, see emulated_pragma) and
+    returns its operators as a flat list of {"name", "rows", "extra_info"}, rows being what each one output."""
+    bin = bin or duckdb_bins()[0]
+    with tempfile.TemporaryDirectory(prefix="gtfs-validate-") as tmp:
+        stdout = validate_then(Path(feed_dir).resolve(), date, bin, tmp, [f"EXPLAIN (ANALYZE, FORMAT JSON) {sql};"])
+    nodes = [json.loads(stdout[stdout.index("{") : stdout.rindex("}") + 1])]
+    ops = []
+    while nodes:
+        node = nodes.pop()
+        # DuckDB v2.0 names them type / intermediate_rows, v1.4 operator_type / operator_cardinality.
+        rows = node.get("intermediate_rows", node.get("operator_cardinality"))
+        if rows is not None:
+            name = node.get("type", node.get("operator_type"))
+            ops.append({"name": name, "rows": rows, "extra_info": node.get("extra_info") or {}})
+        nodes.extend(node.get("operator", []) + node.get("children", []))
     return ops
 
 
